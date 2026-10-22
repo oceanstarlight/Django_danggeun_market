@@ -27,18 +27,20 @@ SECRET_KEY = 'django-insecure-j)(i=ei372cn2*&%^rfeno#e@)_pr0$o$+2+_4k7a0i+a0ly8m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'market',
 ]
 
@@ -92,6 +94,16 @@ DATABASES = {
     }
 }
 
+CHANNEL_LAYERS = {
+
+    "default": {
+
+        "BACKEND":
+            "channels.layers.InMemoryChannelLayer"
+
+    }
+
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -133,3 +145,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+ASGI_APPLICATION = "config.asgi.application"
