@@ -1,0 +1,241 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅</title>
+    <link rel="stylesheet" href="{% static 'market/css/style.css' %}">
+</head>
+
+<body>
+
+<div class="site">
+
+{% include "market/header.html" %}
+
+<main class="main">
+
+<div class="chat-wrap">
+
+    <div class="chat-header">
+
+        <a href="{% url 'chat_list' %}" class="btn btn-sm">
+            ←
+        </a>
+
+        {% if room.product.image_url %}
+
+            <img
+                src="{{ room.product.image_url }}"
+                class="list-item-thumb"
+                alt="{{ room.product.title }}"
+            >
+
+        {% else %}
+
+            <!-- 사진! (상품 썸네일 기본 이미지) -->
+            <div class="list-item-thumb"></div>
+
+        {% endif %}
+
+        <div class="chat-header-body">
+
+            <p class="list-item-title">
+                {{ room.product.title }}
+            </p>
+
+            <p class="list-item-sub">
+                판매자 {{ room.seller.username }}
+                ·
+                구매자 {{ room.buyer.username }}
+            </p>
+
+        </div>
+
+        <a href="{% url 'product_detail' room.product.id %}" class="btn btn-gray btn-sm">
+            상품 보기
+        </a>
+
+    </div>
+
+
+    <div id="chat-log" class="chat-log">
+
+        {% for message in chat_messages %}
+
+            <div class="chat-msg{% if message.sender == user %} mine{% endif %}">
+
+                <span class="chat-sender">
+                    {{ message.sender.username }}
+                </span>
+
+                <div class="chat-line">
+
+                    <p class="chat-bubble">{{ message.content }}</p>
+
+                    <small class="chat-time">
+                        {{ message.created_at|date:"H:i" }}
+                    </small>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="chat-input-bar">
+
+        <input
+            id="chat-message-input"
+            class="input"
+            type="text"
+            placeholder="메시지를 입력하세요."
+        >
+
+        <button id="chat-message-submit" class="btn btn-primary">
+            전송
+        </button>
+
+    </div>
+
+</div>
+
+</main>
+
+</div>
+
+
+<script>
+
+const roomId = "{{ room.id }}";
+
+const myUsername = "{{ user.username|escapejs }}";
+
+const protocol =
+    window.location.protocol === "https:"
+        ? "wss"
+        : "ws";
+
+const chatSocket = new WebSocket(
+    `${protocol}://${window.location.host}/ws/chat/${roomId}/`
+);
+
+const chatLog =
+    document.getElementById("chat-log");
+
+const messageInput =
+    document.getElementById(
+        "chat-message-input"
+    );
+
+const sendButton =
+    document.getElementById(
+        "chat-message-submit"
+    );
+
+
+chatLog.scrollTop =
+    chatLog.scrollHeight;
+
+
+chatSocket.onmessage = function(event) {
+
+    const data =
+        JSON.parse(event.data);
+
+    const wrapper =
+        document.createElement("div");
+
+    wrapper.className =
+        data.username === myUsername
+            ? "chat-msg mine"
+            : "chat-msg";
+
+    const name =
+        document.createElement("span");
+
+    name.className = "chat-sender";
+
+    name.textContent =
+        data.username;
+
+    const line =
+        document.createElement("div");
+
+    line.className = "chat-line";
+
+    const bubble =
+        document.createElement("p");
+
+    bubble.className = "chat-bubble";
+
+    bubble.textContent =
+        data.message;
+
+    const time =
+        document.createElement("small");
+
+    time.className = "chat-time";
+
+    time.textContent =
+        data.created_at;
+
+    line.appendChild(bubble);
+    line.appendChild(time);
+
+    wrapper.appendChild(name);
+    wrapper.appendChild(line);
+
+    chatLog.appendChild(wrapper);
+
+    chatLog.scrollTop =
+        chatLog.scrollHeight;
+};
+
+
+function sendMessage() {
+
+    const message =
+        messageInput.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    chatSocket.send(
+        JSON.stringify({
+            "message": message
+        })
+    );
+
+    messageInput.value = "";
+}
+
+
+sendButton.addEventListener(
+    "click",
+    sendMessage
+);
+
+
+messageInput.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

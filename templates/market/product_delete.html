@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 삭제</title>
+    <link rel="stylesheet" href="{% static 'market/css/style.css' %}">
+</head>
+
+<body>
+
+<div class="site">
+
+{% include "market/header.html" %}
+
+<main class="main">
+
+<div>
+
+    <div class="form-card narrow">
+
+        <h1 class="section-title">상품 삭제</h1>
+
+        <p class="confirm-text">
+            "{{ product.title }}" 상품을 정말 삭제하시겠습니까?<br>
+            삭제한 게시글은 되돌릴 수 없습니다.
+        </p>
+
+        <form method="post" class="form-actions">
+
+            {% csrf_token %}
+
+            <a href="{% url 'product_detail' product.id %}" class="btn btn-gray btn-lg">
+                취소
+            </a>
+
+            <button type="submit" class="btn btn-danger btn-lg">
+                삭제
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</main>
+
+</div>
+
+</body>
+
+</html>
