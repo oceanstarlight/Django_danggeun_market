@@ -1,0 +1,91 @@
+{% load static %}
+
+{# .site 그리드 안에서 include 해서 사용 : 로고 / 검색창 / 상단 박스 3칸을 채웁니다 #}
+
+<header class="top">
+
+    <a href="{% url 'main' %}" class="logo">
+
+        <!-- 사진! (로고 이미지: 예) <img src="{% static 'market/img/logo.png' %}" class="logo-img" alt="폴리마켓"> ) -->
+        <span class="logo-img"></span>
+
+        폴리
+
+    </a>
+
+
+    <form
+        method="get"
+        action="{% url 'product_list' %}"
+        class="search"
+    >
+
+        <input
+            type="text"
+            name="q"
+            value="{{ query|default:'' }}"
+            placeholder="검색어를 입력하세요"
+        >
+
+        <button type="submit" aria-label="검색">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="20" y1="20" x2="16" y2="16"></line>
+            </svg>
+        </button>
+
+    </form>
+
+
+    <div class="top-box">
+
+        {% if user.is_authenticated %}
+
+            <span class="top-box-label">
+                <strong>{{ user.first_name|default:user.username }}</strong>님
+            </span>
+
+            <div class="top-box-actions">
+
+                <a href="{% url 'chat_list' %}" class="btn btn-sm">
+                    채팅
+                </a>
+
+                <form
+                    method="post"
+                    action="{% url 'logout' %}"
+                >
+
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-sm">
+                        로그아웃
+                    </button>
+
+                </form>
+
+            </div>
+
+        {% else %}
+
+            <span class="top-box-label">
+                내 근처에서 거래해보세요
+            </span>
+
+            <div class="top-box-actions">
+
+                <a href="{% url 'login' %}" class="btn btn-sm">
+                    로그인
+                </a>
+
+                <a href="{% url 'signup' %}" class="btn btn-primary btn-sm btn-round">
+                    회원가입
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</header>

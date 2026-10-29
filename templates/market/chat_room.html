@@ -1,83 +1,120 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>채팅</title>
+    <link rel="stylesheet" href="{% static 'market/css/style.css' %}">
 </head>
 
 <body>
 
-<h1>
-    {{ room.product.title }}
-</h1>
+<div class="site">
 
-<p>
-    판매자:
-    {{ room.seller.username }}
-</p>
+{% include "market/header.html" %}
 
-<p>
-    구매자:
-    {{ room.buyer.username }}
-</p>
+<main class="main">
 
-<a href="{% url 'chat_list' %}">
-    채팅 목록
-</a>
+<div class="chat-wrap">
 
-<hr>
+    <div class="chat-header">
 
-<div
-    id="chat-log"
-    style="
-        border: 1px solid black;
-        width: 600px;
-        height: 400px;
-        overflow-y: auto;
-        padding: 10px;
-    "
->
+        <a href="{% url 'chat_list' %}" class="btn btn-sm">
+            ←
+        </a>
 
-    {% for message in chat_messages %}
+        {% if room.product.image_url %}
 
-        <div>
+            <img
+                src="{{ room.product.image_url }}"
+                class="list-item-thumb"
+                alt="{{ room.product.title }}"
+            >
 
-            <strong>
-                {{ message.sender.username }}
-            </strong>
+        {% else %}
 
-            :
+            <!-- 사진! (상품 썸네일 기본 이미지) -->
+            <div class="list-item-thumb"></div>
 
-            {{ message.content }}
+        {% endif %}
 
-            <small>
-                {{ message.created_at|date:"H:i" }}
-            </small>
+        <div class="chat-header-body">
+
+            <p class="list-item-title">
+                {{ room.product.title }}
+            </p>
+
+            <p class="list-item-sub">
+                판매자 {{ room.seller.username }}
+                ·
+                구매자 {{ room.buyer.username }}
+            </p>
 
         </div>
 
-    {% endfor %}
+        <a href="{% url 'product_detail' room.product.id %}" class="btn btn-gray btn-sm">
+            상품 보기
+        </a>
+
+    </div>
+
+
+    <div id="chat-log" class="chat-log">
+
+        {% for message in chat_messages %}
+
+            <div class="chat-msg{% if message.sender == user %} mine{% endif %}">
+
+                <span class="chat-sender">
+                    {{ message.sender.username }}
+                </span>
+
+                <div class="chat-line">
+
+                    <p class="chat-bubble">{{ message.content }}</p>
+
+                    <small class="chat-time">
+                        {{ message.created_at|date:"H:i" }}
+                    </small>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="chat-input-bar">
+
+        <input
+            id="chat-message-input"
+            class="input"
+            type="text"
+            placeholder="메시지를 입력하세요."
+        >
+
+        <button id="chat-message-submit" class="btn btn-primary">
+            전송
+        </button>
+
+    </div>
 
 </div>
 
-<br>
+</main>
 
-<input
-    id="chat-message-input"
-    type="text"
-    placeholder="메시지를 입력하세요."
-    style="width: 500px;"
->
-
-<button id="chat-message-submit">
-    전송
-</button>
+</div>
 
 
 <script>
 
 const roomId = "{{ room.id }}";
+
+const myUsername = "{{ user.username|escapejs }}";
 
 const protocol =
     window.location.protocol === "https:"
@@ -102,38 +139,59 @@ const sendButton =
     );
 
 
+chatLog.scrollTop =
+    chatLog.scrollHeight;
+
+
 chatSocket.onmessage = function(event) {
 
     const data =
         JSON.parse(event.data);
 
-    const line =
+    const wrapper =
         document.createElement("div");
 
+    wrapper.className =
+        data.username === myUsername
+            ? "chat-msg mine"
+            : "chat-msg";
+
     const name =
-        document.createElement("strong");
+        document.createElement("span");
+
+    name.className = "chat-sender";
 
     name.textContent =
         data.username;
 
-    const text =
-        document.createTextNode(
-            " : "
-            + data.message
-            + " "
-        );
+    const line =
+        document.createElement("div");
+
+    line.className = "chat-line";
+
+    const bubble =
+        document.createElement("p");
+
+    bubble.className = "chat-bubble";
+
+    bubble.textContent =
+        data.message;
 
     const time =
         document.createElement("small");
 
+    time.className = "chat-time";
+
     time.textContent =
         data.created_at;
 
-    line.appendChild(name);
-    line.appendChild(text);
+    line.appendChild(bubble);
     line.appendChild(time);
 
-    chatLog.appendChild(line);
+    wrapper.appendChild(name);
+    wrapper.appendChild(line);
+
+    chatLog.appendChild(wrapper);
 
     chatLog.scrollTop =
         chatLog.scrollHeight;

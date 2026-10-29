@@ -30,7 +30,21 @@ from .forms import SignUpForm
 
 #메인 리다이렉트
 def main(request):
-    return render(request, "market/main.html")
+
+    # 메인 "지금 뜨는 중고거래" 순위 (조회수 순)
+    hot_products = (
+        Product.objects
+        .select_related("seller")
+        .order_by("-view_count", "-created_at")[:5]
+    )
+
+    return render(
+        request,
+        "market/main.html",
+        {
+            "hot_products": hot_products
+        }
+    )
 
 #회원가입
 def signup(request):
@@ -146,11 +160,22 @@ def product_list(request):
         .all()
     )
 
+    # 상단 검색창 (?q=검색어)
+    query = request.GET.get("q", "").strip()
+
+    if query:
+        products = products.filter(
+            Q(title__icontains=query)
+            | Q(content__icontains=query)
+            | Q(region__icontains=query)
+        )
+
     return render(
         request,
         "market/product_list.html",
         {
-            "products": products
+            "products": products,
+            "query": query,
         }
     )
 

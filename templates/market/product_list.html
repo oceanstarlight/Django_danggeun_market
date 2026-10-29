@@ -1,90 +1,200 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>중고상품</title>
+    <link rel="stylesheet" href="{% static 'market/css/style.css' %}">
 </head>
 
 <body>
 
-<h1>중고거래 게시판</h1>
+<div class="site">
 
-<p>
-    <a href="{% url 'main' %}">
-        메인
-    </a>
+{% include "market/header.html" %}
 
-    |
+<main class="main">
 
-    <a href="{% url 'product_create' %}">
-        판매글 작성
-    </a>
+    {# 카테고리 탭 #}
 
-    |
+    <nav class="tabs">
 
-    <a href="{% url 'chat_list' %}">
-        내 채팅
-    </a>
-</p>
+        <a href="{% url 'product_list' %}" class="tab">
+            🔍 전체
+        </a>
 
-<hr>
+        <a href="{% url 'product_list' %}" class="tab is-active">
+            🛍️ 중고거래
+        </a>
 
-{% for product in products %}
+        <a href="#" class="tab">
+            🏪 동네업체
+        </a>
 
-    <div>
+        <a href="#" class="tab">
+            🚗 중고차
+        </a>
 
-        {% if product.image_url %}
+        <a href="#" class="tab">
+            📝 동네생활
+        </a>
 
-            <img
-                src="{{ product.image_url }}"
-                width="200"
-            >
+        <a href="#" class="tab tab-more">
+            더보기 ⌄
+        </a>
 
+    </nav>
+
+
+    <h1 class="section-title">
+
+        <!-- 사진! (중고거래 아이콘) -->
+        <span class="icon">🛍️</span>
+
+        {% if query %}
+            "{{ query }}" 중고거래 검색 결과
+        {% else %}
+            중고거래 인기매물
         {% endif %}
 
-        <h2>
+        <small>{{ products|length }}개</small>
 
-            <a href="{% url 'product_detail' product.id %}">
-                {{ product.title }}
-            </a>
+    </h1>
 
-        </h2>
 
-        <p>
-            가격:
-            {{ product.price }}원
-        </p>
+    <div class="toolbar">
 
-        <p>
-            지역:
-            {{ product.region }}
-        </p>
+        <a href="#" class="btn">
+            ⚙ 필터
+        </a>
 
-        <p>
-            판매자:
-            {{ product.seller.username }}
-        </p>
+        <span class="toolbar-sep"></span>
 
-        <p>
-            조회 {{ product.view_count }}
-            /
-            찜 {{ product.wish_count }}
-            /
-            채팅 {{ product.chat_count }}
-        </p>
+        <a href="#" class="btn">
+            지역 선택
+        </a>
+
+        <a href="{% url 'product_create' %}" class="btn btn-dark">
+            ＋ 판매글 작성
+        </a>
+
+        <a href="{% url 'chat_list' %}" class="btn toolbar-right">
+            💬 내 채팅
+        </a>
 
     </div>
 
-    <hr>
 
-{% empty %}
+    <div class="product-grid">
 
-    <p>
-        등록된 상품이 없습니다.
-    </p>
+        {% for product in products %}
 
-{% endfor %}
+            <a href="{% url 'product_detail' product.id %}" class="product-card">
+
+                {% if product.image_url %}
+
+                    <img
+                        src="{{ product.image_url }}"
+                        class="product-thumb"
+                        alt="{{ product.title }}"
+                    >
+
+                {% else %}
+
+                    <!-- 사진! (상품 이미지가 없을 때 기본 썸네일) -->
+                    <div class="product-thumb thumb-placeholder">
+                        이미지 없음
+                    </div>
+
+                {% endif %}
+
+
+                <h2 class="product-title">
+                    {{ product.title }}
+                </h2>
+
+                <p class="product-price">
+                    {{ product.price|floatformat:"0g" }}원
+                </p>
+
+                <p class="product-meta">
+                    {{ product.region }}
+                    ·
+                    {{ product.created_at|timesince }} 전
+                </p>
+
+                <p class="product-meta">
+                    조회 {{ product.view_count }}
+                    ·
+                    찜 {{ product.wish_count }}
+                    ·
+                    채팅 {{ product.chat_count }}
+                </p>
+
+                {% if product.negotiable %}
+                    <span class="badge badge-primary">네고 가능</span>
+                {% endif %}
+
+            </a>
+
+        {% empty %}
+
+            <div class="empty">
+
+                {% if query %}
+                    "{{ query }}"에 대한 검색 결과가 없습니다.
+                {% else %}
+                    등록된 상품이 없습니다.
+                {% endif %}
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</main>
+
+
+<aside class="side">
+
+    <div class="card">
+
+        <div class="card-head">
+
+            <h2 class="card-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <line x1="20" y1="20" x2="16" y2="16"></line>
+                </svg>
+                인기 검색어
+            </h2>
+
+        </div>
+
+        <div class="chip-list">
+
+            <a href="?q=아이폰" class="chip">아이폰</a>
+            <a href="?q=컴퓨터" class="chip">컴퓨터</a>
+            <a href="?q=자전거" class="chip">자전거</a>
+            <a href="?q=의자" class="chip">의자</a>
+            <a href="?q=노트북" class="chip">노트북</a>
+            <a href="?q=닌텐도" class="chip">닌텐도</a>
+            <a href="?q=플스5" class="chip">플스5</a>
+            <a href="?q=침대" class="chip">침대</a>
+            <a href="?q=맥북" class="chip">맥북</a>
+            <a href="?q=애플워치" class="chip">애플워치</a>
+            <a href="{% url 'product_list' %}" class="chip chip-plain">전체보기</a>
+
+        </div>
+
+    </div>
+
+</aside>
+
+</div>
 
 </body>
 
