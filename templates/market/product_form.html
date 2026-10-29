@@ -1,35 +1,61 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page_title }}</title>
+    <link rel="stylesheet" href="{% static 'market/css/style.css' %}">
 </head>
 
 <body>
 
-<h1>
-    {{ page_title }}
-</h1>
+<div class="site">
 
-<form
-    method="post"
-    enctype="multipart/form-data"
->
+{% include "market/header.html" %}
 
-    {% csrf_token %}
+<main class="main">
 
-    {{ form.as_p }}
+<div>
 
-    <button type="submit">
-        저장
-    </button>
+    <div class="form-card">
 
-</form>
+        <h1 class="section-title">
+            {{ page_title }}
+        </h1>
 
-<a href="{% url 'product_list' %}">
-    목록으로
-</a>
+        <form
+            method="post"
+            enctype="multipart/form-data"
+            class="form"
+        >
+
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <div class="form-actions">
+
+                <a href="{% url 'product_list' %}" class="btn btn-gray btn-lg">
+                    목록으로
+                </a>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    저장
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</main>
+
+</div>
 
 </body>
 

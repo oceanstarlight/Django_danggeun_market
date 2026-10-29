@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -5,72 +6,286 @@
 
     <meta charset="UTF-8">
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>
-        Danggeun Market
+        폴리마켓
     </title>
+
+    <link rel="stylesheet" href="{% static 'market/css/style.css' %}">
 
 </head>
 
 
 <body>
 
-
-<h1>
-    Poly Market
-</h1>
+<div class="site">
 
 
-<p>
-    Django로 만드는 중고거래 플랫폼입니다.
-</p>
+{% include "market/header.html" %}
 
 
-<hr>
+<main class="main">
 
 
-{% if user.is_authenticated %}
+    {# 카테고리 타일 #}
+
+    <nav class="tile-grid">
+
+        <a href="{% url 'product_list' %}" class="tile">
+            <!-- 사진! (중고거래 아이콘) -->
+            <span class="icon">🛍️</span>
+            <span class="tile-label">중고거래</span>
+        </a>
+
+        <a href="{% url 'product_create' %}" class="tile">
+            <!-- 사진! (판매하기 아이콘) -->
+            <span class="icon">📦</span>
+            <span class="tile-label">판매하기</span>
+        </a>
+
+        <a href="{% url 'chat_list' %}" class="tile">
+            <!-- 사진! (채팅 아이콘) -->
+            <span class="icon">💬</span>
+            <span class="tile-label">채팅</span>
+        </a>
+
+        <a href="#" class="tile">
+            <!-- 사진! (동네생활 아이콘) -->
+            <span class="icon">📝</span>
+            <span class="tile-label">동네생활</span>
+        </a>
+
+        <a href="#" class="tile">
+            <!-- 사진! (모임 아이콘) -->
+            <span class="icon">👥</span>
+            <span class="tile-label">모임</span>
+        </a>
+
+        <a href="#" class="tile">
+            <!-- 사진! (알바 아이콘) -->
+            <span class="icon">🔍</span>
+            <span class="tile-label">알바</span>
+            <span class="tile-arrow">↗</span>
+        </a>
+
+        <a href="#" class="tile">
+            <!-- 사진! (부동산 아이콘) -->
+            <span class="icon">🏠</span>
+            <span class="tile-label">부동산</span>
+            <span class="tile-arrow">↗</span>
+        </a>
+
+        <a href="#" class="tile">
+            <!-- 사진! (중고차 아이콘) -->
+            <span class="icon">🚗</span>
+            <span class="tile-label">중고차</span>
+            <span class="tile-arrow">↗</span>
+        </a>
+
+    </nav>
 
 
-    <p>
-        {{ user.first_name }}님 환영합니다.
-    </p>
+    {# 지금 뜨는 중고거래 (조회수 순위) #}
+
+    <h2 class="section-title">
+        <!-- 사진! (불꽃 아이콘) -->
+        <span class="icon">🔥</span>
+        지금 뜨는 중고거래
+    </h2>
 
 
-    <p>
-        아이디:
-        {{ user.username }}
-    </p>
+    <div class="rank-list">
+
+        {% for product in hot_products %}
+
+            <a href="{% url 'product_detail' product.id %}" class="rank-item">
+
+                <span class="rank-num">
+                    {{ forloop.counter }}
+                </span>
+
+                <div class="rank-body">
+
+                    <p class="rank-title">
+                        {{ product.title }}
+                    </p>
+
+                    <p class="rank-meta">
+                        {{ product.region }}
+                        ·
+                        {{ product.created_at|timesince }} 전
+                    </p>
+
+                    <p class="rank-meta">
+                        <strong>{{ product.price|floatformat:"0g" }}원</strong>
+                    </p>
+
+                    <div class="rank-stats">
+                        <span>👁 {{ product.view_count }}</span>
+                        <span>♡ {{ product.wish_count }}</span>
+                        <span>💬 {{ product.chat_count }}</span>
+                    </div>
+
+                </div>
+
+                {% if product.image_url %}
+
+                    <img
+                        src="{{ product.image_url }}"
+                        class="rank-thumb"
+                        alt="{{ product.title }}"
+                    >
+
+                {% endif %}
+
+            </a>
+
+        {% empty %}
+
+            <div class="empty">
+
+                <p>
+                    아직 등록된 상품이 없습니다.
+                </p>
+
+                <a href="{% url 'product_create' %}" class="btn btn-primary">
+                    첫 판매글 작성하기
+                </a>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
 
 
-    <form
-        method="post"
-        action="{% url 'logout' %}"
-    >
-
-        {% csrf_token %}
-
-        <button type="submit">
-            로그아웃
-        </button>
-
-    </form>
+</main>
 
 
-{% else %}
+<aside class="side">
 
 
-    <a href="{% url 'login' %}">
-        로그인
-    </a>
+    {# 지도 박스 #}
+
+    <div class="map-box">
+
+        <!-- 사진! (동네 지도 이미지: 예) <img src="{% static 'market/img/map.png' %}" class="map-img" alt="지도"> ) -->
+
+        <a href="{% url 'product_list' %}" class="map-chip">
+            🛍️ 내 주변 중고거래 ↗
+        </a>
+
+    </div>
 
 
-    <a href="{% url 'signup' %}">
-        회원가입
-    </a>
+    {# 나의 폴리 #}
+
+    <div class="card">
+
+        <div class="card-head">
+
+            <h2 class="card-title">
+                <!-- 사진! (나의 폴리 아이콘) -->
+                <span class="icon">🥕</span>
+                나의 폴리
+            </h2>
+
+        </div>
 
 
-{% endif %}
+        {% if user.is_authenticated %}
 
+
+            <div class="profile-row">
+
+                <!-- 사진! (내 프로필 사진) -->
+                <div class="avatar"></div>
+
+                <div>
+
+                    <p class="profile-name">
+                        {{ user.first_name }}님 환영합니다.
+                    </p>
+
+                    <p class="profile-sub">
+                        아이디:
+                        {{ user.username }}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="divider"></div>
+
+
+            <div class="icon-grid">
+
+                <a href="{% url 'product_create' %}" class="icon-row">
+                    <span class="icon">✏️</span>
+                    판매글 작성
+                </a>
+
+                <a href="{% url 'chat_list' %}" class="icon-row">
+                    <span class="icon">💬</span>
+                    내 채팅
+                </a>
+
+                <a href="{% url 'product_list' %}" class="icon-row">
+                    <span class="icon">🛍️</span>
+                    중고거래
+                </a>
+
+                <form
+                    method="post"
+                    action="{% url 'logout' %}"
+                >
+
+                    {% csrf_token %}
+
+                    <button type="submit" class="icon-row btn-reset">
+                        <span class="icon">🚪</span>
+                        로그아웃
+                    </button>
+
+                </form>
+
+            </div>
+
+
+        {% else %}
+
+
+            <p class="profile-sub">
+                Django로 만드는 중고거래 플랫폼입니다.<br>
+                로그인하고 동네 이웃과 거래해 보세요.
+            </p>
+
+
+            <div class="action-stack">
+
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                    로그인
+                </a>
+
+                <a href="{% url 'signup' %}" class="btn btn-gray btn-lg">
+                    회원가입
+                </a>
+
+            </div>
+
+
+        {% endif %}
+
+    </div>
+
+
+</aside>
+
+
+</div>
 
 </body>
 

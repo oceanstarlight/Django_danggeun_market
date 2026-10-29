@@ -1,60 +1,103 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>내 채팅</title>
+    <link rel="stylesheet" href="{% static 'market/css/style.css' %}">
 </head>
 
 <body>
 
-<h1>내 채팅</h1>
+<div class="site">
 
-<a href="{% url 'product_list' %}">
-    상품 목록
-</a>
+{% include "market/header.html" %}
 
-<hr>
+<main class="main">
+
+<div>
+
+<h1 class="section-title">
+    <!-- 사진! (채팅 아이콘) -->
+    <span class="icon">💬</span>
+    내 채팅
+</h1>
+
+<div class="card card-flush">
 
 {% for room in rooms %}
 
-    <div>
+    <a href="{% url 'chat_room' room.id %}" class="list-item">
 
-        <h3>
-            {{ room.product.title }}
-        </h3>
+        <!-- 사진! (상대방 프로필 사진) -->
+        <div class="avatar"></div>
 
-        {% if user == room.seller %}
+        <div class="list-item-body">
 
-            <p>
-                상대방:
-                {{ room.buyer.username }}
+            {% if user == room.seller %}
+
+                <p class="list-item-title">
+                    {{ room.buyer.username }}
+                    <span class="badge">구매자</span>
+                </p>
+
+            {% else %}
+
+                <p class="list-item-title">
+                    {{ room.seller.username }}
+                    <span class="badge badge-primary">판매자</span>
+                </p>
+
+            {% endif %}
+
+            <p class="list-item-sub">
+                {{ room.product.title }}
             </p>
+
+        </div>
+
+        {% if room.product.image_url %}
+
+            <img
+                src="{{ room.product.image_url }}"
+                class="list-item-thumb"
+                alt="{{ room.product.title }}"
+            >
 
         {% else %}
 
-            <p>
-                상대방:
-                {{ room.seller.username }}
-            </p>
+            <!-- 사진! (상품 썸네일 기본 이미지) -->
+            <div class="list-item-thumb"></div>
 
         {% endif %}
 
-        <a href="{% url 'chat_room' room.id %}">
-            채팅방 입장
+    </a>
+
+{% empty %}
+
+    <div class="empty">
+
+        <p>
+            아직 채팅방이 없습니다.
+        </p>
+
+        <a href="{% url 'product_list' %}" class="btn btn-primary">
+            상품 둘러보기
         </a>
 
     </div>
 
-    <hr>
-
-{% empty %}
-
-    <p>
-        아직 채팅방이 없습니다.
-    </p>
-
 {% endfor %}
+
+</div>
+
+</div>
+
+</main>
+
+</div>
 
 </body>
 
