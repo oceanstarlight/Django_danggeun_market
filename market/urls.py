@@ -10,6 +10,12 @@ urlpatterns = [
         views.main,
         name="main"
     ),
+
+    path(
+        "state/",
+        views.state,
+        name="state"
+    ),
     
     # URL 등록
     path(

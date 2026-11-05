@@ -13,6 +13,7 @@ from django.contrib.auth import (
     logout,
 )
 
+from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import F, Q
@@ -485,3 +486,6 @@ def chat_room(request, room_id):
             "chat_messages": chat_messages,
         }
     )
+
+def state(request):
+    return HttpResponse("server OK", content_type="text/plain")
