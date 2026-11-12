@@ -211,6 +211,7 @@ GEMINI_API_KEY=
 | `APP_LOG_LEVEL` | `apps` 로거 로그 레벨 (기본 `INFO`) | 선택 |
 | `RUN_LIVE_AI` | `1` 이면 테스트에서 실제 Gemini 호출 허용 + 라이브 스모크 테스트 실행 | 테스트 (선택) |
 | `SEED_DEMO_ALLOW_POSTGRES` | `1` 이면 SQLite가 아닌 DB에서도 `seed_demo` 실행 허용 | 개발 (선택) |
+| `DJANGO_SUPERUSER_USERNAME` / `DJANGO_SUPERUSER_PASSWORD` / `DJANGO_SUPERUSER_EMAIL` | 배포(`build.sh`) 때 `ensure_admin` 이 관리자 계정을 만들거나, 이미 있으면 비밀번호를 재설정. 없으면 건너뜀. 사용 후 비밀번호 변수는 지우기 권장 | 운영 (선택) |
 
 <br>
 
@@ -489,3 +490,13 @@ python manage.py migrate
 - 중간 버전 스키마에 데이터를 넣은 DB로 `migrate` → 페이지 렌더링 → 상품 등록 → WebSocket 채팅까지 검증했습니다.
 - Python 버전은 루트의 `.python-version`(3.13)으로 고정합니다.
 - `seed_demo` 는 운영 환경(`RENDER` 설정 또는 `DEBUG=False`)에서는 실행되지 않습니다.
+
+### 관리자 계정 만들기 / 비밀번호 재설정
+
+Render 무료 플랜은 Shell 이 없으므로 환경 변수로 처리합니다.
+
+1. Render → Environment 에 `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_PASSWORD` (선택 `DJANGO_SUPERUSER_EMAIL`) 추가
+2. 저장하면 재배포되고, `build.sh` 의 `ensure_admin` 이 계정을 만들거나(없을 때) 비밀번호를 바꿉니다(있을 때).
+3. 완료 후 `/admin/` 에서 로그인하고, `DJANGO_SUPERUSER_PASSWORD` 는 지워 두세요.
+
+> 비밀번호가 Django 비밀번호 규칙(8자 이상, 흔한 비밀번호·숫자만 금지 등)에 맞지 않으면 빌드가 실패하고 이전 버전이 계속 실행됩니다.

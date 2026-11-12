@@ -4,7 +4,8 @@ from collections import Counter
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models import Avg, Count, OuterRef, Q, Subquery
+from django.db.models import Avg, Count, OuterRef, Q, Subquery, Value
+from django.db.models.functions import Lower, Replace
 
 from apps.products.models import Product, RecentView, Wishlist
 from apps.products.selectors import with_card_data
@@ -37,8 +38,16 @@ def is_username_taken(username: str) -> bool:
     return User.objects.filter(username__iexact=username).exists()
 
 
+def nickname_key(nickname: str) -> str:
+    """중복 비교용 키: 공백을 모두 빼고 소문자로 ('민지 네' == '민지네')."""
+    return "".join((nickname or "").split()).lower()
+
+
 def is_nickname_taken(nickname: str, exclude_user_id: int | None = None) -> bool:
-    qs = Profile.objects.filter(nickname__iexact=nickname)
+    """띄어쓰기·대소문자만 다른 닉네임도 같은 것으로 본다 (사칭 방지)."""
+    qs = Profile.objects.annotate(
+        _nick_key=Lower(Replace("nickname", Value(" "), Value("")))
+    ).filter(_nick_key=nickname_key(nickname))
     if exclude_user_id:
         qs = qs.exclude(user_id=exclude_user_id)
     return qs.exists()
