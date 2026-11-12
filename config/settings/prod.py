@@ -33,7 +33,14 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST"),
         "PORT": os.getenv("DB_PORT"),
+        # 연결 재사용(매 요청 TLS 재연결 비용 절약).
+        # Supabase 풀러는 한동안 쓰지 않은 연결을 서버 쪽에서 끊는다. 재사용 전에 연결이
+        # 살아 있는지 확인하지 않으면, 30초마다 polling 하는 알림 배지 같은 요청이
+        # 끊긴 연결을 집어 들어 500 이 난다 → CONN_HEALTH_CHECKS 로 재사용 전 확인.
         "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": True,
+        # 풀러(transaction 모드)에서는 서버측 커서(.iterator())가 트랜잭션 사이에 유지되지 않는다.
+        "DISABLE_SERVER_SIDE_CURSORS": True,
         "OPTIONS": {"sslmode": "require", "connect_timeout": 10},
     }
 }
