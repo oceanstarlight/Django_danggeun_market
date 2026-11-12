@@ -1,0 +1,16 @@
+{% comment %}
+메시지 묶음 (최초 화면 + '이전 대화 불러오기' HTMX 조각 공용)
+컨텍스트: entries · has_more · room
+- has_more 면 맨 위에 '이전 대화 불러오기' 버튼: 누르면 자기 자신을 더 오래된 묶음으로 교체(outerHTML)
+{% endcomment %}
+{% if has_more and entries %}
+  <div class="chat-older" id="chat-older">
+    <button type="button" class="btn btn-ghost btn-sm"
+            hx-get="{% url 'chat:room' room.pk %}?before={{ entries.0.message.pk }}"
+            hx-target="#chat-older" hx-swap="outerHTML" data-silent>
+      <span class="hide-on-request">이전 대화 불러오기</span>
+      <span class="show-on-request">불러오는 중이에요…</span>
+    </button>
+  </div>
+{% endif %}
+{% for e in entries %}{% include "chat/partials/message.html" %}{% endfor %}

@@ -1,0 +1,8 @@
+{% comment "usage" %}
+신고 모달 로딩 skeleton (modal body_template 으로 넣어 두면 HTMX가 폼으로 교체해요)
+{% endcomment %}
+<div class="space-y-3" aria-busy="true" aria-label="불러오는 중">
+  <span class="skeleton h-11 w-full"></span>
+  {% for i in "12345" %}<span class="skeleton h-14 w-full"></span>{% endfor %}
+  <span class="skeleton h-28 w-full"></span>
+</div>

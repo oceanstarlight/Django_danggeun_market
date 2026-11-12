@@ -1,0 +1,36 @@
+{% comment "usage" %}
+상품 카드 (카드 전체가 상세 링크)
+  <div class="product-grid">
+    {% for product in products %}{% include "components/product_card.html" %}{% endfor %}
+  </div>
+파라미터: product(Product). 목록 쿼리에서 select_related("region") + prefetch images,
+          annotate(num_wishes, num_chats) 해두면 N+1 없이 렌더돼요.
+{% endcomment %}{% load static poly_tags %}
+<a href="{% url 'products:detail' product.pk %}" class="product-card">
+  <div class="product-card-media">
+    {% if product.thumbnail_url %}
+      <img src="{{ product.thumbnail_url }}" alt="{{ product.title }}" class="product-card-img" loading="lazy" decoding="async">
+    {% else %}
+      <img src="{% static 'img/placeholder.svg' %}" alt="" class="product-card-img">
+    {% endif %}
+    {% if product.status == product.Status.SOLD %}<div class="product-card-sold" aria-hidden="true"></div>{% endif %}
+    {% if product.status != product.Status.SELLING %}
+      <span class="badge {{ product.status|status_class }} product-card-badge">{{ product.get_status_display }}</span>
+    {% endif %}
+  </div>
+  <div class="product-card-body">
+    <h3 class="product-card-title">{{ product.title }}</h3>
+    <p class="product-card-price">{{ product.price|price }}</p>
+    <div class="product-card-meta">
+      <span class="truncate">{% if product.region %}{{ product.region.dong }} · {% endif %}<time datetime="{{ product.created_at|date:'c' }}">{{ product.created_at|timeago }}</time></span>
+      {% with wishes=product.wish_count chats=product.chat_count %}
+        {% if wishes or chats %}
+          <span class="product-card-stats">
+            {% if chats %}<span aria-label="채팅 {{ chats }}개">{% include "components/icon.html" with name="chat" class="h-3.5 w-3.5" %}{{ chats }}</span>{% endif %}
+            {% if wishes %}<span aria-label="찜 {{ wishes }}개">{% include "components/icon.html" with name="heart" class="h-3.5 w-3.5" %}{{ wishes }}</span>{% endif %}
+          </span>
+        {% endif %}
+      {% endwith %}
+    </div>
+  </div>
+</a>

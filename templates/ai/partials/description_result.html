@@ -1,0 +1,42 @@
+{% comment %}
+ai:describe 결과 카드 (상품 폼 AI 패널의 #ai-result 안에 들어가요)
+컨텍스트: result {title, content, suggested_tags} · cached(bool) · uid
+'적용하기'를 눌러야 #id_title · #id_content 가 바뀌어요 (static/js/ai.js).
+{% endcomment %}
+<article class="ai-result" data-ai-result="description" data-ai-json="ai-desc-{{ uid }}">
+  {% with json_id="ai-desc-"|add:uid %}{{ result|json_script:json_id }}{% endwith %}
+  <div class="ai-card-header">
+    {% include "components/icon.html" with name="sparkles" %}
+    <span>AI가 작성한 초안이에요</span>
+    {% if cached %}<span class="badge badge-neutral ml-auto">이전에 만든 결과</span>{% endif %}
+  </div>
+
+  <p class="ai-result-label">제목</p>
+  <p class="text-[17px] font-semibold leading-6 text-neutral-900 break-keep">{{ result.title }}</p>
+
+  <p class="ai-result-label mt-4">설명</p>
+  <div class="ai-result-content">{{ result.content }}</div>
+
+  {% if result.suggested_tags %}
+    <div class="mt-3 flex flex-wrap gap-1.5" aria-label="추천 태그">
+      {% for tag in result.suggested_tags %}<span class="badge badge-ai">#{{ tag }}</span>{% endfor %}
+    </div>
+    <label class="mt-3 flex items-center gap-2 text-sm text-neutral-700">
+      <input type="checkbox" class="checkbox" data-ai-with-tags checked>
+      태그도 설명 끝에 붙일게요
+    </label>
+  {% endif %}
+
+  <p class="help">[대괄호] 부분은 직접 채워 주세요. AI가 만든 문장이라 사실과 다를 수 있어요.</p>
+
+  <div class="ai-card-actions">
+    <button type="button" class="btn btn-ai btn-sm" data-ai-apply="description">
+      {% include "components/icon.html" with name="check" %}제목·설명 적용
+    </button>
+    <button type="button" class="btn btn-secondary btn-sm" data-ai-apply="title">제목만 적용</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-ai-action="describe" data-ai-regenerate>
+      {% include "components/icon.html" with name="refresh" %}다시 생성
+    </button>
+    <button type="button" class="btn btn-ghost btn-sm ml-auto" data-ai-dismiss>닫기</button>
+  </div>
+</article>

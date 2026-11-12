@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 136 32" fill="none" role="img" aria-label="폴리마켓">
+  <!-- 폴리마켓 로고: 다면체 마크 + 워드마크 -->
+  <g>
+    <path d="M16 2.5 27.7 9.25 16 14Z" fill="#2DD4BF"/>
+    <path d="M27.7 9.25v13.5L16 14Z" fill="#0D9488"/>
+    <path d="M27.7 22.75 16 29.5 16 14Z" fill="#115E59"/>
+    <path d="M16 29.5 4.3 22.75 16 14Z" fill="#0F766E"/>
+    <path d="M4.3 22.75V9.25L16 14Z" fill="#14B8A6"/>
+    <path d="M4.3 9.25 16 2.5 16 14Z" fill="#5EEAD4"/>
+    <path d="M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25Z M16 14 16 2.5 M16 14 27.7 9.25 M16 14 27.7 22.75 M16 14 16 29.5 M16 14 4.3 22.75 M16 14 4.3 9.25" stroke="#fff" stroke-opacity=".35" stroke-width=".6" stroke-linejoin="round"/>
+  </g>
+  <text x="38" y="23" fill="#1C1917" font-family="'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif" font-size="20" font-weight="800" letter-spacing="-0.6">폴리마켓</text>
+</svg>

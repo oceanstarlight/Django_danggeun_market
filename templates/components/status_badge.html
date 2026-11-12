@@ -1,0 +1,5 @@
+{% comment "usage" %}
+상품 상태 배지
+  {% include "components/status_badge.html" with status=product.status label=product.get_status_display %}
+파라미터: status(Product.status 값) · label(표시 문구) · class(추가 클래스, 선택)
+{% endcomment %}{% load poly_tags %}<span class="badge {{ status|status_class }}{% if class %} {{ class }}{% endif %}">{{ label }}</span>

@@ -1,0 +1,15 @@
+{% load poly_tags %}{% comment %}
+'더보기' 버튼 (그리드 안 마지막 칸). HTMX 가 없으면 일반 링크로 다음 페이지로 이동해요.
+{% endcomment %}{% if page_obj.has_next %}
+<div id="load-more" class="col-span-full flex flex-col items-center gap-3 pt-2">
+  {% querystring page=page_obj.next_page_number as next_url %}
+  <a href="{{ next_url }}" class="btn btn-secondary min-w-[160px]"
+     hx-get="{{ next_url }}" hx-target="#load-more" hx-swap="outerHTML" hx-push-url="false">
+    <span class="hide-on-request">더보기</span>
+    <span class="show-on-request"><span class="spinner"></span></span>
+  </a>
+  <p class="text-[13px] text-neutral-400">{{ page_obj.end_index }} / {{ page_obj.paginator.count }}</p>
+</div>
+{% elif page_obj.number > 1 %}
+<p class="col-span-full pt-4 text-center text-[13px] text-neutral-400">모든 상품을 다 봤어요</p>
+{% endif %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load poly_tags %}
+{% comment "usage" %}
+마이페이지 (accounts:mypage) — 왼쪽 프로필 카드, 오른쪽 탭(판매중/거래완료/구매내역/찜/최근 본/받은 후기)
+컨텍스트: profile · tabs · tab · page_obj · counts · summary
+{% endcomment %}
+{% block title %}마이페이지{% endblock %}
+
+{% block content %}
+<div class="container-page py-6 md:py-10">
+  <div class="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
+    {# ── 프로필 카드 ── #}
+    <aside class="space-y-4 lg:sticky lg:top-24 lg:self-start">
+      <section class="card card-body" aria-labelledby="mypage-name">
+        <div class="flex items-center gap-4">
+          {% include "components/avatar.html" with user=user size="lg" %}
+          <div class="min-w-0 flex-1">
+            <h1 id="mypage-name" class="truncate text-h2 text-neutral-900">{{ profile.nickname }}</h1>
+            {% if profile.region %}
+              <p class="mt-0.5 flex items-center gap-1 text-[13px] text-neutral-500">{% include "components/icon.html" with name="map-pin" class="h-3.5 w-3.5 shrink-0" %}<span class="truncate">{{ profile.region.name }}</span></p>
+            {% else %}
+              <a href="{% url 'accounts:profile_edit' %}" class="link mt-0.5 inline-flex items-center gap-1 text-[13px]">{% include "components/icon.html" with name="map-pin" class="h-3.5 w-3.5" %}내 동네 설정하기</a>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if profile.bio %}<p class="mt-4 whitespace-pre-line break-words text-sm leading-6 text-neutral-700">{{ profile.bio }}</p>{% endif %}
+
+        <div class="mt-4 flex items-center justify-between gap-3 rounded-md bg-neutral-50 px-4 py-3">
+          <p class="whitespace-nowrap text-xs text-neutral-500">첫 온도 36.5°C</p>
+          {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
+        </div>
+
+        <dl class="mt-4 grid grid-cols-3 divide-x divide-neutral-200 text-center">
+          <div><dt class="text-xs text-neutral-500">판매중</dt><dd class="mt-0.5 text-base font-bold text-neutral-900 tabular">{{ counts.selling }}</dd></div>
+          <div><dt class="text-xs text-neutral-500">거래완료</dt><dd class="mt-0.5 text-base font-bold text-neutral-900 tabular">{{ counts.sold }}</dd></div>
+          <div>
+            <dt class="text-xs text-neutral-500">받은 후기</dt>
+            <dd class="mt-0.5 inline-flex items-center gap-0.5 text-base font-bold text-neutral-900 tabular">{{ counts.reviews }}{% if summary.avg is not None %}<span class="ml-1 inline-flex items-center text-xs font-semibold text-neutral-500">{% include "components/icon.html" with name="star-fill" class="h-3.5 w-3.5 text-amber-400" %}{{ summary.avg|floatformat:1 }}</span>{% endif %}</dd>
+          </div>
+        </dl>
+
+        <div class="mt-5 grid grid-cols-2 gap-2">
+          <a href="{% url 'accounts:profile_edit' %}" class="btn btn-secondary btn-sm">{% include "components/icon.html" with name="pencil" %}프로필 수정</a>
+          <a href="{% url 'accounts:seller_profile' user.username %}" class="btn btn-ghost btn-sm">{% include "components/icon.html" with name="eye" %}공개 프로필</a>
+        </div>
+      </section>
+
+      {# 바로가기 (모바일은 상단 프로필 메뉴에 같은 항목이 있어 숨김) #}
+      <nav class="card hidden p-1.5 lg:block" aria-label="바로가기">
+        <a href="{% url 'products:create' %}" class="dropdown-item">{% include "components/icon.html" with name="plus" %}내 물건 팔기</a>
+        <a href="{% url 'chat:list' %}" class="dropdown-item">{% include "components/icon.html" with name="chat" %}채팅</a>
+        <a href="{% url 'notifications:list' %}" class="dropdown-item">{% include "components/icon.html" with name="bell" %}알림</a>
+        <a href="{% url 'moderation:block_list' %}" class="dropdown-item">{% include "components/icon.html" with name="ban" %}차단 목록</a>
+        <div class="dropdown-divider"></div>
+        <form method="post" action="{% url 'accounts:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="dropdown-item dropdown-item-danger">{% include "components/icon.html" with name="logout" %}로그아웃</button>
+        </form>
+      </nav>
+    </aside>
+
+    {# ── 탭 + 목록 ── #}
+    <section aria-label="내 활동 목록" class="min-w-0">
+      <div id="mypage-panel" class="scroll-mt-24">{% include "accounts/partials/mypage_panel.html" %}</div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 모바일에서 가로 스크롤되는 탭 목록의 선택된 탭이 보이도록
+  (function () {
+    function reveal(root) {
+      var tab = root && root.querySelector ? root.querySelector(".tab-list .tab-active") : null;
+      if (!tab) return;
+      var list = tab.parentElement;  // 세로 스크롤 없이 탭 목록만 가로로 이동
+      list.scrollLeft = tab.offsetLeft - list.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2;
+    }
+    if (window.htmx) window.htmx.onLoad(reveal);
+    else document.addEventListener("DOMContentLoaded", function () { reveal(document); });
+  })();
+</script>
+{% endblock %}

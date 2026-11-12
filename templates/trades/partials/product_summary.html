@@ -1,0 +1,16 @@
+{% comment "usage" %}
+거래 화면 상단의 상품 요약 (썸네일 · 제목 · 가격 · 상태)
+  {% include "trades/partials/product_summary.html" with product=product %}
+파라미터: product(Product; prefetch_related("images") 권장)
+{% endcomment %}{% load static poly_tags %}
+<a href="{% url 'products:detail' product.pk %}" class="card card-interactive flex items-center gap-3 p-3 md:p-4">
+  {% with thumb=product.thumbnail_url %}<img src="{% if thumb %}{{ thumb }}{% else %}{% static 'img/placeholder.svg' %}{% endif %}" alt="" class="thumb h-14 w-14" width="56" height="56" loading="lazy" decoding="async">{% endwith %}
+  <span class="min-w-0 flex-1">
+    <span class="flex items-center gap-1.5">
+      {% include "components/status_badge.html" with status=product.status label=product.get_status_display %}
+      <span class="truncate text-[15px] font-medium text-neutral-800">{{ product.title }}</span>
+    </span>
+    <span class="mt-1 block text-base font-bold text-neutral-900 tabular">{{ product.price|price }}</span>
+  </span>
+  {% include "components/icon.html" with name="chevron-right" class="h-5 w-5 shrink-0 text-neutral-400" %}
+</a>

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load poly_tags %}
+{% comment "usage" %}
+차단 목록 (moderation:block_list) — 내가 차단한 이웃과 차단 해제 버튼
+컨텍스트: page_obj(Block 페이지; select_related blocked__profile__region)
+{% endcomment %}
+{% block title %}차단 목록{% endblock %}
+
+{% block content %}
+<div class="container-page py-6 md:py-10">
+  <div class="mx-auto w-full max-w-2xl">
+    <a href="{% url 'accounts:mypage' %}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900">
+      {% include "components/icon.html" with name="chevron-left" class="h-4 w-4" %}마이페이지
+    </a>
+    <h1 class="page-title mt-2">차단 목록</h1>
+    <p class="muted mt-1 text-[15px]">차단한 이웃과는 서로의 상품과 채팅이 보이지 않아요.</p>
+
+    {% if page_obj.object_list %}
+      <ul class="card mt-6 divide-y divide-neutral-200">
+        {% for block in page_obj %}{% with other=block.blocked %}
+          <li class="flex items-center gap-3 px-4 py-3.5 md:px-5">
+            <a href="{% url 'accounts:seller_profile' other.username %}" class="flex min-w-0 flex-1 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+              {% include "components/avatar.html" with user=other %}
+              <span class="min-w-0">
+                <span class="block truncate text-[15px] font-semibold text-neutral-900">{{ other|display_name }}</span>
+                <span class="block truncate text-[13px] text-neutral-500">{% if other.profile.region %}{{ other.profile.region.short_name }} · {% endif %}<time datetime="{{ block.created_at|date:'c' }}">{{ block.created_at|timeago }}</time> 차단</span>
+              </span>
+            </a>
+            <form method="post" action="{% url 'moderation:block_toggle' other.username %}" class="shrink-0">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="btn btn-secondary btn-sm">차단 해제</button>
+            </form>
+          </li>
+        {% endwith %}{% endfor %}
+      </ul>
+      {% include "components/pagination.html" with page_obj=page_obj %}
+    {% else %}
+      <div class="card mt-6">
+        {% url 'products:list' as list_url %}
+        {% include "components/empty_state.html" with title="차단한 이웃이 없어요" description="불편한 이웃이 있다면 프로필에서 차단할 수 있어요." cta_url=list_url cta_label="상품 둘러보기" %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

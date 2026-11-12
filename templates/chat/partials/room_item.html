@@ -1,0 +1,29 @@
+{% load poly_tags %}{% comment %}
+채팅 목록 한 줄. 컨텍스트: room (selectors.rooms_for_user 결과 + views 가 붙인 partner · is_mine_last)
+{% endcomment %}{% with partner=room.partner product=room.product %}
+<a href="{% url 'chat:room' room.pk %}" class="chat-list-item">
+  {% include "components/avatar.html" with user=partner %}
+  <div class="min-w-0 flex-1">
+    <p class="flex items-center gap-1.5 text-[13px] leading-[18px] text-neutral-500">
+      <span class="truncate text-[15px] font-semibold text-neutral-900">{{ partner|display_name }}</span>
+      {% if product.region %}<span class="shrink-0">{{ product.region.dong }}</span>{% endif %}
+      {% if room.last_message_at %}<span aria-hidden="true">·</span><time class="shrink-0" datetime="{{ room.last_message_at|date:'c' }}">{{ room.last_message_at|timeago }}</time>{% endif %}
+    </p>
+    <p class="mt-0.5 truncate text-sm{% if room.unread %} font-medium text-neutral-900{% else %} text-neutral-600{% endif %}">
+      {% if room.last_message_content %}{% if room.is_mine_last %}<span class="text-neutral-400">나: </span>{% endif %}{{ room.last_message_content }}{% else %}<span class="text-neutral-400">아직 대화가 없어요</span>{% endif %}
+    </p>
+    <p class="mt-1 flex items-center gap-1.5 text-xs text-neutral-500">
+      {% if product.status != product.Status.SELLING %}{% include "components/status_badge.html" with status=product.status label=product.get_status_display %}{% endif %}
+      <span class="truncate">{{ product.title }}</span>
+    </p>
+  </div>
+  {% if room.unread %}<span class="chat-unread" aria-label="안 읽은 메시지 {{ room.unread }}개">{% if room.unread > 99 %}99+{% else %}{{ room.unread }}{% endif %}</span>{% endif %}
+  <div class="flex shrink-0 flex-col items-end gap-2">
+    {% if product.thumbnail_url %}
+      <img src="{{ product.thumbnail_url }}" alt="" class="thumb h-12 w-12" width="48" height="48" loading="lazy" decoding="async">
+    {% else %}
+      <span class="thumb flex h-12 w-12 items-center justify-center text-neutral-400">{% include "components/icon.html" with name="image" %}</span>
+    {% endif %}
+  </div>
+</a>
+{% endwith %}

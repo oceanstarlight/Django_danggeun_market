@@ -1,0 +1,13 @@
+{% comment "usage" %}
+알림 1개 (목록 페이지 · nav 드롭다운 공용). 누르면 notifications:go 로 읽음 처리 후 이동해요.
+  {% for n in notifications %}<li>{% include "notifications/partials/item.html" with n=n %}</li>{% endfor %}
+파라미터: n(Notification)
+{% endcomment %}{% load poly_tags %}
+<a href="{% url 'notifications:go' n.pk %}" class="notif-item{% if not n.is_read %} notif-item-unread{% endif %}">
+  <span class="notif-icon {{ n.icon_class }}">{% include "components/icon.html" with name=n.icon_name class="h-5 w-5" %}</span>
+  <span class="min-w-0 flex-1">
+    <span class="notif-message">{{ n.message }}</span>
+    <span class="notif-meta block">{{ n.get_kind_display }} · <time datetime="{{ n.created_at|date:'c' }}">{{ n.created_at|timeago }}</time></span>
+  </span>
+  {% if not n.is_read %}<span class="notif-unread-dot" aria-hidden="true"></span><span class="sr-only">안 읽음</span>{% endif %}
+</a>

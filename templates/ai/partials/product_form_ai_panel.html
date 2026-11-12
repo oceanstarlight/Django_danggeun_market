@@ -1,0 +1,45 @@
+{% load static %}{% comment %}
+상품 폼 AI 도우미 패널 — products/product_form.html 안에서 include 돼요.
+  {% include "ai/partials/product_form_ai_panel.html" %}
+- static/js/ai.js 가 #id_images 의 앞 2장을 줄여서(FormData) ai:describe / ai:recognize 로 보내요.
+- 결과 카드의 '적용' 버튼을 눌러야 폼 필드(id_title · id_content · id_category · id_condition)가 바뀌어요. (자동 덮어쓰기 없음)
+- 이 패널의 입력칸에는 name 이 없어서 상품 폼과 함께 전송되지 않아요.
+{% endcomment %}
+<section class="ai-card" id="ai-panel" data-ai-panel aria-labelledby="ai-panel-title"
+         data-describe-url="{% url 'ai:describe' %}" data-recognize-url="{% url 'ai:recognize' %}">
+  <div class="ai-card-header">
+    {% include "components/icon.html" with name="sparkles" %}
+    <h2 id="ai-panel-title">AI 판매글 도우미</h2>
+  </div>
+  <p class="text-sm leading-6 text-neutral-600">사진을 올리고 버튼을 눌러 보세요. 결과를 확인하고 <strong class="font-semibold text-neutral-800">적용</strong>을 눌러야 입력칸이 바뀌어요.</p>
+
+  <div class="mt-4">
+    <label for="ai-keywords" class="label">키워드 <span class="font-normal text-neutral-400">(선택)</span></label>
+    <input type="text" id="ai-keywords" class="input" maxlength="200" autocomplete="off" enterkeyhint="done"
+           placeholder="예) 아이패드 에어 5세대, 64GB, 1년 사용" data-ai-keywords>
+    <p class="help">모델명·사용 기간·구성품을 적으면 더 정확해져요. 사진은 앞의 2장을 사용해요.</p>
+  </div>
+
+  <div class="ai-card-actions">
+    <button type="button" class="btn btn-ai" data-ai-action="describe">
+      {% include "components/icon.html" with name="sparkles" %}AI로 작성하기
+    </button>
+    <button type="button" class="btn btn-secondary" data-ai-action="recognize">
+      {% include "components/icon.html" with name="camera" %}사진으로 분류하기
+    </button>
+  </div>
+
+  <div id="ai-result" class="ai-results" aria-live="polite"></div>
+
+  {# 요청 중 표시 (ai.js 가 복제해서 #ai-result 에 넣어요) #}
+  <template id="ai-loading-template">
+    <div class="ai-result" aria-busy="true" data-ai-loading>
+      <div class="ai-card-header"><span class="spinner"></span><span data-ai-loading-text>AI가 작성 중이에요</span></div>
+      <span class="skeleton skeleton-text w-2/3"></span>
+      <span class="skeleton skeleton-text mt-3 w-full"></span>
+      <span class="skeleton skeleton-text mt-2 w-11/12"></span>
+      <span class="skeleton skeleton-text mt-2 w-4/5"></span>
+    </div>
+  </template>
+</section>
+<script src="{% static 'js/ai.js' %}" defer></script>

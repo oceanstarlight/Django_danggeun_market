@@ -1,0 +1,37 @@
+{% load poly_tags %}{% comment %}
+채팅방 상단 상품 요약 바: 썸네일 · 상태 · 제목 · 가격 + (판매자) 상태 변경 · 거래완료 / (거래 후) 후기 보내기
+컨텍스트: product · room · is_seller · status_choices · traded_here
+{% endcomment %}
+<div class="chat-product-bar">
+  <a href="{% url 'products:detail' product.pk %}" class="chat-product-link">
+    {% if product.thumbnail_url %}
+      <img src="{{ product.thumbnail_url }}" alt="" class="thumb h-12 w-12" width="48" height="48" loading="lazy" decoding="async">
+    {% else %}
+      <span class="thumb flex h-12 w-12 items-center justify-center text-neutral-400">{% include "components/icon.html" with name="image" %}</span>
+    {% endif %}
+    <span class="min-w-0 flex-1">
+      <span class="flex items-center gap-1.5">
+        {% include "components/status_badge.html" with status=product.status label=product.get_status_display %}
+        <span class="truncate text-sm font-medium text-neutral-800">{{ product.title }}</span>
+      </span>
+      <span class="mt-0.5 block text-[15px] font-bold text-neutral-900 tabular-nums">{{ product.price|price }}{% if product.negotiable and product.price %} <span class="text-xs font-medium text-neutral-500">가격 제안 가능</span>{% endif %}</span>
+    </span>
+  </a>
+
+  {% if is_seller %}
+    <div class="chat-product-actions">
+      {% if product.status != product.Status.SOLD %}
+        <div class="min-w-0 flex-1 sm:w-56 sm:flex-none">{% include "products/partials/status_form.html" with next=request.get_full_path %}</div>
+        <a href="{% url 'trades:complete' product.pk %}?buyer={{ room.buyer_id }}" class="btn btn-secondary shrink-0">
+          {% include "components/icon.html" with name="check" class="h-4 w-4" %}거래완료
+        </a>
+      {% elif traded_here %}
+        <a href="{% url 'trades:review_create' product.pk %}" class="btn btn-secondary btn-sm">{% include "components/icon.html" with name="star" class="h-4 w-4" %}후기 보내기</a>
+      {% endif %}
+    </div>
+  {% elif traded_here %}
+    <div class="chat-product-actions">
+      <a href="{% url 'trades:review_create' product.pk %}" class="btn btn-secondary btn-sm">{% include "components/icon.html" with name="star" class="h-4 w-4" %}후기 보내기</a>
+    </div>
+  {% endif %}
+</div>

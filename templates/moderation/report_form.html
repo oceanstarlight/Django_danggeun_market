@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% comment "usage" %}
+신고 전용 페이지 (moderation:report_product / report_user 를 HTMX 없이 열었을 때)
+컨텍스트: form · target_label · back_url · action_url · product · reported_user
+{% endcomment %}
+{% block title %}신고하기{% endblock %}
+
+{% block content %}
+<div class="container-page py-6 md:py-10">
+  <div class="mx-auto w-full max-w-lg">
+    <a href="{{ back_url }}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900">
+      {% include "components/icon.html" with name="chevron-left" class="h-4 w-4" %}돌아가기
+    </a>
+    <h1 class="page-title mt-2">{% if product %}상품 신고하기{% else %}사용자 신고하기{% endif %}</h1>
+    <p class="muted mt-1 text-[15px]">안전한 거래를 위해 알려 주셔서 고마워요.</p>
+    <div class="card card-body mt-6 md:p-6">
+      {% include "moderation/partials/report_form.html" with standalone=True %}
+    </div>
+  </div>
+</div>
+{% endblock %}

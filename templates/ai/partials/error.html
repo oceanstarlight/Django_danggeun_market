@@ -1,0 +1,17 @@
+{% load static %}{% comment %}
+AI 기능 실패 안내 (모든 AI partial 공용). 기능이 실패해도 화면/폼은 그대로 쓸 수 있어요.
+컨텍스트: title · message(사용자용 문구) · hint(선택)
+{% endcomment %}
+<div class="alert alert-warning" role="alert" data-ai-error>
+  {% include "components/icon.html" with name="alert" %}
+  <div class="min-w-0 flex-1">
+    <p class="alert-title">{{ title|default:"AI 도우미가 잠시 쉬고 있어요" }}</p>
+    <p>{{ message|default:"잠시 후 다시 시도해 주세요." }}</p>
+    {% if hint %}<p class="mt-1 text-[13px] opacity-80">{{ hint }}</p>{% endif %}
+  </div>
+  <button type="button" class="btn btn-ghost btn-icon btn-sm -mr-1 -mt-1 shrink-0" data-ai-dismiss aria-label="닫기">
+    {% include "components/icon.html" with name="x" class="h-4 w-4" %}
+  </button>
+</div>
+{# 채팅방처럼 ai.js 가 없는 화면에서도 닫기 버튼이 동작하도록 (중복 실행은 ai.js 가 막아요) #}
+<script src="{% static 'js/ai.js' %}"></script>

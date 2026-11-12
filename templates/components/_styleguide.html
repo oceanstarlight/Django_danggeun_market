@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% comment "usage" %}
+디자인 시스템 스타일가이드 (시각 QA 전용, 개발 환경에서만 URL 연결)
+  path("styleguide/", TemplateView.as_view(template_name="components/_styleguide.html"))
+선택 컨텍스트: sample_products(Product 목록) — 있으면 실제 product_card include도 렌더해요.
+{% endcomment %}
+{% load static poly_tags %}
+{% block title %}스타일가이드{% endblock %}
+
+{% block content %}
+<div class="container-page space-y-14 py-10">
+  <header>
+    <span class="badge badge-neutral">Design System</span>
+    <h1 class="page-title mt-3">폴리마켓 스타일가이드</h1>
+    <p class="muted mt-2">컴포넌트 클래스를 한눈에 확인해요. 클래스 이름은 refactor_spec 6절이 기준이에요.</p>
+  </header>
+
+  {# ───── 컬러 ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">컬러</h2>
+    <div class="grid grid-cols-5 gap-2 sm:grid-cols-10">
+      <div class="h-14 rounded-md bg-brand-50 ring-1 ring-inset ring-black/5"></div>
+      <div class="h-14 rounded-md bg-brand-100"></div>
+      <div class="h-14 rounded-md bg-brand-200"></div>
+      <div class="h-14 rounded-md bg-brand-300"></div>
+      <div class="h-14 rounded-md bg-brand-400"></div>
+      <div class="h-14 rounded-md bg-brand-500"></div>
+      <div class="h-14 rounded-md bg-brand-600"></div>
+      <div class="h-14 rounded-md bg-brand-700"></div>
+      <div class="h-14 rounded-md bg-brand-800"></div>
+      <div class="h-14 rounded-md bg-brand-900"></div>
+      <div class="h-14 rounded-md bg-neutral-50 ring-1 ring-inset ring-black/5"></div>
+      <div class="h-14 rounded-md bg-neutral-100"></div>
+      <div class="h-14 rounded-md bg-neutral-200"></div>
+      <div class="h-14 rounded-md bg-neutral-300"></div>
+      <div class="h-14 rounded-md bg-neutral-400"></div>
+      <div class="h-14 rounded-md bg-neutral-500"></div>
+      <div class="h-14 rounded-md bg-neutral-600"></div>
+      <div class="h-14 rounded-md bg-neutral-700"></div>
+      <div class="h-14 rounded-md bg-neutral-800"></div>
+      <div class="h-14 rounded-md bg-neutral-900"></div>
+    </div>
+    <div class="flex flex-wrap gap-2 text-xs font-semibold">
+      <span class="rounded-sm bg-success-soft px-2 py-1 text-success">success</span>
+      <span class="rounded-sm bg-warning-soft px-2 py-1 text-warning">warning</span>
+      <span class="rounded-sm bg-danger-soft px-2 py-1 text-danger">danger</span>
+      <span class="rounded-sm bg-info-soft px-2 py-1 text-info">info</span>
+      <span class="rounded-sm bg-violet-50 px-2 py-1 text-violet-700">AI violet</span>
+    </div>
+  </section>
+
+  {# ───── 타이포 ───── #}
+  <section class="space-y-3">
+    <h2 class="section-title">타이포그래피</h2>
+    <p class="text-display">우리 동네 중고거래, 폴리마켓</p>
+    <p class="text-h1">h1 · 오늘의 추천 상품이에요</p>
+    <p class="text-h2">h2 · 내 근처 최신 상품</p>
+    <p class="text-h3">h3 · 판매자 정보</p>
+    <p class="text-body-lg">body-lg · 상품 설명은 줄간격을 넉넉하게 두어 읽기 편해요.</p>
+    <p class="text-body">body · 기본 본문은 15px, 줄간격 24px이에요.</p>
+    <p class="text-caption muted">caption · 역삼동 · 3분 전</p>
+    <p class="price">15,000원</p>
+    <p><a href="#" class="link">텍스트 링크</a></p>
+  </section>
+
+  {# ───── 버튼 ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">버튼</h2>
+    <div class="flex flex-wrap items-center gap-2">
+      <button class="btn btn-primary">채팅하기</button>
+      <button class="btn btn-secondary">수정하기</button>
+      <button class="btn btn-ghost">취소</button>
+      <button class="btn btn-danger">삭제하기</button>
+      <button class="btn btn-ai">{% include "components/icon.html" with name="sparkles" %}AI로 작성하기</button>
+      <button class="btn btn-primary" disabled>비활성</button>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <button class="btn btn-primary btn-sm">{% include "components/icon.html" with name="plus" %}작게</button>
+      <button class="btn btn-secondary">기본</button>
+      <button class="btn btn-primary btn-lg">{% include "components/icon.html" with name="chat" %}크게</button>
+      <button class="btn btn-secondary btn-icon" aria-label="찜하기">{% include "components/icon.html" with name="heart" %}</button>
+      <button class="btn btn-primary"><span class="spinner"></span>저장 중이에요</button>
+    </div>
+    <div class="max-w-sm"><button class="btn btn-primary btn-lg btn-block">가입하기</button></div>
+  </section>
+
+  {# ───── 폼 ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">폼</h2>
+    <form class="card card-body grid max-w-2xl gap-5 md:grid-cols-2" onsubmit="return false">
+      <div class="field">
+        <label class="label" for="sg-title">제목</label>
+        <input id="sg-title" class="input" placeholder="글 제목을 입력해 주세요">
+        <p class="help">상품명과 브랜드를 넣으면 검색이 잘 돼요.</p>
+      </div>
+      <div class="field">
+        <label class="label" for="sg-price">가격</label>
+        <div class="input-affix"><input id="sg-price" class="input" inputmode="numeric" placeholder="0"><span class="input-suffix">원</span></div>
+      </div>
+      <div class="field">
+        <label class="label" for="sg-cat">카테고리</label>
+        <select id="sg-cat" class="select"><option>디지털기기</option><option>생활가전</option></select>
+      </div>
+      <div class="field field-has-error">
+        <label class="label" for="sg-nick">닉네임</label>
+        <input id="sg-nick" class="input" value="폴리" aria-invalid="true">
+        <p class="field-error">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>이미 사용 중인 닉네임이에요.</span></p>
+      </div>
+      <div class="field md:col-span-2">
+        <label class="label" for="sg-content">자세한 설명</label>
+        <textarea id="sg-content" class="textarea" data-autoresize placeholder="상품 상태, 구매 시기 등을 적어 주세요"></textarea>
+      </div>
+      <div class="field">
+        <label class="label" for="sg-file">사진</label>
+        <input id="sg-file" type="file" class="input" accept="image/*" multiple data-preview-target="#sg-preview" data-preview-max="10">
+        <div id="sg-preview" class="mt-3" hidden></div>
+      </div>
+      <div class="field flex flex-col justify-end gap-3">
+        <label class="inline-flex items-center gap-2.5 text-[15px]"><input type="checkbox" class="checkbox" checked> 가격 제안 받기</label>
+        <label class="inline-flex items-center gap-2.5 text-[15px]"><input type="radio" name="sg-r" class="radio" checked> 직거래</label>
+      </div>
+    </form>
+  </section>
+
+  {# ───── 배지/칩/탭 ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">배지 · 칩 · 탭</h2>
+    <div class="flex flex-wrap gap-2">
+      <span class="badge badge-selling">판매중</span>
+      <span class="badge badge-reserved">예약중</span>
+      <span class="badge badge-sold">거래완료</span>
+      <span class="badge badge-neutral">나눔</span>
+      <span class="badge badge-ai">{% include "components/icon.html" with name="sparkles" %}AI 추천</span>
+      {% include "components/status_badge.html" with status="RESERVED" label="예약중 (include)" %}
+    </div>
+    <div class="chip-row">
+      <a href="#" class="chip chip-active">전체</a>
+      <a href="#" class="chip"><span aria-hidden="true">📱</span>디지털기기</a>
+      <a href="#" class="chip"><span aria-hidden="true">🛋️</span>가구/인테리어</a>
+      <a href="#" class="chip"><span aria-hidden="true">📚</span>도서</a>
+      <button class="chip">{% include "components/icon.html" with name="filter" %}필터</button>
+    </div>
+    <div class="tab-list">
+      <a href="#" class="tab tab-active">판매중 <span class="tab-count">12</span></a>
+      <a href="#" class="tab">거래완료 <span class="tab-count">3</span></a>
+      <a href="#" class="tab">구매내역</a>
+      <a href="#" class="tab">찜</a>
+      <a href="#" class="tab">받은 후기</a>
+    </div>
+  </section>
+
+  {# ───── 카드/상품 그리드 ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">상품 카드</h2>
+    <div class="product-grid">
+      {% for p in "123456"|make_list %}
+      <a href="#" class="product-card">
+        <div class="product-card-media">
+          <img src="{% static 'img/placeholder.svg' %}" alt="" class="product-card-img">
+          {% if p == "2" %}<span class="badge badge-reserved product-card-badge">예약중</span>{% endif %}
+          {% if p == "3" %}<div class="product-card-sold"></div><span class="badge badge-sold product-card-badge">거래완료</span>{% endif %}
+        </div>
+        <div class="product-card-body">
+          <h3 class="product-card-title">{% if p == "1" %}아이패드 에어 5세대 64GB 스페이스그레이 풀박스{% else %}원목 2인 식탁 세트{% endif %}</h3>
+          <p class="product-card-price">{% if p == "4" %}나눔{% else %}{{ 15000|price }}{% endif %}</p>
+          <div class="product-card-meta">
+            <span class="truncate">역삼동 · 3분 전</span>
+            <span class="product-card-stats"><span>{% include "components/icon.html" with name="chat" %}2</span><span>{% include "components/icon.html" with name="heart" %}5</span></span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% if sample_products %}
+      <div class="product-grid">{% for product in sample_products %}{% include "components/product_card.html" %}{% endfor %}</div>
+    {% endif %}
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="card card-body">
+        <h3 class="text-h3">기본 카드</h3>
+        <p class="muted mt-1 text-sm">1px 보더로 면을 나눠요. 그림자는 쓰지 않아요.</p>
+        <hr class="divider my-4">
+        <div class="flex items-center gap-3">
+          <span class="avatar avatar-sm">폴</span><span class="avatar">리</span><span class="avatar avatar-lg">마</span>
+          <div class="ml-auto">{% include "components/manner_temp.html" with temperature=42.3 %}</div>
+        </div>
+      </div>
+      <a href="#" class="card card-body card-interactive block">
+        <h3 class="text-h3">인터랙티브 카드</h3>
+        <p class="muted mt-1 text-sm">마우스를 올리면 보더와 그림자가 살짝 진해져요.</p>
+        <div class="mt-4 flex gap-4">{% include "components/manner_temp.html" with temperature=28 compact=True %}{% include "components/manner_temp.html" with temperature=36.5 compact=True %}{% include "components/manner_temp.html" with temperature=55 compact=True %}{% include "components/manner_temp.html" with temperature=72 compact=True %}</div>
+      </a>
+    </div>
+  </section>
+
+  {# ───── 알림 상자 ───── #}
+  <section class="space-y-3">
+    <h2 class="section-title">알림 상자</h2>
+    <div class="alert alert-info">{% include "components/icon.html" with name="info" %}<div><p class="alert-title">안전하게 거래해요</p><p>직거래는 사람이 많은 곳에서 해 주세요.</p></div></div>
+    <div class="alert alert-success">{% include "components/icon.html" with name="check" %}<p>상품을 등록했어요.</p></div>
+    <div class="alert alert-warning">{% include "components/icon.html" with name="alert" %}<p>사진을 1장 이상 올려 주세요.</p></div>
+    <div class="alert alert-danger alert-accent">{% include "components/icon.html" with name="alert" %}<div><p class="alert-title">의심 신호가 감지됐어요</p><p>선입금 요구나 외부 메신저 유도가 있는지 확인해 주세요.</p></div></div>
+  </section>
+
+  {# ───── 스켈레톤 / AI 카드 ───── #}
+  <section class="grid gap-6 md:grid-cols-2">
+    <div class="space-y-3">
+      <h2 class="section-title">스켈레톤</h2>
+      <div class="grid grid-cols-3 gap-3">
+        {% for i in "123"|make_list %}<div><span class="skeleton aspect-square w-full"></span><span class="skeleton skeleton-text mt-2.5 w-4/5"></span><span class="skeleton skeleton-text mt-2 w-1/2"></span></div>{% endfor %}
+      </div>
+    </div>
+    <div class="space-y-3">
+      <h2 class="section-title">AI 카드</h2>
+      <div class="ai-card">
+        <div class="ai-card-header">{% include "components/icon.html" with name="sparkles" %}AI가 작성한 초안이에요</div>
+        <p class="text-[15px] font-semibold text-neutral-900">아이패드 에어 5세대 64GB 팝니다</p>
+        <p class="mt-1 text-sm leading-6 text-neutral-700">생활 기스 거의 없고 배터리 효율 좋아요. 정품 케이블 함께 드려요.</p>
+        <div class="ai-card-actions">
+          <button class="btn btn-ai btn-sm">{% include "components/icon.html" with name="check" %}적용하기</button>
+          <button class="btn btn-ghost btn-sm">{% include "components/icon.html" with name="refresh" %}다시 생성</button>
+          <button class="btn btn-ghost btn-sm">닫기</button>
+        </div>
+      </div>
+      <div class="ai-card" aria-busy="true">
+        <div class="ai-card-header"><span class="spinner"></span>AI가 작성 중이에요</div>
+        <span class="skeleton skeleton-text w-2/3"></span><span class="skeleton skeleton-text mt-2 w-full"></span>
+      </div>
+    </div>
+  </section>
+
+  {# ───── 채팅 말풍선 ───── #}
+  <section class="space-y-3">
+    <h2 class="section-title">채팅 말풍선</h2>
+    <div class="card card-body max-w-md space-y-2">
+      <div class="flex items-end gap-1.5"><p class="bubble bubble-other">안녕하세요! 아직 판매 중인가요?</p><span class="bubble-meta">오후 2:10</span></div>
+      <div class="flex flex-row-reverse items-end gap-1.5"><p class="bubble bubble-me">네 판매 중이에요 😊</p><span class="bubble-meta text-right">읽음<br>오후 2:11</span></div>
+    </div>
+  </section>
+
+  {# ───── 드롭다운 / 모달 / 토스트 ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">드롭다운 · 모달 · 토스트</h2>
+    <div class="flex flex-wrap items-start gap-2">
+      <div class="relative" data-dropdown>
+        <button type="button" class="btn btn-secondary" data-dropdown-toggle aria-haspopup="true" aria-expanded="false">{% include "components/icon.html" with name="more" %}더보기</button>
+        <div class="dropdown left-0 right-auto" data-dropdown-menu hidden>
+          <a href="#" class="dropdown-item">{% include "components/icon.html" with name="pencil" %}수정하기</a>
+          <a href="#" class="dropdown-item">{% include "components/icon.html" with name="flag" %}신고하기</a>
+          <div class="dropdown-divider"></div>
+          <button type="button" class="dropdown-item dropdown-item-danger" data-confirm="정말 삭제할까요?">{% include "components/icon.html" with name="trash" %}삭제하기</button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-secondary" data-modal-open="sg-modal">모달 열기</button>
+      <button type="button" class="btn btn-secondary" onclick="Poly.toast('찜 목록에 추가했어요', 'success')">토스트 (성공)</button>
+      <button type="button" class="btn btn-secondary" onclick="Poly.toast('잠시 후 다시 시도해 주세요', 'danger')">토스트 (오류)</button>
+    </div>
+    {% include "components/modal.html" with id="sg-modal" title="거래 상대를 골라 주세요" body="채팅한 이웃 중에서 구매자를 선택하면 거래가 완료돼요." %}
+  </section>
+
+  {# ───── 빈 상태 / 페이지네이션 / 아이콘 ───── #}
+  <section class="grid gap-6 md:grid-cols-2">
+    <div class="card">
+      {% include "components/empty_state.html" with title="아직 찜한 상품이 없어요" description="마음에 드는 상품의 하트를 눌러 모아 보세요." cta_url="#" cta_label="상품 둘러보기" %}
+    </div>
+    <div class="card card-body">
+      <h2 class="section-title mb-4">아이콘</h2>
+      <div class="grid grid-cols-6 gap-3 text-neutral-700 sm:grid-cols-8">
+        {% include "components/icon.html" with name="search" class="h-6 w-6" label="search" %}
+        {% include "components/icon.html" with name="bell" class="h-6 w-6" label="bell" %}
+        {% include "components/icon.html" with name="chat" class="h-6 w-6" label="chat" %}
+        {% include "components/icon.html" with name="heart" class="h-6 w-6" label="heart" %}
+        {% include "components/icon.html" with name="heart-fill" class="h-6 w-6 text-red-500" label="heart-fill" %}
+        {% include "components/icon.html" with name="plus" class="h-6 w-6" label="plus" %}
+        {% include "components/icon.html" with name="user" class="h-6 w-6" label="user" %}
+        {% include "components/icon.html" with name="home" class="h-6 w-6" label="home" %}
+        {% include "components/icon.html" with name="grid" class="h-6 w-6" label="grid" %}
+        {% include "components/icon.html" with name="sparkles" class="h-6 w-6 text-violet-600" label="sparkles" %}
+        {% include "components/icon.html" with name="alert" class="h-6 w-6" label="alert" %}
+        {% include "components/icon.html" with name="x" class="h-6 w-6" label="x" %}
+        {% include "components/icon.html" with name="check" class="h-6 w-6" label="check" %}
+        {% include "components/icon.html" with name="check-double" class="h-6 w-6" label="check-double" %}
+        {% include "components/icon.html" with name="chevron-left" class="h-6 w-6" label="chevron-left" %}
+        {% include "components/icon.html" with name="chevron-right" class="h-6 w-6" label="chevron-right" %}
+        {% include "components/icon.html" with name="camera" class="h-6 w-6" label="camera" %}
+        {% include "components/icon.html" with name="flag" class="h-6 w-6" label="flag" %}
+        {% include "components/icon.html" with name="ban" class="h-6 w-6" label="ban" %}
+        {% include "components/icon.html" with name="star" class="h-6 w-6" label="star" %}
+        {% include "components/icon.html" with name="star-fill" class="h-6 w-6 text-amber-400" label="star-fill" %}
+        {% include "components/icon.html" with name="menu" class="h-6 w-6" label="menu" %}
+        {% include "components/icon.html" with name="more" class="h-6 w-6" label="more" %}
+        {% include "components/icon.html" with name="map-pin" class="h-6 w-6" label="map-pin" %}
+        {% include "components/icon.html" with name="eye" class="h-6 w-6" label="eye" %}
+        {% include "components/icon.html" with name="clock" class="h-6 w-6" label="clock" %}
+        {% include "components/icon.html" with name="send" class="h-6 w-6" label="send" %}
+        {% include "components/icon.html" with name="logout" class="h-6 w-6" label="logout" %}
+        {% include "components/icon.html" with name="settings" class="h-6 w-6" label="settings" %}
+        {% include "components/icon.html" with name="arrow-left" class="h-6 w-6" label="arrow-left" %}
+        {% include "components/icon.html" with name="trash" class="h-6 w-6" label="trash" %}
+        {% include "components/icon.html" with name="pencil" class="h-6 w-6" label="pencil" %}
+        {% include "components/icon.html" with name="image" class="h-6 w-6" label="image" %}
+        {% include "components/icon.html" with name="refresh" class="h-6 w-6" label="refresh" %}
+        {% include "components/icon.html" with name="info" class="h-6 w-6" label="info" %}
+        {% include "components/icon.html" with name="filter" class="h-6 w-6" label="filter" %}
+        {% include "components/icon.html" with name="share" class="h-6 w-6" label="share" %}
+        {% include "components/icon.html" with name="tag" class="h-6 w-6" label="tag" %}
+        {% include "components/icon.html" with name="external" class="h-6 w-6" label="external" %}
+      </div>
+      <nav class="pagination mt-8" aria-label="페이지네이션 예시">
+        <span class="page-link" aria-disabled="true">{% include "components/icon.html" with name="chevron-left" %}</span>
+        <span class="page-link" aria-current="page">1</span><a href="#" class="page-link">2</a><a href="#" class="page-link">3</a>
+        <span class="page-link" aria-hidden="true">…</span><a href="#" class="page-link">12</a>
+        <a href="#" class="page-link" aria-label="다음">{% include "components/icon.html" with name="chevron-right" %}</a>
+      </nav>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block bottom_cta %}<div class="bottom-cta-inner">
+  <button type="button" class="btn btn-ghost btn-icon" aria-label="찜하기">{% include "components/icon.html" with name="heart" %}</button>
+  <div class="min-w-0 flex-1 border-l border-neutral-200 pl-3"><p class="price text-lg">15,000원</p><p class="text-xs text-brand-700">가격 제안 가능</p></div>
+  <button type="button" class="btn btn-primary btn-lg">채팅하기</button>
+</div>{% endblock %}

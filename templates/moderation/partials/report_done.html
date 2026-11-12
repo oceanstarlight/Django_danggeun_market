@@ -1,0 +1,12 @@
+{% comment "usage" %}
+신고 접수 완료 (HTMX 신고 성공 시 #report-form-root 를 교체)
+컨텍스트: back_url
+{% endcomment %}
+<div id="report-form-root" class="py-4 text-center" role="status">
+  <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+    {% include "components/icon.html" with name="check" class="h-7 w-7" stroke="2.25" %}
+  </span>
+  <p class="mt-4 text-h3 text-neutral-900">신고를 접수했어요</p>
+  <p class="muted mx-auto mt-1 max-w-xs text-sm leading-[22px]">운영팀이 꼼꼼히 확인하고 조치할게요.<br>알려 주셔서 고마워요.</p>
+  <button type="button" class="btn btn-primary btn-block mt-6" data-modal-close>확인</button>
+</div>

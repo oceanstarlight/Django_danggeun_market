@@ -1,0 +1,57 @@
+{% comment "usage" %}
+신고 폼 조각 — 모달(HTMX)과 전용 페이지(moderation/report_form.html)에서 함께 써요.
+  모달로 열기:
+    <button type="button" data-modal-open="report-modal" hx-get="{% url 'moderation:report_product' product.pk %}" hx-target="#report-modal-body">신고하기</button>
+    {% include "components/modal.html" with id="report-modal" title="신고하기" body_template="moderation/partials/report_loading.html" %}
+  링크로 열기: <a href="{% url 'moderation:report_product' product.pk %}">신고하기</a>
+컨텍스트: form(ReportForm) · action_url · target_label · back_url · standalone(True면 일반 POST, 아니면 hx-post)
+{% endcomment %}
+<div id="report-form-root">
+  <form method="post" action="{{ action_url }}" class="form-stack"{% if not standalone %} hx-post="{{ action_url }}" hx-target="#report-form-root" hx-swap="outerHTML"{% endif %} novalidate>
+    {% csrf_token %}
+
+    <div class="flex items-center gap-2 rounded-md bg-neutral-50 px-3.5 py-3 text-sm">
+      {% include "components/icon.html" with name="flag" class="h-4 w-4 shrink-0 text-neutral-500" %}
+      <span class="shrink-0 text-neutral-500">신고 대상</span>
+      <strong class="min-w-0 truncate font-semibold text-neutral-900">{{ target_label }}</strong>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-warning" role="alert">
+        {% include "components/icon.html" with name="alert" %}
+        <div>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+      </div>
+    {% endif %}
+
+    <fieldset class="field{% if form.reason.errors %} field-has-error{% endif %}">
+      <legend class="label">{{ form.reason.label }}</legend>
+      <div class="grid gap-2">
+        {% for choice in form.reason %}
+          <label for="{{ choice.id_for_label }}" class="flex cursor-pointer items-start gap-3 rounded-md border border-neutral-200 px-3.5 py-3 hover:bg-neutral-50 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+            <input type="radio" class="radio mt-0.5" name="{{ form.reason.html_name }}" value="{{ choice.data.value }}" id="{{ choice.id_for_label }}"{% if choice.data.selected %} checked{% endif %}>
+            <span class="min-w-0">
+              <span class="block text-[15px] font-medium text-neutral-900">{{ choice.choice_label }}</span>
+              <span class="mt-0.5 block text-[13px] leading-[18px] text-neutral-500">{% with v=choice.data.value %}{% if v == "FRAUD" %}선입금 요구, 가품 판매, 외부 메신저 유도 등{% elif v == "PROHIBITED" %}주류, 의약품, 개인정보 등 거래할 수 없는 물건{% elif v == "ABUSE" %}욕설, 비하, 불쾌한 언행{% elif v == "SPAM" %}같은 글 반복, 광고, 외부 링크 홍보{% else %}그 밖의 문제가 있어요{% endif %}{% endwith %}</span>
+            </span>
+          </label>
+        {% endfor %}
+      </div>
+      {% for error in form.reason.errors %}<p class="field-error" role="alert">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>{{ error }}</span></p>{% endfor %}
+    </fieldset>
+
+    {% include "components/form_field.html" with field=form.detail %}
+
+    <p class="help -mt-2">신고한 내용은 상대방에게 알리지 않아요. 허위 신고는 이용이 제한될 수 있어요.</p>
+
+    <div class="flex gap-2">
+      {% if standalone %}
+        <a href="{{ back_url }}" class="btn btn-secondary flex-1">취소</a>
+      {% else %}
+        <button type="button" class="btn btn-secondary flex-1" data-modal-close>취소</button>
+      {% endif %}
+      <button type="submit" class="btn btn-primary flex-1">
+        <span class="spinner show-on-request" aria-hidden="true"></span>신고하기
+      </button>
+    </div>
+  </form>
+</div>

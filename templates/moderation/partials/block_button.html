@@ -1,0 +1,15 @@
+{% comment "usage" %}
+차단/차단 해제 버튼 (HTMX: 자기 자신을 교체, JS 없으면 일반 POST 후 next 로 이동)
+  {% include "moderation/partials/block_button.html" with target=other_user is_blocked=False next=request.get_full_path %}
+파라미터: target(User) · is_blocked(내가 차단 중인지) · next(선택) · class(버튼 추가 클래스, 선택)
+{% endcomment %}{% load poly_tags %}
+<form method="post" action="{% url 'moderation:block_toggle' target.username %}" class="inline-flex"
+      hx-post="{% url 'moderation:block_toggle' target.username %}" hx-target="this" hx-swap="outerHTML"{% if not is_blocked %} hx-confirm="{{ target|display_name }}님을 차단할까요? 서로의 상품과 채팅이 보이지 않게 돼요."{% endif %}>
+  {% csrf_token %}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  {% if is_blocked %}
+    <button type="submit" class="btn btn-secondary btn-sm{% if class %} {{ class }}{% endif %}">차단 해제</button>
+  {% else %}
+    <button type="submit" class="btn btn-ghost btn-sm text-red-700 hover:bg-red-50 hover:text-red-800{% if class %} {{ class }}{% endif %}">{% include "components/icon.html" with name="ban" %}차단하기</button>
+  {% endif %}
+</form>
