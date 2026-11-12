@@ -1,11 +1,13 @@
 import shutil
 import tempfile
 from datetime import datetime, timedelta
+from io import StringIO
 from pathlib import Path
 
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.template import Context, Template
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
@@ -314,3 +316,37 @@ class BaseLayoutTests(TestCase):
         response = self.client.get(reverse("core:home"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "noprofile")
+
+
+class SeedDemoCommandTests(TestCase):
+    """seed_demo: 데모 데이터 생성/재생성 + 운영 환경 거부."""
+
+    def setUp(self):
+        self.media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.media, ignore_errors=True)
+
+    def test_seed_creates_demo_data(self):
+        from apps.ai.models import FraudAnalysis
+        from apps.chat.models import ChatMessage
+        from apps.products.models import Product
+        from apps.trades.models import Review
+
+        with self.settings(DEBUG=True, MEDIA_ROOT=self.media, USE_SUPABASE_STORAGE=False):
+            call_command("seed_demo", stdout=StringIO())
+            self.assertEqual(Product.objects.filter(seller__username__startswith="demo_").count(), 24)
+            self.assertEqual(Product.objects.filter(status=Product.Status.SOLD).count(), 2)
+            self.assertGreaterEqual(Review.objects.count(), 3)
+            self.assertTrue(ChatMessage.objects.filter(content__contains="130만원에 가능할까요").exists())
+            scam = Product.objects.get(seller__username="demo_quick")
+            self.assertEqual(scam.fraud_analysis.risk_level, FraudAnalysis.RiskLevel.HIGH)
+            self.assertTrue(scam.images.exists())
+            # 두 번째 실행은 건너뛰고, --reset 이면 다시 만든다
+            call_command("seed_demo", stdout=StringIO())
+            self.assertEqual(Product.objects.filter(seller__username__startswith="demo_").count(), 24)
+            call_command("seed_demo", "--reset", stdout=StringIO())
+            self.assertEqual(Product.objects.filter(seller__username__startswith="demo_").count(), 24)
+
+    def test_refuses_without_debug(self):
+        with self.settings(DEBUG=False):
+            with self.assertRaises(CommandError):
+                call_command("seed_demo")

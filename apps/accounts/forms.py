@@ -7,6 +7,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.urls import reverse_lazy
+from django.utils.choices import BaseChoiceIterator
 
 from apps.core.forms import StyledFormMixin
 from apps.core.storage import StorageError, validate_image
@@ -57,16 +58,30 @@ class RegionChoiceField(forms.ModelChoiceField):
         kwargs.setdefault("error_messages", {"required": "동네를 선택해 주세요.", "invalid_choice": "목록에서 동네를 골라 주세요."})
         super().__init__(**kwargs)
 
-    def _get_choices(self):
-        # 렌더링 시점에만 조회 (쿼리 1번)
+    def grouped_choices(self):
+        # 실제 렌더링 시점에만 조회 (쿼리 1번)
         groups: dict[str, list] = {}
         for region in self.queryset:
             groups.setdefault(region.sido, []).append((region.pk, f"{region.sigungu} {region.dong}"))
-        choices = [("", self.empty_label)] if self.empty_label is not None else []
-        choices.extend((label, options) for label, options in groups.items())
-        return choices
+        if self.empty_label is not None:
+            yield ("", self.empty_label)
+        yield from groups.items()
+
+    def _get_choices(self):
+        # 지연 iterable 반환 — 클래스 정의/폼 생성 시 DB를 건드리지 않게 (migrate 전에도 import 가능)
+        return _LazyGroupedChoices(self)
 
     choices = property(_get_choices, forms.ChoiceField.choices.fset)
+
+
+class _LazyGroupedChoices(BaseChoiceIterator):
+    """순회할 때마다 RegionChoiceField.grouped_choices()를 새로 계산한다."""
+
+    def __init__(self, field):
+        self.field = field
+
+    def __iter__(self):
+        return iter(list(self.field.grouped_choices()))
 
 
 def _check_attrs(field_name: str, **extra):

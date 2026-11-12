@@ -27,7 +27,14 @@ def rooms_for_user(user, filter_key="all"):
         ChatRoom.objects.filter(Q(seller=user) | Q(buyer=user))
         .filter(Q(last_message_at__isnull=False) | Q(buyer=user))
         .select_related(
-            "product", "product__region", "seller", "seller__profile", "buyer", "buyer__profile"
+            "product",
+            "product__region",
+            "seller",
+            "seller__profile",
+            "seller__profile__region",
+            "buyer",
+            "buyer__profile",
+            "buyer__profile__region",
         )
         .prefetch_related(_images_prefetch())
         .annotate(

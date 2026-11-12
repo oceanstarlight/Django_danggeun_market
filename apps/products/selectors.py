@@ -95,8 +95,13 @@ def category_by_slug(slug):
 
 
 def popular_products(user, limit=10):
-    """인기 상품 TOP (판매중, 찜·채팅·조회 순)."""
-    qs = with_card_data(visible_products(user).filter(status=Product.Status.SELLING))
+    """인기 상품 TOP (판매중, 찜·채팅·조회 순). 사기 위험 '높음' 상품은 추천에서 뺀다."""
+    qs = (
+        visible_products(user)
+        .filter(status=Product.Status.SELLING)
+        .exclude(fraud_analysis__risk_level="HIGH")
+    )
+    qs = with_card_data(qs)
     return list(qs.order_by(*SORT_ORDERINGS["popular"])[:limit])
 
 

@@ -6,7 +6,7 @@
   <div class="min-w-0 flex-1">
     <p class="flex items-center gap-1.5 text-[13px] leading-[18px] text-neutral-500">
       <span class="truncate text-[15px] font-semibold text-neutral-900">{{ partner|display_name }}</span>
-      {% if product.region %}<span class="shrink-0">{{ product.region.dong }}</span>{% endif %}
+      {% with partner_region=partner.profile.region %}{% if partner_region %}<span class="shrink-0">{{ partner_region.dong }}</span>{% elif product.region %}<span class="shrink-0">{{ product.region.dong }}</span>{% endif %}{% endwith %}
       {% if room.last_message_at %}<span aria-hidden="true">·</span><time class="shrink-0" datetime="{{ room.last_message_at|date:'c' }}">{{ room.last_message_at|timeago }}</time>{% endif %}
     </p>
     <p class="mt-0.5 truncate text-sm{% if room.unread %} font-medium text-neutral-900{% else %} text-neutral-600{% endif %}">

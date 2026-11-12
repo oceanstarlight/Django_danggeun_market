@@ -10,6 +10,11 @@
 
 /* ───────────────────────── 기본(base) ───────────────────────── */
 @layer base {
+  /* fieldset 기본 min-width:min-content 때문에 긴 내용이 모바일 가로 스크롤을 만드는 것 방지 */
+  fieldset {
+    min-width: 0;
+  }
+
   /* 디자인 토큰 (다크모드 대비 변수화) */
   :root {
     --poly-brand: 15 118 110;        /* brand-700 */
@@ -719,7 +724,7 @@ body:has(.chat-shell) > footer { display: none; }
   .ai-result { @apply rounded-md border border-violet-100 bg-white p-4 shadow-sm; }
   .ai-result .ai-card-header { @apply mb-2; }
   .ai-result-label { @apply mb-1 text-[12px] font-semibold uppercase tracking-wide text-violet-700; }
-  .ai-result-content { @apply whitespace-pre-line text-[15px] leading-7 text-neutral-800 break-keep; }
+  .ai-result-content { @apply whitespace-pre-line text-[15px] leading-6 text-neutral-800 break-keep; }
   .ai-facts { @apply grid grid-cols-2 gap-x-4 gap-y-3 text-[15px]; }
 
   /* 확신도 막대 (<progress>) */

@@ -4,11 +4,10 @@ from collections import Counter
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models import Avg, Count, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
-from django.db.models.functions import Coalesce
+from django.db.models import Avg, Count, OuterRef, Q, Subquery
 
-from apps.chat.models import ChatRoom
-from apps.products.models import Product, ProductImage, RecentView, Wishlist
+from apps.products.models import Product, RecentView, Wishlist
+from apps.products.selectors import with_card_data
 from apps.trades.models import Review
 
 from .models import Profile
@@ -50,25 +49,9 @@ def is_phone_taken(phone: str) -> bool:
 
 
 # ───────── 상품 카드용 기본 쿼리 ─────────
-def _count_subquery(model):
-    """상품별 개수 서브쿼리 (JOIN 중복 집계 없이 정확한 수)."""
-    sub = (
-        model.objects.filter(product=OuterRef("pk"))
-        .order_by()
-        .values("product")
-        .annotate(n=Count("pk"))
-        .values("n")[:1]
-    )
-    return Coalesce(Subquery(sub, output_field=IntegerField()), Value(0))
-
-
 def product_cards():
-    """product_card 컴포넌트가 N+1 없이 렌더되도록 준비한 QuerySet."""
-    return (
-        Product.objects.select_related("region", "category")
-        .prefetch_related(Prefetch("images", queryset=ProductImage.objects.order_by("order", "id")))
-        .annotate(num_wishes=_count_subquery(Wishlist), num_chats=_count_subquery(ChatRoom))
-    )
+    """product_card 컴포넌트가 N+1 없이 렌더되도록 준비한 QuerySet (products 셀렉터 재사용)."""
+    return with_card_data(Product.objects.all())
 
 
 def selling_products(user):

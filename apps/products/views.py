@@ -117,7 +117,11 @@ def home(request):
 def product_list(request):
     """목록/검색/필터/정렬. HTMX 요청이면 그리드 partial 만 돌려준다."""
     params = ProductFilterForm(request.GET).params()
-    region_value, region = selectors.resolve_region(request.user, request.GET.get("region"))
+    raw_region = request.GET.get("region")
+    if not raw_region and params["q"]:
+        # 상단 검색창(동네 선택 없음)으로 찾을 땐 전체 지역에서 보여줘요
+        raw_region = "all"
+    region_value, region = selectors.resolve_region(request.user, raw_region)
     category = selectors.category_by_slug(params["category"])
 
     queryset = selectors.search_products(

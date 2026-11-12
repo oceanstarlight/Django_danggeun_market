@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{# DEBUG=False 일 때 보이는 404 화면 #}
+{% block title %}페이지를 찾을 수 없어요{% endblock %}
+{% block content %}
+<div class="container-page max-w-xl py-16">
+  {% url 'core:home' as home_url %}
+  {% include "components/empty_state.html" with title="페이지를 찾을 수 없어요" description="주소가 바뀌었거나 삭제된 페이지예요. 홈에서 다시 찾아보세요." cta_url=home_url cta_label="홈으로 가기" %}
+</div>
+{% endblock %}

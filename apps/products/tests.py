@@ -675,3 +675,40 @@ class StatusChangeViewTests(ProductTestMixin, TestCase):
         self.client.force_login(self.buyer)
         self.assertEqual(self.client.post(self.url, {"status": Product.Status.RESERVED}).status_code, 403)
         self.assertEqual(self.client.get(self.url).status_code, 405)
+
+
+class PopularExcludesHighRiskTests(TestCase):
+    """인기 상품 TOP 에서 사기 위험 '높음' 상품은 빠진다 (통합 단계 추가)."""
+
+    def test_high_risk_excluded(self):
+        from apps.ai.models import FraudAnalysis
+
+        seller = get_user_model().objects.create_user("risk_seller", password="x-pass-1234")
+        category = Category.objects.first()
+        safe = Product.objects.create(seller=seller, category=category, title="정상 상품", content="내용", price=1000)
+        risky = Product.objects.create(seller=seller, category=category, title="의심 상품", content="내용", price=1000)
+        FraudAnalysis.objects.create(
+            product=risky, content_hash="x" * 64, risk_level="HIGH", risk_score=90, reasons=[], rule_hits=[], source="RULE"
+        )
+        popular = selectors.popular_products(None)
+        self.assertIn(safe, popular)
+        self.assertNotIn(risky, popular)
+
+
+class SearchDefaultsToAllRegionsTests(TestCase):
+    """상단 검색창(region 파라미터 없음)으로 검색하면 전체 지역에서 찾는다 (통합 단계 추가)."""
+
+    def test_query_without_region_searches_all(self):
+        mine, other = Region.objects.all()[:2]
+        buyer = get_user_model().objects.create_user("search_buyer", password="x-pass-1234")
+        Profile.objects.create(user=buyer, nickname="검색러", region=mine)
+        seller = get_user_model().objects.create_user("far_seller", password="x-pass-1234")
+        far = Product.objects.create(
+            seller=seller, category=Category.objects.first(), region=other, title="먼동네 자전거", content="내용", price=1000
+        )
+        self.client.force_login(buyer)
+        response = self.client.get(reverse("products:list"), {"q": "자전거"})
+        self.assertContains(response, far.title)
+        # 동네를 직접 고르면 그 동네만
+        response = self.client.get(reverse("products:list"), {"q": "자전거", "region": "me"})
+        self.assertNotContains(response, far.title)
