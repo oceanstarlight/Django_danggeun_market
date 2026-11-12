@@ -5,11 +5,17 @@ from django.db import models
 
 
 class Region(models.Model):
-    """동네 (시/도 · 시/군/구 · 동)."""
+    """동네 (시/도 · 시/군/구 · 읍/면/동).
 
+    전국 행정동 목록은 accounts 0004 마이그레이션이 data/regions_hangjeongdong_*.csv 에서 넣는다.
+    code 가 비어 있는 행은 예전 시드에만 있던 동네로, 아직 누군가 쓰고 있어서 남겨 둔 것이다
+    (새로 고를 때는 목록에 나오지 않는다).
+    """
+
+    code = models.CharField("행정동 코드", max_length=10, unique=True, null=True, blank=True)
     sido = models.CharField("시/도", max_length=20)
     sigungu = models.CharField("시/군/구", max_length=20)
-    dong = models.CharField("동", max_length=20)
+    dong = models.CharField("읍/면/동", max_length=20)
 
     class Meta:
         verbose_name = "동네"
