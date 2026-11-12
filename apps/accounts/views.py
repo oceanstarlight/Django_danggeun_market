@@ -22,6 +22,7 @@ from .forms import (
     ProfileForm,
     SignUpForm,
     nickname_format_error,
+    normalize_nickname,
     normalize_phone,
     username_format_error,
 )
@@ -122,7 +123,7 @@ def check_duplicate(request):
             else:
                 result = {"ok": True, "message": "사용할 수 있는 아이디예요."}
     elif "nickname" in request.GET:
-        value = request.GET["nickname"].strip()
+        value = normalize_nickname(request.GET["nickname"])
         if value:
             error = nickname_format_error(value)
             exclude = request.user.pk if request.user.is_authenticated else None

@@ -18,7 +18,8 @@ from .models import Profile, Region
 User = get_user_model()
 
 USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]{4,20}$")
-NICKNAME_RE = re.compile(r"^[가-힣a-zA-Z0-9_]{2,20}$")
+# 띄어쓰기는 가운데에만 (앞뒤 공백·연속 공백은 normalize_nickname 이 정리)
+NICKNAME_RE = re.compile(r"^[가-힣a-zA-Z0-9_](?:[가-힣a-zA-Z0-9_ ]{0,18})[가-힣a-zA-Z0-9_]$")
 PHONE_RE = re.compile(r"^01[016789]\d{7,8}$")
 
 BIO_MAX_LENGTH = 300
@@ -31,9 +32,14 @@ def username_format_error(value: str) -> str | None:
     return None
 
 
+def normalize_nickname(value: str) -> str:
+    """앞뒤 공백을 지우고 연속 공백(탭·줄바꿈 포함)을 한 칸으로 합친다."""
+    return re.sub(r"\s+", " ", value or "").strip()
+
+
 def nickname_format_error(value: str) -> str | None:
-    if not NICKNAME_RE.match(value or ""):
-        return "닉네임은 한글, 영문, 숫자, 밑줄(_)로 2~20자 입력해 주세요."
+    if not NICKNAME_RE.match(value or "") or "  " in value:
+        return "닉네임은 한글, 영문, 숫자, 밑줄(_), 띄어쓰기로 2~20자 입력해 주세요."
     return None
 
 
@@ -160,7 +166,7 @@ class SignUpForm(StyledFormMixin, UserCreationForm):
         return username
 
     def clean_nickname(self):
-        nickname = (self.cleaned_data.get("nickname") or "").strip()
+        nickname = normalize_nickname(self.cleaned_data.get("nickname"))
         error = nickname_format_error(nickname)
         if error:
             raise forms.ValidationError(error)
@@ -237,7 +243,7 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
         }
 
     def clean_nickname(self):
-        nickname = (self.cleaned_data.get("nickname") or "").strip()
+        nickname = normalize_nickname(self.cleaned_data.get("nickname"))
         error = nickname_format_error(nickname)
         if error:
             raise forms.ValidationError(error)

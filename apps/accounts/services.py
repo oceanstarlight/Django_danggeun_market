@@ -40,7 +40,9 @@ def register_user(*, username, password, nickname, name="", birth_date=None, pho
 def _unique_nickname(base: str) -> str:
     base = (base or "이웃")[:16]
     candidate, n = base, 1
-    while Profile.objects.filter(nickname__iexact=candidate).exists():
+    from .selectors import is_nickname_taken  # 순환 import 방지
+
+    while is_nickname_taken(candidate):
         n += 1
         candidate = f"{base}{n}"
     return candidate

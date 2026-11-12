@@ -195,3 +195,32 @@ class LoginLogoutTests(TestCase):
         res = self.client.post(reverse("accounts:logout"))
         self.assertRedirects(res, reverse("core:home"), fetch_redirect_response=False)
         self.assertNotIn("_auth_user_id", self.client.session)
+
+
+class NicknameSpaceTests(TestCase):
+    """닉네임 띄어쓰기 허용 + 공백 무시 중복 확인."""
+
+    def test_format_allows_inner_space(self):
+        from apps.accounts.forms import nickname_format_error, normalize_nickname
+
+        self.assertIsNone(nickname_format_error("민지 네"))
+        self.assertIsNone(nickname_format_error(normalize_nickname("  폴리   마켓  ")))
+        self.assertEqual(normalize_nickname("  폴리 \t  마켓 "), "폴리 마켓")
+        self.assertIsNotNone(nickname_format_error(" 앞공백"))
+        self.assertIsNotNone(nickname_format_error("뒤공백 "))
+        self.assertIsNotNone(nickname_format_error("두칸  공백"))
+        self.assertIsNotNone(nickname_format_error("특수!문자"))
+        self.assertIsNotNone(nickname_format_error("가"))
+
+    def test_duplicate_ignores_spaces_and_case(self):
+        from django.contrib.auth import get_user_model
+
+        from apps.accounts.models import Profile
+        from apps.accounts.selectors import is_nickname_taken
+
+        u = get_user_model().objects.create_user("spaceuser", password="Passw0rd!x")
+        Profile.objects.create(user=u, nickname="민지네 Shop")
+        self.assertTrue(is_nickname_taken("민지네shop"))
+        self.assertTrue(is_nickname_taken("민지 네 SHOP"))
+        self.assertFalse(is_nickname_taken("민지네 Shop", exclude_user_id=u.id))
+        self.assertFalse(is_nickname_taken("민지네 마켓"))
