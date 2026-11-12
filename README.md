@@ -8,8 +8,9 @@
 
 **기본 기능**
 
-- 👤 **회원**: 회원가입(HTMX 아이디·닉네임 중복 확인), 로그인/로그아웃, 마이페이지, 프로필 수정(닉네임·아바타·소개·동네), 판매자 프로필
-- 🛍️ **중고거래**: 상품 등록/수정/삭제(사진 여러 장, 최대 10장), 검색어·카테고리·동네 필터와 "거래 가능만" 보기, 정렬(최신순·인기순·낮은 가격순·높은 가격순), 판매중/예약중/거래완료 상태 변경, 최근 본 상품
+- 👤 **회원**: 회원가입(HTMX 아이디·닉네임 중복 확인, 닉네임 띄어쓰기 가능), 로그인/로그아웃, 마이페이지, 프로필 수정(닉네임·아바타·소개·동네), 판매자 프로필
+- 📍 **동네**: 전국 행정동 3,559개를 시/도 → 시/군/구 → 읍/면/동 순서로 고르는 3단 선택 (예: 강원특별자치도 → 춘천시 → 퇴계동). 가입·프로필 수정·상품 등록/수정에서 같은 컴포넌트를 쓰고, 다음 단계 목록은 HTMX로 불러옵니다
+- 🛍️ **중고거래**: 상품 등록/수정/삭제(사진 여러 장, 최대 10장), 검색어·카테고리·동네 필터(내 동네 / 시·도 전체 / 시·군·구 전체 / 읍·면·동)와 "거래 가능만" 보기, 정렬(최신순·인기순·낮은 가격순·높은 가격순), 판매중/예약중/거래완료 상태 변경, 최근 본 상품
 - ❤️ **찜**: 상품 찜하기/취소 토글
 - 💬 **실시간 채팅**: Django Channels + WebSocket 1:1 채팅, 읽음 표시, 자동 재연결(놓친 메시지 보충)
 - 🤝 **거래**: 거래완료 처리(구매자 선택), 거래 후기 작성, 후기에 따른 매너온도 반영
@@ -39,6 +40,7 @@
 6. [주요 URL](#-주요-url)
 7. [테스트](#-테스트)
 8. [배포 (Render)](#-배포-render)
+9. [데이터 출처 · 라이선스](#-데이터-출처--라이선스)
 
 <br>
 
@@ -109,7 +111,7 @@ python manage.py migrate
 python manage.py seed_demo
 ```
 
-- `migrate` 를 하면 동네(Region)와 카테고리(Category) 기본 데이터도 함께 들어갑니다.
+- `migrate` 를 하면 동네(Region, 전국 행정동 3,559개)와 카테고리(Category) 기본 데이터도 함께 들어갑니다. 동네 목록의 출처는 [데이터 출처](#-데이터-출처--라이선스)를 참고하세요.
 - `seed_demo` 는 데모 사용자·상품(사진 포함)·찜·최근 본 상품·채팅·거래 후기·신고·알림을 만듭니다. 모든 쓰기가 실제 서비스 함수를 거치므로 알림·매너온도·사기 분석도 실제 흐름과 똑같이 생깁니다.
 
 | 옵션 | 설명 |
@@ -248,6 +250,8 @@ Django_danggeun_market/
 ├── apps/
 │   ├── core/                   # 공통: 홈/헬스체크/스타일가이드, 이미지 업로드(storage.py), nav 컨텍스트, 템플릿 태그, seed_demo
 │   ├── accounts/               # 회원가입·로그인, 프로필(Profile)·동네(Region), 마이페이지, 판매자 프로필
+│   │   ├── regions.py          # 동네 3단 선택 조회(시/도·시/군/구·읍/면/동) + 컴포넌트 컨텍스트
+│   │   └── data/               # 전국 행정동 CSV (마이그레이션 0004 가 읽음)
 │   ├── products/               # 상품·사진·카테고리·찜·최근 본 상품, 목록/검색/상세/등록/상태 변경
 │   ├── chat/                   # 채팅방·메시지, WebSocket consumer, 읽음 처리
 │   ├── trades/                 # 거래완료, 거래 후기(Review), 매너온도
@@ -353,6 +357,7 @@ Django_danggeun_market/
 |---|---|---|
 | `accounts:signup` | `/accounts/signup/` | 회원가입 |
 | `accounts:check_duplicate` | `/accounts/signup/check/` | 아이디·닉네임 중복 확인 (HTMX) |
+| `accounts:region_options` | `/accounts/regions/options/` | 동네 3단 선택의 다음 단계 `<option>` 목록 (HTMX, GET, 로그인 불필요, `?level=sigungu&sido=` / `?level=dong&sido=&sigungu=`) |
 | `accounts:login` | `/accounts/login/` | 로그인 |
 | `accounts:logout` | `/accounts/logout/` | 로그아웃 (POST) |
 | `accounts:mypage` | `/accounts/me/` | 마이페이지 |
@@ -363,7 +368,7 @@ Django_danggeun_market/
 
 | 이름 | 경로 | 설명 |
 |---|---|---|
-| `products:list` | `/products/` | 상품 목록 · 검색 (`?q=&category=&region=&status=&sort=&page=`) |
+| `products:list` | `/products/` | 상품 목록 · 검색 (`?q=&category=&status=&sort=&page=`, 동네는 `region=me\|all\|<id>` 또는 `sido=&sigungu=&region=`) |
 | `products:create` | `/products/new/` | 상품 등록 |
 | `products:detail` | `/products/<pk>/` | 상품 상세 |
 | `products:update` | `/products/<pk>/edit/` | 상품 수정 (작성자) |
@@ -487,6 +492,7 @@ python manage.py migrate
 
 - 기존 회원은 그대로 로그인할 수 있고, 첫 접속 때 새 프로필이 자동으로 만들어집니다 (동네는 프로필 수정에서 설정).
 - 기존 `market_*` 테이블(옛 상품·채팅)은 지워지지 않고 남지만 새 화면에서는 쓰지 않습니다.
+- 동네 데이터(`accounts` 0003·0004)는 이미 들어가 있는 예전 시드(0002, 41개)를 지우지 않고 **이어서** 갱신합니다. 이름이 같은 동네는 그대로 두고 행정동 코드만 채우고, 목록에 없는 예전 이름(예: `성수동1가`, `부천시 중동`)은 **누군가의 프로필·상품이 쓰고 있으면 그대로 남기고**(새로 고르는 목록에는 안 보이고, 폼은 그 값이 지금 내 동네·수정 중인 상품의 동네일 때만 받음) 아무도 안 쓰면 지웁니다. 0002 까지만 적용된 SQLite·PostgreSQL DB에 예전 동네를 참조하는 프로필·상품을 만든 뒤 `migrate` 해서 참조가 유지되고 화면이 정상인지 확인했습니다.
 - 중간 버전 스키마에 데이터를 넣은 DB로 `migrate` → 페이지 렌더링 → 상품 등록 → WebSocket 채팅까지 검증했습니다.
 - Python 버전은 루트의 `.python-version`(3.13)으로 고정합니다.
 - `seed_demo` 는 운영 환경(`RENDER` 설정 또는 `DEBUG=False`)에서는 실행되지 않습니다.
@@ -500,3 +506,14 @@ Render 무료 플랜은 Shell 이 없으므로 환경 변수로 처리합니다.
 3. 완료 후 `/admin/` 에서 로그인하고, `DJANGO_SUPERUSER_PASSWORD` 는 지워 두세요.
 
 > 비밀번호가 Django 비밀번호 규칙(8자 이상, 흔한 비밀번호·숫자만 금지 등)에 맞지 않으면 빌드가 실패하고 이전 버전이 계속 실행됩니다.
+
+<br>
+
+## 📚 데이터 출처 · 라이선스
+
+동네 목록(`apps/accounts/data/regions_hangjeongdong_20261001.csv`, 2026-10-01 기준 전국 행정동 3,559개)은 아래 자료를 가공해 만들었습니다.
+
+- **통계청 통계지리정보서비스(SGIS) 행정동 경계** — [공공누리 제1유형(출처표시)](https://www.kogl.or.kr/info/licenseType1.do). 출처: 통계청 SGIS
+- **[vuski/admdongkor](https://github.com/vuski/admdongkor)** (SGIS 자료를 정리한 행정동 데이터) — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+이 저장소에서는 행정동 코드·시/도·시/군/구·읍/면/동 이름 열만 뽑았고, `수원시장안구` 같은 시/군/구 이름을 `수원시 장안구` 처럼 띄어 썼습니다. 출처 표기는 CSV 맨 위 주석에도 들어 있습니다.

@@ -1,0 +1,6 @@
+{% comment %}
+accounts:region_options 응답: 동네 3단 선택의 다음 단계 <option> 들 (HTMX 가 select 안을 통째로 바꿔요).
+컨텍스트: placeholder · options[(value, label)]
+{% endcomment %}<option value="">{{ placeholder }}</option>
+{% for value, label in options %}<option value="{{ value }}">{{ label }}</option>
+{% endfor %}

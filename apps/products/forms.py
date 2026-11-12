@@ -3,7 +3,7 @@
 from django import forms
 from django.conf import settings
 
-from apps.accounts.models import Region
+from apps.accounts.forms import RegionChoiceField
 from apps.core.forms import StyledFormMixin
 from apps.core.storage import StorageError, validate_image
 
@@ -47,6 +47,7 @@ class ProductForm(StyledFormMixin, forms.ModelForm):
         label="사진",
         help_text=f"최대 {MAX_IMAGES}장까지 올릴 수 있어요. 첫 번째 사진이 대표 사진이 돼요.",
     )
+    region = RegionChoiceField(label="거래 동네")
     remove_images = forms.ModelMultipleChoiceField(
         label="삭제할 사진",
         queryset=ProductImage.objects.none(),
@@ -63,12 +64,10 @@ class ProductForm(StyledFormMixin, forms.ModelForm):
             "condition": "상품 상태",
             "price": "가격",
             "negotiable": "가격 제안 받기",
-            "region": "거래 동네",
             "content": "자세한 설명",
         }
         help_texts = {
             "price": "0원을 입력하면 나눔으로 올라가요.",
-            "region": "",
         }
         widgets = {
             "title": forms.TextInput(attrs={"placeholder": "어떤 물건인지 알 수 있게 적어 주세요", "maxlength": 100}),
@@ -91,19 +90,18 @@ class ProductForm(StyledFormMixin, forms.ModelForm):
         self.user = user
         self.fields["category"].queryset = Category.objects.all()
         self.fields["category"].empty_label = "카테고리를 골라 주세요"
-        self.fields["region"].queryset = Region.objects.all()
-        self.fields["region"].empty_label = "동네를 골라 주세요"
-        self.fields["region"].required = True
         self.fields["price"].max_value = MAX_PRICE
         # 파일 input 은 커스텀 업로드 타일로 대체 (스크린리더/키보드용으로만 남김)
         self.fields["images"].widget.attrs.update(
             {"class": "peer sr-only", "accept": "image/*", "data-preview-target": "#image-preview"}
         )
+        region = _user_region(user)
+        # 예전 시드 행(코드 없음)은 지금 값일 때만: 내 동네, 수정 중인 상품의 원래 거래 동네
+        self.fields["region"].allow(region, self.instance.region_id)
         if self.instance.pk:
             self.fields["remove_images"].queryset = self.instance.images.all()
         else:
             # 새 글: 기본 거래 동네 = 내 동네
-            region = _user_region(user)
             if region and not self.initial.get("region"):
                 self.initial["region"] = region.pk
         self.fields["images"].widget.attrs["data-preview-max"] = str(self.remaining_slots)

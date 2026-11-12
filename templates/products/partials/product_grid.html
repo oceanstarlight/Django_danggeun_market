@@ -17,7 +17,7 @@
     {% querystring q='' page='' as clear_q_url %}
     {% include "components/empty_state.html" with title="검색 결과가 없어요" description="검색어를 바꾸거나 필터를 줄여서 다시 찾아보세요." cta_url=clear_q_url cta_label="검색어 지우기" %}
   {% elif region_value != "all" %}
-    {% querystring region='all' page='' as all_region_url %}
+    {% querystring region='all' sido='' sigungu='' page='' as all_region_url %}
     {% include "components/empty_state.html" with title="이 동네에는 아직 상품이 없어요" description="전체 지역으로 넓혀서 찾아보세요." cta_url=all_region_url cta_label="전체 지역 보기" %}
   {% else %}
     {% url 'products:create' as create_url %}

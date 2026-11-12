@@ -42,11 +42,16 @@ class NormalizePhoneTests(TestCase):
 class SignupTests(TestCase):
     url = reverse("accounts:signup")
 
-    def test_get_renders_form_with_region_groups(self):
+    def test_get_renders_form_with_region_cascade(self):
         res = self.client.get(self.url)
         self.assertEqual(res.status_code, 200)
         self.assertTemplateUsed(res, "accounts/signup.html")
-        self.assertContains(res, "<optgroup", html=False)
+        self.assertTemplateUsed(res, "components/region_select.html")
+        # 시/도만 채워져 있고 아래 단계는 잠겨 있어요
+        self.assertContains(res, 'name="region_sido"')
+        self.assertContains(res, '<option value="강원특별자치도">강원특별자치도</option>', html=True)
+        self.assertContains(res, 'name="region_sigungu"')
+        self.assertContains(res, 'data-region-level="dong"')
         self.assertContains(res, 'id="check-username"')
 
     def test_signup_creates_user_profile_and_logs_in(self):

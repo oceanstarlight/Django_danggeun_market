@@ -5,9 +5,9 @@ from .models import Profile, Region
 
 @admin.register(Region)
 class RegionAdmin(admin.ModelAdmin):
-    list_display = ("id", "sido", "sigungu", "dong")
+    list_display = ("id", "code", "sido", "sigungu", "dong")
     list_filter = ("sido",)
-    search_fields = ("sido", "sigungu", "dong")
+    search_fields = ("code", "sido", "sigungu", "dong")
 
 
 @admin.register(Profile)

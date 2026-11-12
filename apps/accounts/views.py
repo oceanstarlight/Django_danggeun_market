@@ -5,9 +5,10 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.core.cache import cache
 from django.core.paginator import Paginator
-from django.http import Http404
+from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import redirect, render, resolve_url
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from apps.core.storage import StorageError
@@ -15,7 +16,7 @@ from apps.core.templatetags.poly_tags import display_name
 from apps.moderation.models import Block
 from apps.moderation.services import blocked_user_ids, is_blocked_between
 
-from . import selectors, services
+from . import regions, selectors, services
 from .decorators import login_required
 from .forms import (
     LoginForm,
@@ -232,6 +233,38 @@ def profile_edit(request):
             return redirect("accounts:mypage")
         profile.refresh_from_db()  # 실패 시 화면의 현재 아바타는 원래 값으로
     return render(request, "accounts/profile_edit.html", {"form": form, "profile": profile})
+
+
+# ───────── 동네 3단 선택 (HTMX) ─────────
+def _region_param(request, key):
+    """'sido' 또는 '<필드이름>_sido' 처럼 끝이 같은 파라미터 값 (위젯 이름에 접두어가 붙어도 동작)."""
+    value = request.GET.get(key)
+    if value is None:
+        value = next((v for k, v in request.GET.items() if k.endswith(f"_{key}")), "")
+    return regions.clean_param(value)  # NUL 이 섞인 값은 '' (PostgreSQL 쿼리 에러 방지)
+
+
+@require_GET
+@cache_control(max_age=3600)
+def region_options(request):
+    """다음 단계 <option> 조각. 로그인 없이 쓸 수 있다.
+
+    ?level=sigungu&sido=강원특별자치도 → 시/군/구 (value=이름)
+    ?level=dong&sido=강원특별자치도&sigungu=춘천시 → 읍/면/동 (value=Region pk)
+    """
+    level = request.GET.get("level")
+    sido = _region_param(request, "sido")
+    text = regions.placeholders("form")
+    if level == "sigungu":
+        options = [(name, name) for name in regions.sigungu_choices(sido)]
+    elif level == "dong":
+        sigungu = _region_param(request, "sigungu")
+        options = regions.dong_choices(sido, sigungu)
+    else:
+        return HttpResponseBadRequest("level 은 sigungu 또는 dong 이어야 해요.")
+    return render(
+        request, "components/region_options.html", {"placeholder": text[level], "options": options}
+    )
 
 
 # ───────── 판매자(공개) 프로필 ─────────

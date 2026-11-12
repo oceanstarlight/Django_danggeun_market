@@ -15,9 +15,10 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_http_methods, require_POST
 
+from apps.accounts import regions as region_lookup
 from apps.core.storage import StorageError
 from apps.moderation.services import is_blocked_between
 
@@ -118,42 +119,61 @@ def product_list(request):
     """목록/검색/필터/정렬. HTMX 요청이면 그리드 partial 만 돌려준다."""
     params = ProductFilterForm(request.GET).params()
     raw_region = request.GET.get("region")
-    if not raw_region and params["q"]:
+    sido = request.GET.get("sido")  # 3단 동네 select 로 제출하면 항상 있음 (빈 값 = 전체 지역)
+    if not raw_region and sido is None and params["q"]:
         # 상단 검색창(동네 선택 없음)으로 찾을 땐 전체 지역에서 보여줘요
         raw_region = "all"
-    region_value, region = selectors.resolve_region(request.user, raw_region)
+    region_filter = selectors.resolve_region_filter(
+        request.user, region=raw_region, sido=sido, sigungu=request.GET.get("sigungu", "")
+    )
     category = selectors.category_by_slug(params["category"])
 
     queryset = selectors.search_products(
         request.user,
         q=params["q"],
         category=category,
-        region=region,
+        region=region_filter.region,
+        sido=region_filter.sido,
+        sigungu=region_filter.sigungu,
         status=params["status"],
         sort=params["sort"],
     )
     page_obj = Paginator(queryset, selectors.PAGE_SIZE).get_page(request.GET.get("page"))
+    my_region = selectors.user_region(request.user)
 
     context = {
         "page_obj": page_obj,
         "products": page_obj.object_list,
         "q": params["q"],
         "current_category": category,
-        "current_region": region,
-        "region_value": region_value,
+        "current_region": region_filter.region,
+        "region_filter": region_filter,
+        "region_value": region_filter.value,
         "status_value": params["status"],
         "sort_value": params["sort"],
         "sort_choices": ProductFilterForm.SORT_CHOICES,
-        "my_region": selectors.user_region(request.user),
+        "my_region": my_region,
         "is_append": page_obj.number > 1,
     }
     if _is_htmx(request):
         return render(request, "products/partials/product_grid.html", context)
 
+    sel_sido, sel_sigungu, sel_region = region_filter.selection
+    region_params = region_filter.query_params()
     context.update(
         {
             "categories": Category.objects.all(),
-            "region_groups": selectors.regions_grouped(),
+            "region_select": region_lookup.build_select_context(
+                id_prefix="filter-region",
+                names={"sido": "sido", "sigungu": "sigungu", "dong": "region"},
+                sido=sel_sido,
+                sigungu=sel_sigungu,
+                region=sel_region,
+                mode="filter",
+                legend="동네",
+                keep=my_region,  # 내 동네가 예전 시드 행(코드 없음)이어도 목록에 보이게 (필터 기준과 같게)
+            ),
+            "reset_url": reverse("products:list") + (f"?{urlencode(region_params)}" if region_params else ""),
             "has_filters": bool(params["q"] or category or params["status"] != "all" or params["sort"] != "latest"),
         }
     )
