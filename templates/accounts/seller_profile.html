@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load poly_tags %}
+{% comment "usage" %}
+판매자(공개) 프로필 (accounts:seller_profile) — 매너온도, 판매 상품, 받은 후기, 신고/차단
+컨텍스트: seller · profile(없을 수 있음) · is_me · i_blocked · blocked · tabs · tab · page_obj · counts · summary
+{% endcomment %}
+{% block title %}{{ seller|display_name }}님의 프로필{% endblock %}
+
+{% block content %}
+<div class="container-page py-6 md:py-10">
+  {# ── 프로필 헤더 ── #}
+  <section class="card card-body md:p-6" aria-labelledby="seller-name">
+    <div class="flex items-start gap-4">
+      {% include "components/avatar.html" with user=seller size="lg" %}
+      <div class="min-w-0 flex-1 pt-1">
+        <h1 id="seller-name" class="truncate text-h1 text-neutral-900">{{ seller|display_name }}</h1>
+        <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-neutral-500 sm:gap-x-1.5">
+          {% if profile.region %}<span class="inline-flex items-center gap-1">{% include "components/icon.html" with name="map-pin" class="h-3.5 w-3.5" %}{{ profile.region.name }}</span><span class="hidden sm:inline" aria-hidden="true">·</span>{% endif %}
+          <span>{{ seller.date_joined|date:"Y년 n월" }} 가입</span>
+        </p>
+      </div>
+
+      {% if is_me %}
+        <a href="{% url 'accounts:profile_edit' %}" class="btn btn-secondary btn-sm shrink-0">{% include "components/icon.html" with name="pencil" %}<span class="hidden sm:inline">프로필 수정</span><span class="sm:hidden">수정</span></a>
+      {% elif user.is_authenticated %}
+        <div class="relative shrink-0" data-dropdown>
+          <button type="button" class="btn btn-ghost btn-icon btn-sm" data-dropdown-toggle aria-haspopup="true" aria-expanded="false" aria-label="더보기">{% include "components/icon.html" with name="more" %}</button>
+          <div class="dropdown w-48" data-dropdown-menu role="menu" hidden>
+            <button type="button" class="dropdown-item" role="menuitem" data-modal-open="report-modal"
+                    hx-get="{% url 'moderation:report_user' seller.username %}" hx-target="#report-modal-body" hx-swap="innerHTML">
+              {% include "components/icon.html" with name="flag" %}신고하기
+            </button>
+            <form method="post" action="{% url 'moderation:block_toggle' seller.username %}"{% if not i_blocked %} data-confirm="{{ seller|display_name }}님을 차단할까요? 서로의 상품과 채팅이 보이지 않게 돼요."{% endif %}>
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="dropdown-item{% if not i_blocked %} dropdown-item-danger{% endif %}" role="menuitem">
+                {% include "components/icon.html" with name="ban" %}{% if i_blocked %}차단 해제{% else %}차단하기{% endif %}
+              </button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if profile.bio %}<p class="mt-4 whitespace-pre-line break-words text-[15px] leading-6 text-neutral-700">{{ profile.bio }}</p>{% endif %}
+
+    <div class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-stretch">
+      <dl class="grid grid-cols-3 gap-2">
+        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
+          <dt class="text-xs text-neutral-500">판매 상품</dt>
+          <dd class="mt-1 text-lg font-bold text-neutral-900 tabular">{{ counts.selling }}<span class="ml-0.5 text-[13px] font-medium text-neutral-500">개</span></dd>
+        </div>
+        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
+          <dt class="text-xs text-neutral-500">거래완료</dt>
+          <dd class="mt-1 text-lg font-bold text-neutral-900 tabular">{{ counts.sold }}<span class="ml-0.5 text-[13px] font-medium text-neutral-500">회</span></dd>
+        </div>
+        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
+          <dt class="text-xs text-neutral-500">평균 별점</dt>
+          <dd class="mt-1 inline-flex items-center gap-0.5 text-lg font-bold text-neutral-900 tabular">
+            {% if summary.avg is not None %}{% include "components/icon.html" with name="star-fill" class="h-4 w-4 text-amber-400" %}{{ summary.avg|floatformat:1 }}{% else %}<span class="text-neutral-500">-</span>{% endif %}
+          </dd>
+        </div>
+      </dl>
+      <div class="flex items-center justify-between gap-4 rounded-md bg-neutral-50 px-4 py-3 sm:justify-center sm:px-5">
+        <p class="whitespace-nowrap text-xs text-neutral-500 sm:hidden">첫 온도 36.5°C</p>
+        {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
+      </div>
+    </div>
+
+    {% if summary.tags and not blocked and tab != "reviews" %}
+      <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="많이 받은 매너 평가">
+        {% for tag, n in summary.tags %}<li class="badge badge-neutral font-medium">{{ tag }} <span class="text-brand-700">{{ n }}</span></li>{% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+
+  {# ── 차단 상태 / 탭 ── #}
+  <div class="mt-8">
+    {% if i_blocked %}
+      <div class="alert alert-warning alert-accent" role="status">
+        {% include "components/icon.html" with name="ban" %}
+        <div class="min-w-0 flex-1">
+          <p class="alert-title">차단한 이웃이에요</p>
+          <p>차단을 해제하면 다시 상품을 보고 채팅할 수 있어요.</p>
+          <form method="post" action="{% url 'moderation:block_toggle' seller.username %}" class="mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="btn btn-secondary btn-sm">차단 해제</button>
+          </form>
+        </div>
+      </div>
+    {% elif blocked %}
+      {% include "components/empty_state.html" with title="상품을 볼 수 없는 이웃이에요" description="이 이웃과는 서로의 상품과 채팅이 보이지 않아요." %}
+    {% else %}
+      <div id="seller-panel" class="scroll-mt-24">{% include "accounts/partials/seller_panel.html" %}</div>
+    {% endif %}
+  </div>
+</div>
+
+{% if user.is_authenticated and not is_me %}
+  {% include "components/modal.html" with id="report-modal" title="신고하기" body_template="moderation/partials/report_loading.html" %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 신고 모달이 열리면 '더보기' 메뉴는 닫아요
+  document.addEventListener("poly:modal-open", function () { window.Poly && window.Poly.closeDropdowns(); });
+</script>
+{% endblock %}

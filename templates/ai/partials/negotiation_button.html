@@ -1,0 +1,12 @@
+{% comment %}
+판매자 화면에서 구매자의 가격 협상 메시지 아래에 붙는 'AI 답장 초안' 버튼.
+  {% include "ai/partials/negotiation_button.html" with message=m %}
+- 결과(ai/partials/negotiation_drafts.html)는 버튼 바로 다음 형제 div(.chat-nego-result)에 들어가요.
+- chat.js 가 <template> 안의 /ai/negotiate/0/ 을 실제 메시지 id 로 바꾼 뒤 htmx.process 해요. (URL 문자열을 바꾸지 마세요)
+{% endcomment %}
+<button type="button" class="btn btn-ai btn-sm" hx-post="{% url 'ai:negotiate' message.id %}" hx-target="next div" hx-swap="innerHTML"
+        hx-disabled-elt="this" aria-label="AI로 가격 협상 답장 초안 받기">
+  <span class="hide-on-request">{% include "components/icon.html" with name="sparkles" class="h-4 w-4" %}</span>
+  <span class="spinner show-on-request" aria-hidden="true"></span>
+  <span>AI 답장 초안</span>
+</button>

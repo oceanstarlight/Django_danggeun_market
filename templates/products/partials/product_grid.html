@@ -1,0 +1,26 @@
+{% load poly_tags %}
+{% comment %}
+상품 목록 결과 (products:list 의 HTMX 응답 겸 첫 화면 include)
+- is_append(2페이지 이상): 카드들 + 다음 '더보기'만 → 기존 #load-more 자리를 대체해 이어 붙여요
+- 첫 페이지: 그리드 전체 또는 빈 상태
+{% endcomment %}
+{% if is_append %}
+  {% for product in products %}{% include "components/product_card.html" %}{% endfor %}
+  {% include "products/partials/load_more.html" %}
+{% elif products %}
+  <div class="product-grid" id="product-grid">
+    {% for product in products %}{% include "components/product_card.html" %}{% endfor %}
+    {% include "products/partials/load_more.html" %}
+  </div>
+{% else %}
+  {% if q %}
+    {% querystring q='' page='' as clear_q_url %}
+    {% include "components/empty_state.html" with title="검색 결과가 없어요" description="검색어를 바꾸거나 필터를 줄여서 다시 찾아보세요." cta_url=clear_q_url cta_label="검색어 지우기" %}
+  {% elif region_value != "all" %}
+    {% querystring region='all' page='' as all_region_url %}
+    {% include "components/empty_state.html" with title="이 동네에는 아직 상품이 없어요" description="전체 지역으로 넓혀서 찾아보세요." cta_url=all_region_url cta_label="전체 지역 보기" %}
+  {% else %}
+    {% url 'products:create' as create_url %}
+    {% include "components/empty_state.html" with title="조건에 맞는 상품이 없어요" description="다른 카테고리를 보거나 직접 물건을 올려 보세요." cta_url=create_url cta_label="내 물건 팔기" %}
+  {% endif %}
+{% endif %}

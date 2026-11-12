@@ -1,0 +1,43 @@
+{% comment "usage" %}
+마이페이지 탭 + 목록 (#mypage-panel 안쪽). 탭/페이지 이동은 HTMX(hx-boost)로 이 영역만 바꿔요.
+컨텍스트: tabs(build_tabs 결과) · tab · page_obj(Product 또는 Review 페이지) · summary(받은 후기 요약)
+{% endcomment %}
+<nav class="tab-list" aria-label="내 활동" hx-boost="true" hx-target="#mypage-panel" hx-swap="innerHTML show:none">
+  {% for t in tabs %}
+    <a href="{% url 'accounts:mypage' %}?tab={{ t.key }}" class="tab{% if t.active %} tab-active{% endif %}"{% if t.active %} aria-current="page"{% endif %}>{{ t.label }}<span class="tab-count">{{ t.count }}</span></a>
+  {% endfor %}
+</nav>
+
+<div class="pt-6">
+  {% if tab == "reviews" %}
+    {% if page_obj.object_list %}
+      {% include "components/accounts_review_summary.html" with summary=summary %}
+      <div class="mt-2 divide-y divide-neutral-200">
+        {% for review in page_obj %}{% include "components/accounts_review_item.html" %}{% endfor %}
+      </div>
+    {% else %}
+      {% include "components/empty_state.html" with title="아직 받은 후기가 없어요" description="거래를 마치면 이웃이 후기를 남길 수 있어요." %}
+    {% endif %}
+  {% elif page_obj.object_list %}
+    <div class="product-grid xl:grid-cols-4">
+      {% for product in page_obj %}{% include "components/product_card.html" %}{% endfor %}
+    </div>
+  {% else %}
+    {% url 'products:create' as create_url %}{% url 'products:list' as list_url %}
+    {% if tab == "selling" %}
+      {% include "components/empty_state.html" with title="판매 중인 상품이 없어요" description="안 쓰는 물건을 이웃과 나눠 보세요." cta_url=create_url cta_label="내 물건 팔기" %}
+    {% elif tab == "sold" %}
+      {% include "components/empty_state.html" with title="아직 거래를 완료한 상품이 없어요" description="첫 거래가 끝나면 여기에 모아 둘게요." %}
+    {% elif tab == "bought" %}
+      {% include "components/empty_state.html" with title="아직 구매한 상품이 없어요" description="우리 동네에 어떤 물건이 있는지 둘러보세요." cta_url=list_url cta_label="둘러보기" %}
+    {% elif tab == "wishlist" %}
+      {% include "components/empty_state.html" with title="찜한 상품이 없어요" description="마음에 드는 상품의 하트를 누르면 여기에 모여요." cta_url=list_url cta_label="상품 구경하기" %}
+    {% else %}
+      {% include "components/empty_state.html" with title="최근 본 상품이 없어요" description="상품을 둘러보면 여기에서 다시 찾을 수 있어요." cta_url=list_url cta_label="상품 구경하기" %}
+    {% endif %}
+  {% endif %}
+
+  <div hx-boost="true" hx-target="#mypage-panel" hx-swap="innerHTML show:#mypage-panel:top">
+    {% include "components/pagination.html" with page_obj=page_obj %}
+  </div>
+</div>

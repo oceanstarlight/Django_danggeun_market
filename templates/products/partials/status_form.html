@@ -1,0 +1,19 @@
+{% comment %}
+판매 상태 변경 셀렉트 (판매자 전용). 바꾸면 HTMX 로 바로 저장하고 새로고침해요.
+'거래완료'를 고르면 서버가 trades:complete(구매자 선택)로 보내요.
+  {% include "products/partials/status_form.html" with next=request.get_full_path %}
+컨텍스트: product · status_choices · next(선택)
+{% endcomment %}
+<form method="post" action="{% url 'products:status_change' product.pk %}"
+      hx-post="{% url 'products:status_change' product.pk %}" hx-trigger="change" hx-swap="none"
+      class="flex items-center gap-2">
+  {% csrf_token %}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  <label for="status-{{ product.pk }}" class="shrink-0 text-sm font-medium text-neutral-600">판매 상태</label>
+  <select id="status-{{ product.pk }}" name="status" class="select flex-1">
+    {% for value, label in status_choices %}
+      <option value="{{ value }}"{% if product.status == value %} selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button type="submit" class="btn btn-secondary">변경</button></noscript>
+</form>

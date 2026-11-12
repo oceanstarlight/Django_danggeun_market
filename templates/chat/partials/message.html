@@ -1,0 +1,30 @@
+{% comment %}
+채팅 메시지 한 줄 (chat/partials/messages.html 에서 사용). static/js/chat.js 의 buildMessage() 와 마크업을 맞춰 주세요.
+컨텍스트: e (views.build_entries 항목: message · mine · date_sep · show_avatar · show_negotiation · fraud_warnings) · room
+{% endcomment %}{% with m=e.message %}
+{% if e.date_sep %}<div class="chat-date-sep" data-date="{{ e.date_sep|date:'Y-m-d' }}" role="separator"><span>{{ e.date_sep|date:"Y년 n월 j일 l" }}</span></div>{% endif %}
+<div class="chat-row{% if e.mine %} chat-row-me{% endif %}{% if e.show_avatar %} chat-row-first{% endif %}" data-message-id="{{ m.pk }}" data-sender-id="{{ m.sender_id }}">
+  {% if not e.mine %}<div class="chat-avatar-slot">{% if e.show_avatar %}{% include "components/avatar.html" with user=m.sender size="sm" %}{% endif %}</div>{% endif %}
+  <div class="chat-stack">
+    <div class="chat-line">
+      <p class="bubble {% if e.mine %}bubble-me{% else %}bubble-other{% endif %}">{{ m.content }}</p>
+      <span class="chat-meta">
+        {% if e.mine %}<span class="chat-read" data-read{% if not m.is_read %} hidden{% endif %}>읽음</span>{% endif %}
+        <time class="bubble-meta" datetime="{{ m.created_at|date:'c' }}">{{ m.created_at|date:"A g:i" }}</time>
+      </span>
+    </div>
+    {% if e.fraud_warnings %}
+      <div class="chat-warning" role="note">
+        {% include "components/icon.html" with name="alert" class="mt-0.5 h-3.5 w-3.5 shrink-0" %}
+        <p><strong class="font-semibold">사기 의심 신호가 있어요.</strong> {{ e.fraud_warnings|join:" · " }}</p>
+      </div>
+    {% endif %}
+    {% if e.show_negotiation %}
+      <div class="chat-nego">
+        {% include "ai/partials/negotiation_button.html" with message=m %}
+        <div class="chat-nego-result" aria-live="polite"></div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endwith %}

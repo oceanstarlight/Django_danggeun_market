@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load poly_tags %}
+{% comment %}
+상품 목록/검색 (products:list)
+필터는 모두 URL(GET)에 남고, '더보기'는 HTMX 로 다음 페이지를 이어 붙여요 (partials/product_grid.html).
+{% endcomment %}
+{% block title %}{% if q %}‘{{ q }}’ 검색 결과{% elif current_category %}{{ current_category.name }}{% else %}중고거래{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-page py-6 md:py-8">
+
+  {# ───────── 제목 ───────── #}
+  <header class="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+    <div class="min-w-0">
+      <p class="text-[13px] font-medium text-neutral-500">
+        {% if region_value == "me" and my_region %}{{ my_region.name }}{% elif current_region %}{{ current_region.name }}{% else %}전체 지역{% endif %}
+      </p>
+      <h1 class="page-title mt-0.5 truncate">
+        {% if q %}‘{{ q }}’ 검색 결과{% elif current_category %}<span aria-hidden="true">{{ current_category.icon }}</span> {{ current_category.name }}{% else %}중고거래{% endif %}
+      </h1>
+    </div>
+    <p class="text-sm text-neutral-500" aria-live="polite">상품 <strong class="font-semibold text-neutral-800">{{ page_obj.paginator.count }}</strong>개</p>
+  </header>
+
+  {# ───────── 카테고리 칩 ───────── #}
+  <nav aria-label="카테고리" class="mb-4">
+    <div class="chip-row">
+      <a href="{% querystring category='' page='' %}" class="chip shrink-0{% if not current_category %} chip-active{% endif %}"{% if not current_category %} aria-current="true"{% endif %}>전체</a>
+      {% for c in categories %}
+        <a href="{% querystring category=c.slug page='' %}" class="chip shrink-0{% if current_category.pk == c.pk %} chip-active{% endif %}"{% if current_category.pk == c.pk %} aria-current="true"{% endif %}>
+          <span aria-hidden="true">{{ c.icon }}</span>{{ c.name }}
+        </a>
+      {% endfor %}
+    </div>
+  </nav>
+
+  {# ───────── 필터 · 정렬 (바뀌면 자동 적용) ───────── #}
+  <form method="get" action="{% url 'products:list' %}" class="products-filter" data-products-autosubmit>
+    {% if current_category %}<input type="hidden" name="category" value="{{ current_category.slug }}">{% endif %}
+
+    {# 모바일 검색창 (데스크톱은 상단 내비 검색창 사용, 숨겨져도 값은 함께 전송돼요) #}
+    <div class="relative w-full md:hidden">
+      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">{% include "components/icon.html" with name="search" class="h-[18px] w-[18px]" %}</span>
+      <input type="search" name="q" value="{{ q }}" class="input pl-10" placeholder="검색어를 입력해 주세요" aria-label="검색어" enterkeyhint="search" data-no-autosubmit>
+    </div>
+
+    <label class="sr-only" for="filter-region">동네</label>
+    <select id="filter-region" name="region" class="select products-filter-select">
+      {% if my_region %}<option value="me"{% if region_value == "me" %} selected{% endif %}>내 동네 · {{ my_region.dong }}</option>{% endif %}
+      <option value="all"{% if region_value == "all" %} selected{% endif %}>전체 지역</option>
+      {% for group, regions in region_groups %}
+        <optgroup label="{{ group }}">
+          {% for r in regions %}
+            {% if not my_region or r.pk != my_region.pk %}
+              <option value="{{ r.pk }}"{% if region_value == r.pk|stringformat:'s' %} selected{% endif %}>{{ r.dong }}</option>
+            {% endif %}
+          {% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+
+    <label class="sr-only" for="filter-sort">정렬</label>
+    <select id="filter-sort" name="sort" class="select products-filter-select">
+      {% for value, label in sort_choices %}
+        <option value="{{ value }}"{% if sort_value == value %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <label class="inline-flex h-10 w-full cursor-pointer items-center gap-2 text-sm font-medium text-neutral-700 sm:w-auto">
+      <input type="checkbox" name="status" value="selling" class="checkbox"{% if status_value == "selling" %} checked{% endif %}>
+      거래 가능만 보기
+    </label>
+
+    <noscript><button type="submit" class="btn btn-secondary btn-sm">적용</button></noscript>
+    {% if has_filters %}
+      <a href="{% url 'products:list' %}{% if region_value != 'me' %}?region={{ region_value }}{% endif %}" class="btn btn-ghost btn-sm ml-auto">{% include "components/icon.html" with name="refresh" %}초기화</a>
+    {% endif %}
+  </form>
+
+  {# ───────── 결과 ───────── #}
+  <div id="product-results" class="mt-6">
+    {% include "products/partials/product_grid.html" %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 필터 select/체크박스가 바뀌면 바로 적용 (검색창은 Enter 로 제출)
+  document.addEventListener("change", function (e) {
+    var form = e.target.closest("form[data-products-autosubmit]");
+    if (!form || e.target.hasAttribute("data-no-autosubmit")) return;
+    if (form.requestSubmit) form.requestSubmit(); else form.submit();
+  });
+</script>
+{% endblock %}

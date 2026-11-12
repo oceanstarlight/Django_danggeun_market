@@ -1,0 +1,24 @@
+{% comment "usage" %}
+빈 상태 (다면체 일러스트 + 제목 + 설명 + CTA 1개)
+  {% url 'products:create' as create_url %}
+  {% include "components/empty_state.html" with title="아직 등록한 상품이 없어요" description="안 쓰는 물건을 이웃과 나눠 보세요." cta_url=create_url cta_label="상품 등록하기" %}
+파라미터: title · description(선택) · cta_url(선택) · cta_label(선택) · compact(True면 여백 축소)
+{% endcomment %}
+<div class="empty-state{% if compact %} py-8{% endif %}">
+  <svg class="empty-state-art" viewBox="0 0 96 96" fill="none" aria-hidden="true">
+    <path d="M48 14 74 29v30L48 74 22 59V29Z" fill="#F0FDFA"/>
+    <path d="M48 14 74 29 48 42Z" fill="#CCFBF1"/>
+    <path d="M74 29v30L48 42Z" fill="#99F6E4"/>
+    <path d="M74 59 48 74V42Z" fill="#5EEAD4"/>
+    <path d="M48 74 22 59 48 42Z" fill="#99F6E4"/>
+    <path d="M22 59V29L48 42Z" fill="#CCFBF1"/>
+    <path d="M48 14 74 29v30L48 74 22 59V29Z M48 42V14 M48 42 74 29 M48 42 74 59 M48 42V74 M48 42 22 59 M48 42 22 29" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="m78 70 8 4.6-8 4.6Z" fill="#E7E5E4"/>
+    <path d="M14 18h7l-3.5 6Z" fill="#D6D3D1"/>
+    <circle cx="82" cy="20" r="3" fill="#E7E5E4"/>
+    <ellipse cx="48" cy="86" rx="20" ry="2.5" fill="#F5F5F4"/>
+  </svg>
+  <p class="empty-state-title">{{ title }}</p>
+  {% if description %}<p class="empty-state-desc">{{ description }}</p>{% endif %}
+  {% if cta_url and cta_label %}<a href="{{ cta_url }}" class="btn btn-primary mt-6">{{ cta_label }}</a>{% endif %}
+</div>

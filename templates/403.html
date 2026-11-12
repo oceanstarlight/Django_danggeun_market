@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{# DEBUG=False 일 때 보이는 403 화면 (권한 없음) #}
+{% block title %}접근할 수 없어요{% endblock %}
+{% block content %}
+<div class="container-page max-w-xl py-16">
+  {% url 'core:home' as home_url %}
+  {% include "components/empty_state.html" with title="이 페이지를 볼 수 있는 권한이 없어요" description="내 상품이나 내가 참여한 거래만 관리할 수 있어요." cta_url=home_url cta_label="홈으로 가기" %}
+</div>
+{% endblock %}

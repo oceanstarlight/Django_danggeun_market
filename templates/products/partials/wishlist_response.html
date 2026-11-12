@@ -1,0 +1,7 @@
+{% comment %}찜 토글 HTMX 응답: 누른 버튼 + 같은 화면의 다른 찜 버튼(oob)을 함께 갱신{% endcomment %}
+{% include "products/partials/wishlist_button.html" with animate=True %}
+{% if variant == "cta" %}
+  {% include "products/partials/wishlist_button.html" with variant="default" oob=True %}
+{% else %}
+  {% include "products/partials/wishlist_button.html" with variant="cta" oob=True %}
+{% endif %}

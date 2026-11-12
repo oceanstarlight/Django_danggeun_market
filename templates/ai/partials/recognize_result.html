@@ -1,0 +1,57 @@
+{% comment %}
+ai:recognize 결과 카드 (상품 폼 AI 패널의 #ai-result 안에 들어가요)
+컨텍스트: result {category_slug, category_id, category_name, title, condition, condition_label,
+          confidence, confidence_percent, notes} · cached · uid · low_confidence
+'카테고리·상태 적용' → #id_category · #id_condition 선택, '제목도 적용' → #id_title (static/js/ai.js).
+{% endcomment %}
+<article class="ai-result" data-ai-result="recognize" data-ai-json="ai-vision-{{ uid }}">
+  {% with json_id="ai-vision-"|add:uid %}{{ result|json_script:json_id }}{% endwith %}
+  <div class="ai-card-header">
+    {% include "components/icon.html" with name="camera" %}
+    <span>사진을 분석했어요</span>
+    {% if cached %}<span class="badge badge-neutral ml-auto">이전에 만든 결과</span>{% endif %}
+  </div>
+
+  <dl class="ai-facts">
+    <div>
+      <dt class="ai-result-label">카테고리</dt>
+      <dd class="font-semibold text-neutral-900">{{ result.category_name|default:"기타" }}</dd>
+    </div>
+    <div>
+      <dt class="ai-result-label">상품 상태</dt>
+      <dd class="font-semibold text-neutral-900">{{ result.condition_label }}</dd>
+    </div>
+    {% if result.title %}
+      <div class="col-span-2">
+        <dt class="ai-result-label">추천 제목</dt>
+        <dd class="text-neutral-900 break-keep">{{ result.title }}</dd>
+      </div>
+    {% endif %}
+  </dl>
+
+  <div class="mt-4">
+    <div class="flex items-center justify-between text-[13px]">
+      <span class="font-semibold text-neutral-700" id="ai-conf-{{ uid }}">확신도</span>
+      <span class="tabular-nums text-neutral-600">{{ result.confidence_percent }}%
+        · {% if result.confidence >= 0.8 %}높아요{% elif result.confidence >= 0.5 %}보통이에요{% else %}낮아요{% endif %}</span>
+    </div>
+    <progress class="ai-meter{% if low_confidence %} ai-meter-low{% endif %}" max="100" value="{{ result.confidence_percent }}" aria-labelledby="ai-conf-{{ uid }}">{{ result.confidence_percent }}%</progress>
+  </div>
+
+  {% if result.notes %}<p class="mt-3 text-sm leading-6 text-neutral-700">{{ result.notes }}</p>{% endif %}
+
+  {% if low_confidence %}
+    <div class="alert alert-warning mt-3">
+      {% include "components/icon.html" with name="alert" %}
+      <p>확신도가 낮아요. 적용하기 전에 카테고리와 상태를 꼭 확인해 주세요.</p>
+    </div>
+  {% endif %}
+
+  <div class="ai-card-actions">
+    <button type="button" class="btn btn-ai btn-sm" data-ai-apply="recognize">
+      {% include "components/icon.html" with name="check" %}카테고리·상태 적용
+    </button>
+    {% if result.title %}<button type="button" class="btn btn-secondary btn-sm" data-ai-apply="vision-title">제목도 적용</button>{% endif %}
+    <button type="button" class="btn btn-ghost btn-sm ml-auto" data-ai-dismiss>닫기</button>
+  </div>
+</article>

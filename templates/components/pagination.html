@@ -1,0 +1,31 @@
+{% comment "usage" %}
+페이지네이션 (현재 GET 파라미터 유지: poly_tags의 querystring 태그 사용)
+  {% include "components/pagination.html" with page_obj=page_obj %}
+파라미터: page_obj(Page) — 현재 페이지 ±2 와 처음/끝만 보여주고 나머지는 … 처리
+{% endcomment %}{% load poly_tags %}{% if page_obj.has_other_pages %}
+<nav class="pagination mt-10" aria-label="페이지 이동">
+  {% if page_obj.has_previous %}
+    <a class="page-link" href="{% querystring page=page_obj.previous_page_number %}" aria-label="이전 페이지">{% include "components/icon.html" with name="chevron-left" %}</a>
+  {% else %}
+    <span class="page-link" aria-disabled="true">{% include "components/icon.html" with name="chevron-left" %}</span>
+  {% endif %}
+  {% with cur=page_obj.number last=page_obj.paginator.num_pages %}
+    {% for n in page_obj.paginator.page_range %}
+      {% if n == 1 or n == last or n >= cur|add:-2 and n <= cur|add:2 %}
+        {% if n == cur %}
+          <span class="page-link" aria-current="page">{{ n }}</span>
+        {% else %}
+          <a class="page-link" href="{% querystring page=n %}">{{ n }}</a>
+        {% endif %}
+      {% elif n == cur|add:-3 or n == cur|add:3 %}
+        <span class="page-link" aria-hidden="true">…</span>
+      {% endif %}
+    {% endfor %}
+  {% endwith %}
+  {% if page_obj.has_next %}
+    <a class="page-link" href="{% querystring page=page_obj.next_page_number %}" aria-label="다음 페이지">{% include "components/icon.html" with name="chevron-right" %}</a>
+  {% else %}
+    <span class="page-link" aria-disabled="true">{% include "components/icon.html" with name="chevron-right" %}</span>
+  {% endif %}
+</nav>
+{% endif %}

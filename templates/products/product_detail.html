@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% load static poly_tags humanize %}
+{% comment %}
+상품 상세 (products:detail)
+컨텍스트: product · images · is_owner · is_blocked · is_wished · wish_count · chat_room · other_products
+          seller_stats · fraud_analysis · status_choices · review_url
+{% endcomment %}
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block head_extra %}
+<meta property="og:title" content="{{ product.title }} · {{ product.price|price }}">
+<meta property="og:description" content="{{ product.content|truncatechars:80 }}">
+{% if images %}<meta property="og:image" content="{{ images.0.image_url }}">{% endif %}
+{% endblock %}
+
+{% block content %}
+{% with seller=product.seller profile=product.seller.profile %}
+<div class="container-page pb-8 pt-0 md:py-8">
+
+  {# ───────── 경로 (데스크톱) ───────── #}
+  <nav aria-label="현재 위치" class="mb-4 hidden items-center gap-1 text-[13px] text-neutral-500 md:flex">
+    <a href="{% url 'core:home' %}" class="hover:text-neutral-800">홈</a>
+    {% include "components/icon.html" with name="chevron-right" class="h-3.5 w-3.5" %}
+    <a href="{% url 'products:list' %}?category={{ product.category.slug }}&amp;region=all" class="hover:text-neutral-800">{{ product.category.name }}</a>
+  </nav>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-10">
+
+    {# ───────── 이미지 갤러리: 모바일 스크롤 스냅 + 점, 데스크톱 화살표 + 썸네일 ───────── #}
+    <div class="-mx-4 min-w-0 md:mx-0 lg:col-span-7">
+      <div class="products-gallery" data-gallery>
+        <div class="products-gallery-track" data-gallery-track tabindex="0" role="region" aria-roledescription="carousel" aria-label="상품 사진 {{ images|length }}장">
+          {% for image in images %}
+            <div class="products-gallery-slide" role="group" aria-roledescription="slide" aria-label="{{ forloop.counter }} / {{ images|length }}">
+              <img src="{{ image.image_url }}" alt="{{ product.title }} 사진 {{ forloop.counter }}" class="products-gallery-img"{% if not forloop.first %} loading="lazy"{% endif %} decoding="async">
+            </div>
+          {% empty %}
+            <div class="products-gallery-slide">
+              <img src="{% static 'img/placeholder.svg' %}" alt="등록된 사진이 없어요" class="products-gallery-img">
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if product.status == product.Status.SOLD %}<div class="product-card-sold pointer-events-none" aria-hidden="true"></div>{% endif %}
+
+        {% if images|length > 1 %}
+          <button type="button" class="products-gallery-nav left-3" data-gallery-prev aria-label="이전 사진">{% include "components/icon.html" with name="chevron-left" %}</button>
+          <button type="button" class="products-gallery-nav right-3" data-gallery-next aria-label="다음 사진">{% include "components/icon.html" with name="chevron-right" %}</button>
+          <span class="products-gallery-counter" aria-hidden="true"><span data-gallery-current>1</span> / {{ images|length }}</span>
+          <div class="products-gallery-dots" aria-hidden="true">
+            {% for image in images %}<span class="products-gallery-dot"{% if forloop.first %} data-active{% endif %}></span>{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      {% if images|length > 1 %}
+        <div class="products-gallery-thumbs" role="tablist" aria-label="사진 선택">
+          {% for image in images %}
+            <button type="button" class="products-gallery-thumb" data-gallery-thumb="{{ forloop.counter0 }}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="{{ forloop.counter }}번째 사진 보기">
+              <img src="{{ image.image_url }}" alt="" loading="lazy" decoding="async">
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    {# ───────── 정보 패널 ───────── #}
+    <div class="min-w-0 lg:col-span-5">
+      <div class="space-y-6 lg:sticky lg:top-[calc(var(--poly-nav-h)+24px)]">
+
+        {# 판매자 카드 #}
+        <a href="{% url 'accounts:seller_profile' seller.username %}" class="card card-interactive flex items-center gap-3 p-4">
+          {% include "components/avatar.html" with user=seller %}
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[15px] font-semibold text-neutral-900">{{ seller|display_name }}</p>
+            {# 모바일에서 거래 횟수가 잘리지 않게 줄바꿈 허용 (sm 이상은 한 줄) #}
+            <p class="text-[13px] leading-[18px] text-neutral-500 sm:truncate">
+              <span class="whitespace-nowrap">{% if product.region %}{{ product.region.dong }}{% elif profile.region %}{{ profile.region.dong }}{% else %}동네 미설정{% endif %}</span>
+              <span class="whitespace-nowrap">· 판매 {{ seller_stats.total }}</span>
+              <span class="whitespace-nowrap">· 거래완료 {{ seller_stats.sold }}</span>
+            </p>
+          </div>
+          {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
+        </a>
+
+        {# 제목 · 가격 #}
+        <div>
+          <div class="mb-2 flex flex-wrap items-center gap-1.5">
+            {% include "components/status_badge.html" with status=product.status label=product.get_status_display %}
+            <span class="badge badge-neutral">{{ product.get_condition_display }}</span>
+            {% if product.negotiable %}<span class="badge badge-neutral">가격 제안 가능</span>{% endif %}
+          </div>
+          <h1 class="page-title break-keep">{{ product.title }}</h1>
+          <p class="mt-1 text-[13px] text-neutral-500">
+            <a href="{% url 'products:list' %}?category={{ product.category.slug }}&amp;region=all" class="hover:text-neutral-800 hover:underline">{{ product.category.name }}</a>
+            · <time datetime="{{ product.created_at|date:'c' }}">{{ product.created_at|timeago }}</time>
+          </p>
+          <p class="price mt-3 text-[26px] leading-8">{{ product.price|price }}</p>
+        </div>
+
+        {# AI 사기 의심 배너 (AI 담당 partial, LOW 면 partial 안에서 숨김) #}
+        {% if fraud_analysis %}
+          {% include "ai/partials/fraud_banner.html" with analysis=fraud_analysis product=product %}
+        {% endif %}
+
+        {% if is_blocked %}
+          <div class="alert alert-warning" role="status">
+            {% include "components/icon.html" with name="ban" %}
+            <div><p class="alert-title">차단 관계인 사용자의 상품이에요</p><p>채팅과 찜을 할 수 없어요.</p></div>
+          </div>
+        {% endif %}
+
+        {# 구매자 액션 (모바일은 하단 고정 CTA 사용) #}
+        {% if not is_owner %}
+          <div class="hidden gap-2 md:flex">
+            {% if not is_blocked %}{% include "products/partials/wishlist_button.html" with variant="default" %}{% endif %}
+            {% include "products/partials/chat_button.html" with block_class="flex-1" %}
+          </div>
+        {% endif %}
+
+        {# 판매자 관리 #}
+        {% if is_owner %}
+          <div class="card card-body space-y-4">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-[15px] font-semibold text-neutral-900">내 상품 관리</p>
+              <a href="{% url 'chat:list' %}" class="link text-sm">채팅 {{ product.chat_count }}개</a>
+            </div>
+            {% include "products/partials/status_form.html" %}
+            <div class="grid grid-cols-2 gap-2">
+              <a href="{% url 'products:update' product.pk %}" class="btn btn-secondary">{% include "components/icon.html" with name="pencil" %}수정하기</a>
+              <form method="post" action="{% url 'products:delete' product.pk %}" data-confirm="이 상품을 삭제할까요? 채팅과 찜 기록도 함께 사라져요.">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-block text-red-700 hover:text-red-800">{% include "components/icon.html" with name="trash" %}삭제하기</button>
+              </form>
+            </div>
+            {% if product.status != product.Status.SOLD %}
+              <a href="{% url 'trades:complete' product.pk %}" class="btn btn-primary btn-block">{% include "components/icon.html" with name="check" %}거래완료로 바꾸기</a>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if review_url %}
+          <div class="alert alert-info">
+            {% include "components/icon.html" with name="star" %}
+            <div class="flex-1"><p class="alert-title">거래는 어떠셨나요?</p><p>후기를 남기면 상대의 매너온도에 반영돼요.</p></div>
+            <a href="{{ review_url }}" class="btn btn-primary btn-sm shrink-0 self-center">후기 남기기</a>
+          </div>
+        {% endif %}
+
+        {# 본문 #}
+        <section aria-label="상품 설명">
+          <div class="text-content break-words">{{ product.content }}</div>
+          <p class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-neutral-500">
+            <span class="inline-flex items-center gap-1">{% include "components/icon.html" with name="eye" class="h-4 w-4" %}조회 {{ product.view_count|intcomma }}</span>
+            <span class="inline-flex items-center gap-1">{% include "components/icon.html" with name="heart" class="h-4 w-4" %}찜 {{ wish_count }}</span>
+            <span class="inline-flex items-center gap-1">{% include "components/icon.html" with name="chat" class="h-4 w-4" %}채팅 {{ product.chat_count }}</span>
+            {% if product.region %}<span class="inline-flex items-center gap-1">{% include "components/icon.html" with name="map-pin" class="h-4 w-4" %}{{ product.region.name }}</span>{% endif %}
+          </p>
+        </section>
+
+        {% if not is_owner %}
+          <div class="divider my-0"></div>
+          <div class="flex items-center justify-between text-[13px]">
+            <p class="text-neutral-500">거래 전에 꼭 직접 만나서 확인해 주세요.</p>
+            {% if user.is_authenticated %}
+              <a href="{% url 'moderation:report_product' product.pk %}" class="inline-flex items-center gap-1 font-medium text-neutral-500 hover:text-red-700">{% include "components/icon.html" with name="flag" class="h-4 w-4" %}신고하기</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ───────── 판매자의 다른 상품 ───────── #}
+  {% if other_products %}
+    <section class="mt-14" aria-labelledby="seller-others">
+      <div class="mb-4 flex items-end justify-between gap-4">
+        <h2 id="seller-others" class="section-title">{{ seller|display_name }}님의 다른 상품</h2>
+        <a href="{% url 'accounts:seller_profile' seller.username %}" class="link shrink-0 text-sm">전체 보기</a>
+      </div>
+      <div class="products-related-grid">
+        {% for product in other_products %}{% include "components/product_card.html" %}{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
+{% endwith %}
+{% endblock %}
+
+{% block bottom_cta %}{% if not is_owner %}
+<div class="bottom-cta-inner">
+  {% if not is_blocked %}{% include "products/partials/wishlist_button.html" with variant="cta" %}<span class="h-8 w-px bg-neutral-200" aria-hidden="true"></span>{% endif %}
+  <div class="min-w-0 flex-1">
+    <p class="truncate text-[17px] font-bold leading-6 text-neutral-900">{{ product.price|price }}</p>
+    <p class="text-xs text-neutral-500">{% if product.negotiable %}가격 제안 가능{% elif product.price == 0 %}무료 나눔{% else %}가격 제안 불가{% endif %}</p>
+  </div>
+  {% include "products/partials/chat_button.html" %}
+</div>
+{% endif %}{% endblock %}
+
+{% block scripts %}
+<script>
+  // 상품 사진 갤러리: 스크롤 위치 ↔ 점/썸네일/카운터 동기화
+  (function () {
+    var root = document.querySelector("[data-gallery]");
+    if (!root) return;
+    var track = root.querySelector("[data-gallery-track]");
+    var slides = track.children;
+    var dots = root.querySelectorAll(".products-gallery-dot");
+    var thumbs = document.querySelectorAll("[data-gallery-thumb]");
+    var current = root.querySelector("[data-gallery-current]");
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var index = 0;
+
+    function go(i) {
+      i = Math.max(0, Math.min(slides.length - 1, i));
+      track.scrollTo({ left: i * track.clientWidth, behavior: reduce ? "auto" : "smooth" });
+    }
+    function sync() {
+      var i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+      if (i === index && current && current.textContent == i + 1) return;
+      index = i;
+      dots.forEach(function (d, n) { if (n === i) d.setAttribute("data-active", ""); else d.removeAttribute("data-active"); });
+      thumbs.forEach(function (t, n) { t.setAttribute("aria-selected", String(n === i)); });
+      if (current) current.textContent = i + 1;
+    }
+    var raf = null;
+    track.addEventListener("scroll", function () { if (raf) cancelAnimationFrame(raf); raf = requestAnimationFrame(sync); }, { passive: true });
+    root.addEventListener("click", function (e) {
+      if (e.target.closest("[data-gallery-prev]")) go(index - 1);
+      if (e.target.closest("[data-gallery-next]")) go(index + 1);
+    });
+    thumbs.forEach(function (t) { t.addEventListener("click", function () { go(parseInt(t.dataset.galleryThumb, 10)); }); });
+    track.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft") { e.preventDefault(); go(index - 1); }
+      if (e.key === "ArrowRight") { e.preventDefault(); go(index + 1); }
+    });
+  })();
+</script>
+{% endblock %}

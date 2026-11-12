@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% comment "usage" %}
+알림 목록 (notifications:list) — 전체/안 읽음 탭 · 모두 읽음 · 페이지네이션
+컨텍스트: page_obj(Notification 페이지) · counts({all, unread}) · current_filter("all" | "unread")
+{% endcomment %}
+{% block title %}알림{% endblock %}
+
+{% block content %}
+<div class="container-page py-6 md:py-10">
+  <div class="mx-auto w-full max-w-2xl">
+    <div class="flex items-end justify-between gap-3">
+      <div>
+        <h1 class="page-title">알림</h1>
+        <p class="muted mt-1 text-[15px]">{% if counts.unread %}안 읽은 알림이 {{ counts.unread }}개 있어요.{% else %}새 알림을 모두 확인했어요.{% endif %}</p>
+      </div>
+      {% if counts.unread %}
+        <form method="post" action="{% url 'notifications:read_all' %}" class="shrink-0">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="btn btn-secondary btn-sm">{% include "components/icon.html" with name="check-double" %}모두 읽음</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <nav class="tab-list mt-6" aria-label="알림 필터">
+      <a href="{% url 'notifications:list' %}" class="tab{% if current_filter == 'all' %} tab-active{% endif %}"{% if current_filter == 'all' %} aria-current="page"{% endif %}>전체 <span class="tab-count">{{ counts.all }}</span></a>
+      <a href="{% url 'notifications:list' %}?filter=unread" class="tab{% if current_filter == 'unread' %} tab-active{% endif %}"{% if current_filter == 'unread' %} aria-current="page"{% endif %}>안 읽음 <span class="tab-count">{{ counts.unread }}</span></a>
+    </nav>
+
+    {% if page_obj.object_list %}
+      <ul class="card mt-4 divide-y divide-neutral-200 overflow-hidden">
+        {% for n in page_obj %}<li>{% include "notifications/partials/item.html" with n=n %}</li>{% endfor %}
+      </ul>
+      {% include "components/pagination.html" with page_obj=page_obj %}
+    {% else %}
+      <div class="card mt-4">
+        {% url 'products:list' as list_url %}
+        {% if current_filter == 'unread' %}
+          {% include "components/empty_state.html" with title="안 읽은 알림이 없어요" description="새 소식이 생기면 바로 알려 드릴게요." %}
+        {% else %}
+          {% include "components/empty_state.html" with title="아직 받은 알림이 없어요" description="찜한 상품의 가격이 바뀌거나 새 메시지, 거래 후기가 오면 여기서 알려 드려요." cta_url=list_url cta_label="상품 둘러보기" %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

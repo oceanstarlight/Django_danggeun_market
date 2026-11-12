@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static poly_tags %}
+{% comment %}상품 삭제 확인 (JS 없이 들어온 경우 등). POST 하면 삭제돼요.{% endcomment %}
+{% block title %}상품 삭제{% endblock %}
+
+{% block content %}
+<div class="container-page max-w-lg py-10 md:py-16">
+  <div class="card card-body space-y-5">
+    <div class="flex items-center gap-3">
+      <img src="{% if product.thumbnail_url %}{{ product.thumbnail_url }}{% else %}{% static 'img/placeholder.svg' %}{% endif %}" alt="" class="thumb h-16 w-16">
+      <div class="min-w-0">
+        <p class="truncate text-[15px] font-semibold text-neutral-900">{{ product.title }}</p>
+        <p class="text-sm text-neutral-500">{{ product.price|price }} · {{ product.get_status_display }}</p>
+      </div>
+    </div>
+    <div>
+      <h1 class="text-h2 text-neutral-900">이 상품을 삭제할까요?</h1>
+      <p class="mt-1.5 text-sm leading-6 text-neutral-600">삭제하면 사진, 찜, 채팅 기록도 함께 사라지고 되돌릴 수 없어요.</p>
+    </div>
+    <form method="post" action="{% url 'products:delete' product.pk %}" class="grid grid-cols-2 gap-2">
+      {% csrf_token %}
+      <a href="{% url 'products:detail' product.pk %}" class="btn btn-secondary btn-lg">취소</a>
+      <button type="submit" class="btn btn-danger btn-lg">삭제하기</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

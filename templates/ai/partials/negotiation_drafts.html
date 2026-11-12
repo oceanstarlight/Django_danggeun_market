@@ -1,0 +1,33 @@
+{% load static poly_tags %}{% comment %}
+ai:negotiate 결과 — 판매자가 고를 수 있는 답장 초안 3개 (chat 메시지 아래 .chat-nego-result 안에 들어가요)
+컨텍스트: message · drafts [{tone, text, price}] · offered_price · cached
+초안을 누르면 채팅 입력창(#chat-input)에 들어가요 — 보내기는 판매자가 직접 (static/js/ai.js).
+{% endcomment %}
+<div class="ai-result ai-drafts" data-ai-drafts>
+  <div class="ai-card-header">
+    {% include "components/icon.html" with name="sparkles" %}
+    <span>답장 초안이에요</span>
+    {% if offered_price %}<span class="badge badge-ai ml-auto">제시가 {{ offered_price|price }}</span>{% endif %}
+  </div>
+  <ul class="space-y-2" role="list">
+    {% for draft in drafts %}
+      <li>
+        <button type="button" class="ai-draft" data-ai-fill="#chat-input" data-ai-text="{{ draft.text }}">
+          <span class="ai-draft-tone">{{ draft.tone }}{% if draft.price %}<span class="ai-draft-price">{{ draft.price|price }}</span>{% endif %}</span>
+          <span class="ai-draft-text">{{ draft.text }}</span>
+        </button>
+      </li>
+    {% endfor %}
+  </ul>
+  <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-[13px] text-neutral-500">누르면 입력창에 들어가요. 보내기 전에 다듬어 주세요.</p>
+    <button type="button" class="btn btn-ghost btn-sm" hx-post="{% url 'ai:negotiate' message.pk %}" hx-vals='{"regenerate": "1"}'
+            hx-target="closest .chat-nego-result" hx-swap="innerHTML" hx-disabled-elt="this">
+      <span class="hide-on-request">{% include "components/icon.html" with name="refresh" class="h-4 w-4" %}</span>
+      <span class="spinner show-on-request" aria-hidden="true"></span>
+      다시 만들기
+    </button>
+  </div>
+</div>
+{# 채팅방은 ai.js 를 따로 불러오지 않으므로 여기서 불러요 (중복 실행은 ai.js 가 막아요) #}
+<script src="{% static 'js/ai.js' %}"></script>

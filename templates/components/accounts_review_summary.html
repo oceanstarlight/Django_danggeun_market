@@ -1,0 +1,27 @@
+{% comment "usage" %}
+받은 후기 요약 카드 (평균 별점 · 후기 수 · 많이 받은 매너 태그)
+  {% include "components/accounts_review_summary.html" with summary=summary %}
+파라미터: summary(apps.accounts.selectors.review_summary 결과: avg, stars, count, tags[(태그, 수)])
+{% endcomment %}
+<div class="rounded-md bg-neutral-50 p-4 md:p-5">
+  <div class="flex items-center gap-4">
+    <div class="text-center">
+      <p class="text-[32px] font-bold leading-10 tracking-[-0.02em] text-neutral-900 tabular">{% if summary.avg is not None %}{{ summary.avg|floatformat:1 }}{% else %}-{% endif %}</p>
+      <p class="text-xs text-neutral-500">평균 별점</p>
+    </div>
+    <div class="min-w-0 flex-1 border-l border-neutral-200 pl-4">
+      <div class="flex items-center gap-0.5" aria-hidden="true">
+        {% for i in "12345" %}{% if forloop.counter <= summary.stars %}{% include "components/icon.html" with name="star-fill" class="h-5 w-5 text-amber-400" %}{% else %}{% include "components/icon.html" with name="star" class="h-5 w-5 text-neutral-300" %}{% endif %}{% endfor %}
+      </div>
+      <p class="mt-1 text-sm text-neutral-600">후기 <strong class="font-semibold text-neutral-900">{{ summary.count }}개</strong>를 받았어요</p>
+    </div>
+  </div>
+  {% if summary.tags %}
+    <div class="mt-4 border-t border-neutral-200 pt-4">
+      <p class="mb-2 text-[13px] font-semibold text-neutral-700">많이 받은 매너 평가</p>
+      <ul class="flex flex-wrap gap-1.5">
+        {% for tag, n in summary.tags %}<li class="badge bg-white font-medium text-neutral-700 ring-1 ring-inset ring-neutral-200">{{ tag }} <span class="text-brand-700">{{ n }}</span></li>{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</div>

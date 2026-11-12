@@ -1,0 +1,20 @@
+{% comment "usage" %}
+모달 (모바일 바텀시트 / 데스크톱 중앙). ESC · 바깥 클릭 · [data-modal-close]로 닫혀요.
+  <button type="button" class="btn btn-secondary" data-modal-open="report-modal">신고하기</button>
+  {% include "components/modal.html" with id="report-modal" title="신고하기" body_template="moderation/partials/report_form.html" %}
+HTMX로 내용 불러오기: 본문 컨테이너 id는 "<id>-body"
+  <button data-modal-open="m1" hx-get="..." hx-target="#m1-body">열기</button>
+  {% include "components/modal.html" with id="m1" title="제목" %}
+JS: Poly.openModal("m1") / Poly.closeModal("m1")
+파라미터: id(필수) · title · body_template(include할 템플릿, 선택) · body(텍스트, 선택) · size("lg"면 넓게)
+{% endcomment %}
+<div id="{{ id }}" class="modal{% if size == 'lg' %} modal-lg{% endif %}" role="dialog" aria-modal="true" aria-labelledby="{{ id }}-title" data-modal hidden>
+  <div class="modal-overlay" data-modal-close></div>
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h2 id="{{ id }}-title" class="modal-title">{{ title }}</h2>
+      <button type="button" class="btn btn-ghost btn-icon btn-sm -mr-2" data-modal-close aria-label="닫기">{% include "components/icon.html" with name="x" %}</button>
+    </div>
+    <div id="{{ id }}-body" class="modal-body">{% if body_template %}{% include body_template %}{% elif body %}<p class="text-[15px] leading-6 text-neutral-700">{{ body }}</p>{% endif %}</div>
+  </div>
+</div>

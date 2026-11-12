@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load poly_tags %}
+{% block title %}채팅{% endblock %}
+
+{% block content %}
+<div class="container-page max-w-3xl py-6 md:py-8">
+  <div class="flex items-end justify-between gap-3">
+    <h1 class="page-title">채팅</h1>
+    {% if counts.unread %}<p class="text-sm text-neutral-500">안 읽은 대화 <strong class="font-semibold text-neutral-900 tabular-nums">{{ counts.unread }}</strong>개</p>{% endif %}
+  </div>
+
+  <nav class="tab-list mt-4" aria-label="채팅 필터">
+    {% for key, label, count in tabs %}
+      <a href="{% url 'chat:list' %}{% if key != 'all' %}?filter={{ key }}{% endif %}" class="tab{% if filter_key == key %} tab-active{% endif %}"{% if filter_key == key %} aria-current="page"{% endif %}>
+        {{ label }}{% if count %} <span class="tab-count">{{ count }}</span>{% endif %}
+      </a>
+    {% endfor %}
+  </nav>
+
+  {% if page_obj.object_list %}
+    <ul class="chat-list" role="list">
+      {% for room in page_obj %}
+        <li>{% include "chat/partials/room_item.html" %}</li>
+      {% endfor %}
+    </ul>
+    {% include "components/pagination.html" with page_obj=page_obj %}
+  {% else %}
+    {% url 'products:list' as browse_url %}
+    {% if filter_key == "unread" %}
+      {% include "components/empty_state.html" with title="안 읽은 대화가 없어요" description="새 메시지가 오면 여기에서 바로 알려 드릴게요." %}
+    {% elif filter_key == "selling" %}
+      {% url 'products:create' as create_url %}
+      {% include "components/empty_state.html" with title="아직 판매 문의가 없어요" description="상품을 올리면 이웃의 문의가 여기에 모여요." cta_url=create_url cta_label="내 물건 팔기" %}
+    {% else %}
+      {% include "components/empty_state.html" with title="아직 대화가 없어요" description="마음에 드는 물건을 찾으면 판매자에게 채팅을 보내 보세요." cta_url=browse_url cta_label="중고거래 둘러보기" %}
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,33 +1,19 @@
 # 진행 상황
 
-당근마켓 클론 Django 프로젝트의 작업 현황과 실행 방법을 정리한 문서입니다.
+실행 방법·구조·환경 변수는 [README.md](README.md)를 참고하세요.
 
-## 실행 방법
+## 완료
 
-```powershell
-# 가상환경 활성화
-.venv\Scripts\activate
+- 중간 버전: 단일 앱(`market`) 구조, 상품 CRUD · 찜 · 실시간 채팅 (보고서: `docs/reports/midterm/`)
+- 리팩토링
+  - 기능별 앱 8개(`apps/*`) + 서비스 레이어(`services.py` / `selectors.py`)
+  - 설정 분리(`config/settings/` base · dev · prod)
+  - Tailwind + HTMX 디자인 시스템
+- 기본 기능: 회원·동네, 상품(다중 사진·카테고리·상태), 검색·필터, 찜·최근 본 상품, 1:1 채팅(읽음), 거래완료·후기·매너온도, 알림, 신고·차단, 판매자 프로필
+- AI 기능 4종 (Gemini): 설명 생성, 사진 인식 자동 분류, 사기 의심 탐지, 가격 협상 답장 초안
+- 테스트 359개 통과
 
-# 개발 서버 실행
-python manage.py runserver
-```
+## 예정
 
-서버가 뜨면 http://127.0.0.1:8000/ 에서 메인 페이지를 볼 수 있습니다.
-
-> DB는 PostgreSQL(Supabase)이며 접속 정보를 환경변수(`.env`)에서 읽습니다.
-> `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`가 설정되어 있어야 합니다.
-
-## 완료한 작업
-
-- Django 프로젝트(`config`)와 앱(`market`) 생성
-- 메인 페이지 뷰/URL/템플릿 연결 (`/` → `market/main.html`)
-- DB를 PostgreSQL(Supabase)로 설정, 접속 정보는 환경변수로 분리
-- `.gitignore`에 등록된 파일(`db.sqlite3`, `.vscode/`, `__pycache__/`)을 git 추적에서 제거
-
-## 진행 중 / 예정 작업
-
-- 모델 설계: 상품(Product), 사용자(User), 지역 등 (현재 `models.py`는 비어 있음)
-- 마이그레이션 생성 및 Supabase DB에 적용
-- 상품 목록 / 상세 / 등록 페이지 구현
-- 메인 페이지 디자인 (현재는 환영 문구만 표시)
-- `.gitignore`의 `Thunbs.db` 오타를 `Thumbs.db`로 수정
+- 운영 DB 초기화 후 Render 재배포 (새 마이그레이션 적용)
+- 기말 보고서 (`docs/reports/final/`)

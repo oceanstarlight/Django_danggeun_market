@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="이미지 없음">
+  <!-- 상품 이미지가 없을 때 쓰는 기본 이미지 (다면체 모티프) -->
+  <rect width="400" height="400" fill="#F5F5F4"/>
+  <g transform="translate(200 188)">
+    <path d="M0-58 50-29 0-8Z" fill="#E7E5E4"/>
+    <path d="M50-29v58L0-8Z" fill="#D6D3D1"/>
+    <path d="M50 29 0 58 0-8Z" fill="#C9C5C2"/>
+    <path d="M0 58-50 29 0-8Z" fill="#D6D3D1"/>
+    <path d="M-50 29v-58L0-8Z" fill="#E7E5E4"/>
+    <path d="M-50-29 0-58 0-8Z" fill="#EFEDEC"/>
+    <path d="M0-58 50-29v58L0 58-50 29v-58Z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <rect x="160" y="276" width="80" height="6" rx="3" fill="#E7E5E4"/>
+</svg>

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load poly_tags %}
+{% comment "usage" %}
+프로필 수정 (accounts:profile_edit) — 닉네임 · 동네 · 소개 · 아바타(core.storage 업로드)
+컨텍스트: form(ProfileForm) · profile
+{% endcomment %}
+{% block title %}프로필 수정{% endblock %}
+
+{% block content %}
+<div class="container-page py-6 md:py-10">
+  <div class="mx-auto w-full max-w-xl">
+    <a href="{% url 'accounts:mypage' %}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900">
+      {% include "components/icon.html" with name="chevron-left" class="h-4 w-4" %}마이페이지
+    </a>
+    <h1 class="page-title mt-2">프로필 수정</h1>
+    <p class="muted mt-1 text-[15px]">이웃에게 보여지는 정보예요.</p>
+
+    <form id="profile-form" method="post" enctype="multipart/form-data" action="{% url 'accounts:profile_edit' %}" class="card card-body mt-6 md:p-6" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-6" role="alert">
+          {% include "components/icon.html" with name="alert" %}
+          <div>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+        </div>
+      {% endif %}
+
+      {# ── 아바타 ── #}
+      <div class="flex items-center gap-5{% if form.avatar.errors %} field-has-error{% endif %}">
+        <div class="relative shrink-0">
+          <span id="avatar-preview" class="avatar h-20 w-20 text-2xl">
+            {% if profile.avatar_url %}<img src="{{ profile.avatar_url }}" alt="현재 프로필 사진">{% else %}<span aria-hidden="true">{{ profile.nickname|slice:":1"|upper }}</span>{% endif %}
+          </span>
+          <label for="{{ form.avatar.id_for_label }}" class="absolute -bottom-1 -right-1 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-700 shadow-sm hover:bg-neutral-50" aria-hidden="true">
+            {% include "components/icon.html" with name="camera" class="h-4 w-4" %}
+          </label>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="label mb-1">{{ form.avatar.label }}</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <label for="{{ form.avatar.id_for_label }}" class="btn btn-secondary btn-sm cursor-pointer">사진 선택</label>
+            {% if profile.avatar_url %}
+              <label for="{{ form.remove_avatar.id_for_label }}" class="inline-flex cursor-pointer items-center gap-2 text-[13px] text-neutral-600">
+                {{ form.remove_avatar }}<span>{{ form.remove_avatar.label }}</span>
+              </label>
+            {% endif %}
+          </div>
+          <p class="help" id="avatar-help">{{ form.avatar.help_text }}</p>
+          <div class="sr-only">{{ form.avatar }}</div>
+          {% for error in form.avatar.errors %}<p class="field-error" role="alert">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>{{ error }}</span></p>{% endfor %}
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="form-stack">
+        <div>
+          {% include "components/form_field.html" with field=form.nickname %}
+          <div id="check-nickname" aria-live="polite"></div>
+        </div>
+        {% include "components/form_field.html" with field=form.region %}
+        {% include "components/form_field.html" with field=form.bio %}
+      </div>
+
+      <hr class="divider">
+
+      <dl class="grid grid-cols-[88px_minmax(0,1fr)] gap-y-2 text-sm">
+        <dt class="text-neutral-500">아이디</dt><dd class="truncate text-neutral-800">{{ user.username }}</dd>
+        {% if user.first_name %}<dt class="text-neutral-500">이름</dt><dd class="truncate text-neutral-800">{{ user.first_name }}</dd>{% endif %}
+        {% if profile.phone %}<dt class="text-neutral-500">휴대폰</dt><dd class="text-neutral-800 tabular">{{ profile.phone|slice:":4" }}****{{ profile.phone|slice:"-5:" }}</dd>{% endif %}
+      </dl>
+
+      <div class="mt-8 hidden justify-end gap-2 md:flex">
+        <a href="{% url 'accounts:mypage' %}" class="btn btn-ghost">취소</a>
+        <button type="submit" class="btn btn-primary">저장하기</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block bottom_cta %}<div class="bottom-cta-inner"><a href="{% url 'accounts:mypage' %}" class="btn btn-secondary btn-lg">취소</a><button type="submit" form="profile-form" class="btn btn-primary btn-lg flex-1">저장하기</button></div>{% endblock %}
+
+{% block scripts %}
+<script>
+  // 아바타 미리보기: 선택한 사진을 원형 아바타에 바로 보여줘요
+  (function () {
+    var input = document.querySelector("[data-avatar-input]");
+    var preview = document.getElementById("avatar-preview");
+    var remove = document.getElementById("{{ form.remove_avatar.id_for_label }}");
+    if (!input || !preview) return;
+    var lastUrl = null;
+    input.addEventListener("change", function () {
+      var file = input.files && input.files[0];
+      if (!file || !/^image\//.test(file.type)) return;
+      if (file.size > 10 * 1024 * 1024) { window.Poly && Poly.toast("사진은 10MB 이하만 올릴 수 있어요", "warning"); input.value = ""; return; }
+      if (lastUrl) URL.revokeObjectURL(lastUrl);
+      lastUrl = URL.createObjectURL(file);
+      preview.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = lastUrl;
+      img.alt = "새 프로필 사진 미리보기";
+      preview.appendChild(img);
+      if (remove) remove.checked = false;
+    });
+  })();
+</script>
+{% endblock %}

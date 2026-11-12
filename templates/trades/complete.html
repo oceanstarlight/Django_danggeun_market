@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load poly_tags %}
+{% comment "usage" %}
+거래완료 처리 (trades:complete) — 판매자가 채팅한 이웃 중 구매자를 골라요
+컨텍스트: product · partners(ChatRoom 목록; buyer__profile__region, num_messages, last_message)
+          selected(미리 선택된 buyer id 문자열 또는 no_buyer) · no_buyer("none") · error
+{% endcomment %}
+{% block title %}거래완료{% endblock %}
+
+{% block content %}
+<div class="container-page py-6 md:py-10">
+  <div class="mx-auto w-full max-w-xl">
+    <a href="{% url 'products:detail' product.pk %}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900">
+      {% include "components/icon.html" with name="chevron-left" class="h-4 w-4" %}상품으로 돌아가기
+    </a>
+    <h1 class="page-title mt-2">누구와 거래했나요?</h1>
+    <p class="muted mt-1 text-[15px]">구매자를 선택하면 거래완료로 바뀌고, 서로 후기를 남길 수 있어요.</p>
+
+    <div class="mt-6">{% include "trades/partials/product_summary.html" with product=product %}</div>
+
+    <form id="trade-complete-form" method="post" action="{% url 'trades:complete' product.pk %}" class="mt-8" novalidate>
+      {% csrf_token %}
+      <fieldset>
+        <legend class="section-title">채팅한 이웃 <span class="tab-count align-middle">{{ partners|length }}</span></legend>
+
+        {% if error %}
+          <div class="alert alert-danger mt-3" role="alert">
+            {% include "components/icon.html" with name="alert" %}
+            <p>{{ error }}</p>
+          </div>
+        {% endif %}
+
+        {% if partners %}
+          <ul class="card mt-3 divide-y divide-neutral-200 overflow-hidden">
+            {% for room in partners %}{% with buyer=room.buyer %}
+              <li>
+                <label for="buyer-{{ buyer.pk }}" class="flex cursor-pointer items-center gap-3 px-4 py-3.5 transition-colors duration-150 hover:bg-neutral-50 has-[:checked]:bg-brand-50 motion-reduce:transition-none md:px-5">
+                  {% include "components/avatar.html" with user=buyer %}
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-center gap-1.5">
+                      <span class="truncate text-[15px] font-semibold text-neutral-900">{{ buyer|display_name }}</span>
+                      {% include "components/manner_temp.html" with temperature=buyer.profile.manner_temperature compact=True %}
+                    </span>
+                    <span class="mt-0.5 block truncate text-[13px] text-neutral-500">
+                      {% if buyer.profile.region %}{{ buyer.profile.region.short_name }} · {% endif %}{% if room.last_message_at %}<time datetime="{{ room.last_message_at|date:'c' }}">{{ room.last_message_at|timeago }}</time> 대화{% else %}아직 대화가 없어요{% endif %}
+                    </span>
+                    {% if room.last_message %}<span class="mt-0.5 block truncate text-[13px] text-neutral-600">“{{ room.last_message }}”</span>{% endif %}
+                  </span>
+                  <input type="radio" id="buyer-{{ buyer.pk }}" name="buyer" value="{{ buyer.pk }}" class="radio"{% if selected == buyer.pk|stringformat:'s' %} checked{% endif %} required>
+                </label>
+              </li>
+            {% endwith %}{% endfor %}
+          </ul>
+        {% else %}
+          <div class="card mt-3">
+            {% include "components/empty_state.html" with title="아직 채팅한 이웃이 없어요" description="이 상품으로 채팅한 이웃이 있어야 구매자로 선택하고 후기를 주고받을 수 있어요." compact=True %}
+          </div>
+        {% endif %}
+
+        {# 채팅 밖에서 거래한 경우: 구매자 없이 거래완료 (후기는 남길 수 없음) #}
+        <label for="buyer-none" class="card mt-3 flex cursor-pointer items-center gap-3 px-4 py-3.5 transition-colors duration-150 hover:bg-neutral-50 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50 motion-reduce:transition-none md:px-5">
+          <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">{% include "components/icon.html" with name="user" %}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-[15px] font-semibold text-neutral-900">채팅 밖에서 거래했어요</span>
+            <span class="mt-0.5 block text-[13px] text-neutral-500">구매자 없이 거래완료로 바꿔요. 이 경우 후기는 남길 수 없어요.</span>
+          </span>
+          <input type="radio" id="buyer-none" name="buyer" value="{{ no_buyer }}" class="radio"{% if selected == no_buyer %} checked{% endif %}>
+        </label>
+      </fieldset>
+
+      <div class="alert alert-info mt-6">
+        {% include "components/icon.html" with name="info" %}
+        <p>거래완료로 바꾸면 구매자에게 알림이 가요. 다시 판매하려면 상품 화면에서 판매 상태를 바꾸면 돼요.</p>
+      </div>
+
+      <div class="mt-6 hidden gap-2 md:flex">
+        <a href="{% url 'products:detail' product.pk %}" class="btn btn-secondary btn-lg flex-1">취소</a>
+        <button type="submit" class="btn btn-primary btn-lg flex-[2]">{% include "components/icon.html" with name="check" %}거래완료로 바꾸기</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block bottom_cta %}<div class="bottom-cta-inner">
+  <button type="submit" form="trade-complete-form" class="btn btn-primary btn-lg btn-block">{% include "components/icon.html" with name="check" %}거래완료로 바꾸기</button>
+</div>{% endblock %}

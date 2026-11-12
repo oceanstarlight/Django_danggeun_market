@@ -1,0 +1,18 @@
+{% load static %}<!doctype html>
+{# 서버 오류 화면: DB/컨텍스트 없이도 렌더되도록 base.html 을 쓰지 않는다 #}
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>잠시 문제가 생겼어요 · 폴리마켓</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="bg-white text-neutral-900">
+  <main class="container-page max-w-xl py-24 text-center">
+    <p class="text-5xl" aria-hidden="true">🔧</p>
+    <h1 class="page-title mt-6">잠시 문제가 생겼어요</h1>
+    <p class="muted mt-2">잠시 후 다시 시도해 주세요. 문제가 계속되면 새로고침해 주세요.</p>
+    <a href="/" class="btn btn-primary mt-8">홈으로 가기</a>
+  </main>
+</body>
+</html>

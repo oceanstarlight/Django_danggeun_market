@@ -1,0 +1,5 @@
+{% comment "usage" %}
+사용자 아바타 (프로필 이미지가 없으면 닉네임 첫 글자)
+  {% include "components/avatar.html" with user=product.seller size="lg" %}
+파라미터: user(User) · size(sm | md | lg, 기본 md) · class(추가 클래스, 선택)
+{% endcomment %}{% load poly_tags %}{% with s=size|default:"md" name=user|display_name %}<span class="avatar{% if s == 'sm' %} avatar-sm{% elif s == 'lg' %} avatar-lg{% endif %}{% if class %} {{ class }}{% endif %}" role="img" aria-label="{{ name }}">{% if user.profile.avatar_url %}<img src="{{ user.profile.avatar_url }}" alt="" loading="lazy" decoding="async">{% else %}<span aria-hidden="true">{{ name|slice:":1"|upper }}</span>{% endif %}</span>{% endwith %}

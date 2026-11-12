@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load poly_tags %}
+{% comment %}
+상품 등록/수정 (products:create, products:update)
+컨텍스트: form(ProductForm) · product · is_edit · max_images · existing_images · removed_ids
+- 이미지 input: name="images" id="id_images" (AI 패널 JS가 이 input 의 파일을 사용)
+- 기존 이미지: 체크하면 '삭제 예정' → 저장할 때 지워져요 (remove_images)
+{% endcomment %}
+{% block title %}{% if is_edit %}상품 수정{% else %}내 물건 팔기{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-page max-w-3xl py-6 md:py-10">
+  <header class="mb-6 flex items-center gap-2">
+    <a href="{% if is_edit %}{% url 'products:detail' product.pk %}{% else %}{% url 'core:home' %}{% endif %}" class="btn btn-ghost btn-icon -ml-2 md:hidden" aria-label="뒤로 가기">{% include "components/icon.html" with name="chevron-left" %}</a>
+    <div>
+      <h1 class="page-title">{% if is_edit %}상품 정보 수정{% else %}내 물건 팔기{% endif %}</h1>
+      {% if not is_edit %}<p class="mt-1 text-sm text-neutral-500">사진을 올리면 AI가 제목과 설명 초안을 만들어 드려요.</p>{% endif %}
+    </div>
+  </header>
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger mb-6" role="alert">
+      {% include "components/icon.html" with name="alert" %}
+      <div>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+    </div>
+  {% endif %}
+
+  <form id="product-form" method="post" enctype="multipart/form-data" novalidate class="form-stack"
+        action="{% if is_edit %}{% url 'products:update' product.pk %}{% else %}{% url 'products:create' %}{% endif %}">
+    {% csrf_token %}
+
+    {# ───────── 사진 ───────── #}
+    <section class="field{% if form.images.errors or form.remove_images.errors %} field-has-error{% endif %}" aria-labelledby="photos-label">
+      <div class="mb-2 flex items-baseline justify-between">
+        <h2 id="photos-label" class="label mb-0">사진 <span class="font-normal text-neutral-500">(선택)</span></h2>
+        <span class="text-[13px] tabular-nums text-neutral-500"><span data-photo-count>{{ existing_images|length }}</span> / {{ max_images }}</span>
+      </div>
+
+      <div class="preview-grid">
+        {{ form.images }}
+        <label for="{{ form.images.id_for_label }}" class="products-upload-tile">
+          {% include "components/icon.html" with name="camera" class="h-6 w-6" %}
+          <span>사진 추가</span>
+        </label>
+        {% for image in existing_images %}
+          {% with image_id=image.pk|stringformat:"s" %}
+          <label class="preview-item products-existing cursor-pointer" title="눌러서 삭제 예정으로 표시해요">
+            <input type="checkbox" name="remove_images" value="{{ image.pk }}" class="peer sr-only"{% if image_id in removed_ids %} checked{% endif %} data-remove-image>
+            <img src="{{ image.image_url }}" alt="등록된 사진 {{ forloop.counter }}" loading="lazy">
+            {% if forloop.first %}<span class="preview-item-badge">대표</span>{% endif %}
+            <span class="products-remove-btn" aria-hidden="true">{% include "components/icon.html" with name="x" class="h-3.5 w-3.5" stroke="2.5" %}</span>
+            <span class="products-remove-overlay" aria-hidden="true">삭제 예정</span>
+            <span class="sr-only">{{ forloop.counter }}번째 사진 삭제</span>
+          </label>
+          {% endwith %}
+        {% endfor %}
+      </div>
+
+      {# 새로 고른 사진 미리보기 (app.js 가 채워요) #}
+      <div id="image-preview" class="mt-2" aria-live="polite" hidden></div>
+
+      <p class="help">{{ form.images.help_text }}{% if is_edit %} 기존 사진을 누르면 삭제할 수 있어요.{% endif %}</p>
+      {% for error in form.images.errors %}<p class="field-error" role="alert">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>{{ error }}</span></p>{% endfor %}
+      {% for error in form.remove_images.errors %}<p class="field-error" role="alert">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>{{ error }}</span></p>{% endfor %}
+    </section>
+
+    {# ───────── AI 도우미 (AI 담당 partial) ───────── #}
+    {% include "ai/partials/product_form_ai_panel.html" %}
+
+    {# ───────── 기본 정보 ───────── #}
+    {% include "components/form_field.html" with field=form.title %}
+
+    <div class="grid gap-5 sm:grid-cols-2">
+      {% include "components/form_field.html" with field=form.category %}
+      {% include "components/form_field.html" with field=form.condition %}
+    </div>
+
+    <div class="field">
+      <div class="grid gap-x-5 gap-y-3 sm:grid-cols-2 sm:items-start">
+        {% include "components/form_field.html" with field=form.price suffix="원" %}
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 sm:pt-[30px]">
+          <button type="button" class="chip" data-price-free aria-pressed="{% if form.price.value == 0 or form.price.value == '0' %}true{% else %}false{% endif %}">나눔으로 올리기</button>
+          {% include "components/form_field.html" with field=form.negotiable %}
+        </div>
+      </div>
+    </div>
+
+    {% include "components/form_field.html" with field=form.region %}
+    {% include "components/form_field.html" with field=form.content %}
+
+    <div class="alert alert-info">
+      {% include "components/icon.html" with name="info" %}
+      <div><p class="alert-title">안전하게 거래해요</p><p>선입금 요구, 외부 메신저 유도, 개인정보 요청 문구는 사기 의심 신호로 표시될 수 있어요.</p></div>
+    </div>
+
+    <div class="hidden items-center justify-end gap-2 border-t border-neutral-200 pt-6 md:flex">
+      <a href="{% if is_edit %}{% url 'products:detail' product.pk %}{% else %}{% url 'core:home' %}{% endif %}" class="btn btn-ghost btn-lg">취소</a>
+      <button type="submit" class="btn btn-primary btn-lg min-w-[160px]">{% if is_edit %}수정 완료{% else %}등록하기{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block bottom_cta %}
+<div class="bottom-cta-inner">
+  <button type="submit" form="product-form" class="btn btn-primary btn-lg btn-block">{% if is_edit %}수정 완료{% else %}등록하기{% endif %}</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 상품 폼 보조: 사진 개수 표시, '나눔' 버튼
+  (function () {
+    var form = document.getElementById("product-form");
+    if (!form) return;
+    var input = document.getElementById("id_images");
+    var countEl = form.querySelector("[data-photo-count]");
+    var price = document.getElementById("id_price");
+    var nego = document.getElementById("id_negotiable");
+    var freeBtn = form.querySelector("[data-price-free]");
+
+    function updateCount() {
+      var kept = form.querySelectorAll("[data-remove-image]:not(:checked)").length;
+      var added = input && input.files ? Math.min(input.files.length, parseInt(input.dataset.previewMax || "10", 10)) : 0;
+      if (countEl) countEl.textContent = kept + added;
+    }
+    function syncFree() {
+      var isFree = price && price.value !== "" && Number(price.value) === 0;
+      if (freeBtn) { freeBtn.classList.toggle("chip-active", isFree); freeBtn.setAttribute("aria-pressed", String(isFree)); }
+      if (nego) { nego.disabled = isFree; if (isFree) nego.checked = false; }
+    }
+    form.addEventListener("change", function (e) {
+      if (e.target === input || e.target.matches("[data-remove-image]")) updateCount();
+    });
+    if (price) price.addEventListener("input", syncFree);
+    if (freeBtn) freeBtn.addEventListener("click", function () {
+      var isFree = freeBtn.getAttribute("aria-pressed") === "true";
+      price.value = isFree ? "" : "0";
+      syncFree();
+      price.focus();
+    });
+    updateCount();
+    syncFree();
+  })();
+</script>
+{% endblock %}

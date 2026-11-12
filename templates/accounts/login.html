@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+{% comment "usage" %}
+로그인 페이지 (accounts:login)
+컨텍스트: form(LoginForm) · next(로그인 후 돌아갈 경로, 선택)
+{% endcomment %}
+{% block title %}로그인{% endblock %}
+
+{% block content %}
+<div class="container-page py-10 md:py-16">
+  <div class="mx-auto w-full max-w-[420px]">
+    <div class="mb-8 text-center">
+      <img src="{% static 'img/logo-mark.svg' %}" alt="" class="mx-auto h-12 w-12" width="48" height="48">
+      <h1 class="page-title mt-4">다시 만나서 반가워요</h1>
+      <p class="muted mt-2 text-[15px]">아이디와 비밀번호로 로그인해 주세요.</p>
+    </div>
+
+    <div class="sm:rounded-lg sm:border sm:border-neutral-200 sm:bg-white sm:p-8">
+      <form method="post" action="{% url 'accounts:login' %}" class="form-stack" novalidate>
+        {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">
+            {% include "components/icon.html" with name="alert" %}
+            <div>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+          </div>
+        {% endif %}
+
+        {% include "components/form_field.html" with field=form.username %}
+        {% include "components/form_field.html" with field=form.password %}
+        {% include "components/form_field.html" with field=form.remember %}
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block">로그인</button>
+      </form>
+    </div>
+
+    <p class="mt-6 text-center text-[15px] text-neutral-600">
+      아직 회원이 아니신가요?
+      <a href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link ml-1">회원가입</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

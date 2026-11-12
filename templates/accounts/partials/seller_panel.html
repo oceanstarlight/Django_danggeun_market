@@ -1,0 +1,35 @@
+{% comment "usage" %}
+판매자 프로필 탭 + 목록 (#seller-panel 안쪽). 탭/페이지 이동은 HTMX(hx-boost)로 이 영역만 바꿔요.
+컨텍스트: seller · tabs · tab · page_obj · summary · is_me
+{% endcomment %}{% load poly_tags %}
+<nav class="tab-list" aria-label="{{ seller|display_name }}님의 활동" hx-boost="true" hx-target="#seller-panel" hx-swap="innerHTML show:none">
+  {% for t in tabs %}
+    <a href="{% url 'accounts:seller_profile' seller.username %}?tab={{ t.key }}" class="tab{% if t.active %} tab-active{% endif %}"{% if t.active %} aria-current="page"{% endif %}>{{ t.label }}<span class="tab-count">{{ t.count }}</span></a>
+  {% endfor %}
+</nav>
+
+<div class="pt-6">
+  {% if tab == "reviews" %}
+    {% if page_obj.object_list %}
+      {% include "components/accounts_review_summary.html" with summary=summary %}
+      <div class="mt-2 divide-y divide-neutral-200">
+        {% for review in page_obj %}{% include "components/accounts_review_item.html" %}{% endfor %}
+      </div>
+    {% else %}
+      {% include "components/empty_state.html" with title="아직 받은 후기가 없어요" description="거래를 마친 이웃이 남긴 후기가 여기에 보여요." %}
+    {% endif %}
+  {% elif page_obj.object_list %}
+    <div class="product-grid">
+      {% for product in page_obj %}{% include "components/product_card.html" %}{% endfor %}
+    </div>
+  {% elif tab == "selling" %}
+    {% if is_me %}{% url 'products:create' as create_url %}{% endif %}
+    {% include "components/empty_state.html" with title="판매 중인 상품이 없어요" description="새 상품이 올라오면 여기에서 볼 수 있어요." cta_url=create_url cta_label="내 물건 팔기" %}
+  {% else %}
+    {% include "components/empty_state.html" with title="아직 거래를 완료한 상품이 없어요" %}
+  {% endif %}
+
+  <div hx-boost="true" hx-target="#seller-panel" hx-swap="innerHTML show:#seller-panel:top">
+    {% include "components/pagination.html" with page_obj=page_obj %}
+  </div>
+</div>

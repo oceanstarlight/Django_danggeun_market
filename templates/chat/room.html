@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static poly_tags %}
+{% block title %}{{ partner|display_name }}님과의 채팅{% endblock %}
+
+{% block content %}
+<section class="chat-shell" id="chat-root"
+         data-room-id="{{ room.pk }}"
+         data-user-id="{{ user.pk }}"
+         data-seller-id="{{ room.seller_id }}"
+         data-buyer-id="{{ room.buyer_id }}"
+         data-ws-path="{{ ws_path }}"
+         data-read-url="{% url 'chat:mark_read' room.pk %}"
+         data-negotiate-url="{{ negotiate_url_template }}"
+         data-blocked="{{ blocked|yesno:'1,0' }}"
+         data-tz="{{ time_zone }}"
+         aria-label="{{ partner|display_name }}님과의 채팅">
+
+  {# ───── 상단: 상대 정보 + 메뉴 ───── #}
+  <header class="chat-header">
+    <a href="{% url 'chat:list' %}" class="btn btn-ghost btn-icon shrink-0" aria-label="채팅 목록으로">{% include "components/icon.html" with name="arrow-left" %}</a>
+    <a href="{% url 'accounts:seller_profile' partner.username %}" class="flex min-w-0 flex-1 items-center gap-2.5 rounded-md">
+      {% include "components/avatar.html" with user=partner size="sm" %}
+      <span class="min-w-0">
+        <span class="flex items-center gap-1.5">
+          <span class="truncate text-[15px] font-semibold text-neutral-900">{{ partner|display_name }}</span>
+          {% include "components/manner_temp.html" with temperature=partner.profile.manner_temperature compact=True %}
+        </span>
+        <span class="block truncate text-xs text-neutral-500">
+          {% if is_seller %}구매 문의{% else %}판매자{% endif %}{% if partner.profile.region %} · {{ partner.profile.region.dong }}{% endif %}
+        </span>
+      </span>
+    </a>
+    <span class="chat-conn" id="chat-conn" data-state="connecting" role="status" aria-live="polite">연결 중</span>
+    <div class="relative" data-dropdown>
+      <button type="button" class="btn btn-ghost btn-icon" data-dropdown-toggle aria-haspopup="true" aria-expanded="false" aria-label="더보기">{% include "components/icon.html" with name="more" %}</button>
+      <div class="dropdown w-52" data-dropdown-menu role="menu" hidden>
+        <a href="{% url 'accounts:seller_profile' partner.username %}" class="dropdown-item" role="menuitem">{% include "components/icon.html" with name="user" %}프로필 보기</a>
+        <a href="{% url 'products:detail' product.pk %}" class="dropdown-item" role="menuitem">{% include "components/icon.html" with name="tag" %}상품 보기</a>
+        <a href="{% url 'moderation:report_user' partner.username %}" class="dropdown-item" role="menuitem">{% include "components/icon.html" with name="flag" %}신고하기</a>
+        <div class="dropdown-divider"></div>
+        <form method="post" action="{% url 'moderation:block_toggle' partner.username %}"{% if not i_blocked %} data-confirm="{{ partner|display_name }}님을 차단할까요? 서로 메시지를 보낼 수 없어요."{% endif %}>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="dropdown-item{% if not i_blocked %} dropdown-item-danger{% endif %}" role="menuitem">
+            {% include "components/icon.html" with name="ban" %}{% if i_blocked %}차단 해제하기{% else %}차단하기{% endif %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  {# ───── 상품 요약 바 ───── #}
+  {% include "chat/partials/product_bar.html" %}
+
+  {# ───── 메시지 ───── #}
+  <div class="chat-scroll" id="chat-scroll" tabindex="0" aria-label="대화 내용">
+    <div class="chat-safety">
+      {% include "components/icon.html" with name="info" class="h-4 w-4 shrink-0" %}
+      <p>선입금 요구나 외부 메신저·링크 유도는 사기일 수 있어요. 직접 만나서 거래해 주세요.</p>
+    </div>
+    <div id="chat-messages" aria-live="polite" aria-relevant="additions">
+      {% include "chat/partials/messages.html" %}
+    </div>
+    {% if not entries %}
+      <div id="chat-empty">
+        {% with title=partner|display_name|add:"님에게 첫 메시지를 보내 보세요" %}
+          {% if is_seller %}
+            {% include "components/empty_state.html" with title=title description="구매 문의에 친절하게 답해 주세요." compact=True %}
+          {% else %}
+            {% include "components/empty_state.html" with title=title description="상품 상태나 거래 장소를 먼저 물어봐도 좋아요." compact=True %}
+          {% endif %}
+        {% endwith %}
+      </div>
+    {% endif %}
+    <div id="chat-bottom" aria-hidden="true"></div>
+  </div>
+
+  {# ───── 입력창 ───── #}
+  <div class="chat-composer">
+    {% if blocked %}
+      <div class="alert alert-warning">
+        {% include "components/icon.html" with name="ban" %}
+        <p>{% if i_blocked %}차단한 사용자예요. 차단을 해제하면 다시 대화할 수 있어요.{% else %}지금은 이 사용자와 메시지를 주고받을 수 없어요.{% endif %}</p>
+      </div>
+    {% else %}
+      <form method="post" action="{% url 'chat:room' room.pk %}" class="chat-form" id="chat-form" autocomplete="off">
+        {% csrf_token %}
+        <label for="chat-input" class="sr-only">메시지</label>
+        <textarea id="chat-input" name="content" rows="1" maxlength="{{ max_length }}" class="textarea chat-input"
+                  placeholder="메시지를 입력해 주세요" enterkeyhint="send" data-autoresize data-autoresize-max="140" required></textarea>
+        <button type="submit" class="btn btn-primary btn-icon chat-send" aria-label="보내기" id="chat-send">
+          {% include "components/icon.html" with name="send" %}
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  {# 실시간 수신 메시지용 상대 아바타 원본 #}
+  <template id="chat-partner-avatar">{% include "components/avatar.html" with user=partner size="sm" %}</template>
+  {# 실시간 수신 메시지용 협상 버튼 원본 (id 0 → JS 가 실제 id 로 교체) #}
+  {% if is_seller %}
+    <template id="chat-negotiation-template">{% include "ai/partials/negotiation_button.html" with message=negotiation_template_message %}</template>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/chat.js' %}" defer></script>
+{% endblock %}

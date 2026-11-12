@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+{% comment "usage" %}
+회원가입 페이지 (accounts:signup)
+컨텍스트: form(SignUpForm) · next(선택)
+아이디/닉네임/휴대폰은 입력하는 동안 accounts:check_duplicate 로 중복을 확인해요(HTMX).
+{% endcomment %}
+{% block title %}회원가입{% endblock %}
+
+{% block content %}
+<div class="container-page py-10 md:py-14">
+  <div class="mx-auto w-full max-w-[520px]">
+    <div class="mb-8 text-center">
+      <img src="{% static 'img/logo-mark.svg' %}" alt="" class="mx-auto h-12 w-12" width="48" height="48">
+      <h1 class="page-title mt-4">폴리마켓에 오신 걸 환영해요</h1>
+      <p class="muted mt-2 text-[15px]">가입하고 우리 동네 이웃과 거래를 시작해 보세요.</p>
+    </div>
+
+    <form method="post" action="{% url 'accounts:signup' %}" class="sm:rounded-lg sm:border sm:border-neutral-200 sm:bg-white sm:p-8" novalidate>
+      {% csrf_token %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-6" role="alert">
+          {% include "components/icon.html" with name="alert" %}
+          <div>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
+        </div>
+      {% endif %}
+
+      <fieldset class="form-stack">
+        <legend class="mb-5 text-h3 text-neutral-900">계정 정보</legend>
+        <div>
+          {% include "components/form_field.html" with field=form.username %}
+          <div id="check-username" aria-live="polite"></div>
+        </div>
+        {% include "components/form_field.html" with field=form.password1 %}
+        {% include "components/form_field.html" with field=form.password2 %}
+      </fieldset>
+
+      <hr class="divider my-8">
+
+      <fieldset class="form-stack">
+        <legend class="mb-5 text-h3 text-neutral-900">프로필</legend>
+        <div>
+          {% include "components/form_field.html" with field=form.nickname %}
+          <div id="check-nickname" aria-live="polite"></div>
+        </div>
+        {% include "components/form_field.html" with field=form.region %}
+      </fieldset>
+
+      <hr class="divider my-8">
+
+      <fieldset class="form-stack">
+        <legend class="mb-1 text-h3 text-neutral-900">본인 정보</legend>
+        <p class="help -mt-1 mb-1">거래 안전을 위해서만 쓰이고, 다른 사람에게는 보이지 않아요.</p>
+        <div class="grid gap-5 sm:grid-cols-2">
+          {% include "components/form_field.html" with field=form.name %}
+          {% include "components/form_field.html" with field=form.birth_date %}
+        </div>
+        <div>
+          {% include "components/form_field.html" with field=form.phone %}
+          <div id="check-phone" aria-live="polite"></div>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block mt-8">가입하기</button>
+    </form>
+
+    <p class="mt-6 text-center text-[15px] text-neutral-600">
+      이미 계정이 있나요?
+      <a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link ml-1">로그인</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

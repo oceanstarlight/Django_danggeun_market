@@ -1,0 +1,28 @@
+{% comment "usage" %}
+받은 후기 1개 (마이페이지 · 판매자 프로필)
+  <div class="divide-y divide-neutral-200">{% for review in reviews %}{% include "components/accounts_review_item.html" %}{% endfor %}</div>
+파라미터: review(Review; select_related("reviewer__profile", "product") 권장)
+{% endcomment %}{% load poly_tags %}
+<article class="flex gap-3 py-5 first:pt-1">
+  <a href="{% url 'accounts:seller_profile' review.reviewer.username %}" class="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" aria-label="{{ review.reviewer|display_name }} 프로필">
+    {% include "components/avatar.html" with user=review.reviewer size="md" %}
+  </a>
+  <div class="min-w-0 flex-1">
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+      <a href="{% url 'accounts:seller_profile' review.reviewer.username %}" class="text-[15px] font-semibold text-neutral-900 hover:underline">{{ review.reviewer|display_name }}</a>
+      <span class="text-[13px] text-neutral-500"><time datetime="{{ review.created_at|date:'c' }}">{{ review.created_at|timeago }}</time></span>
+    </div>
+    <div class="mt-1 flex items-center gap-0.5" role="img" aria-label="별점 5점 만점에 {{ review.rating }}점">
+      {% for i in "12345" %}{% if forloop.counter <= review.rating %}{% include "components/icon.html" with name="star-fill" class="h-4 w-4 text-amber-400" %}{% else %}{% include "components/icon.html" with name="star" class="h-4 w-4 text-neutral-300" %}{% endif %}{% endfor %}
+    </div>
+    {% if review.manner_tags %}
+      <ul class="mt-2 flex flex-wrap gap-1.5" aria-label="매너 태그">
+        {% for tag in review.manner_tags %}<li class="badge badge-neutral font-medium">{{ tag }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% if review.content %}<p class="mt-2 whitespace-pre-line break-words text-[15px] leading-6 text-neutral-800">{{ review.content }}</p>{% endif %}
+    <a href="{% url 'products:detail' review.product_id %}" class="mt-2 inline-flex max-w-full items-center gap-1 text-[13px] text-neutral-500 hover:text-neutral-800">
+      {% include "components/icon.html" with name="tag" class="h-3.5 w-3.5 shrink-0" %}<span class="truncate">{{ review.product.title }}</span>
+    </a>
+  </div>
+</article>

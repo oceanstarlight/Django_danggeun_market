@@ -1,0 +1,17 @@
+{
+  "name": "polymarket-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "폴리마켓 프론트엔드 빌드 (Tailwind CSS + HTMX)",
+  "scripts": {
+    "build:css": "tailwindcss -i ./static/src/input.css -o ./static/css/app.css --minify",
+    "watch:css": "tailwindcss -i ./static/src/input.css -o ./static/css/app.css --watch",
+    "vendor:htmx": "node -e \"require('fs').copyFileSync('node_modules/htmx.org/dist/htmx.min.js','static/vendor/htmx.min.js')\"",
+    "build": "npm run vendor:htmx && npm run build:css"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.11",
+    "htmx.org": "^2.0.11",
+    "tailwindcss": "^3.4.19"
+  }
+}

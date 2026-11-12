@@ -1,0 +1,27 @@
+{% comment "usage" %}
+nav 알림 드롭다운 내용 (notifications:dropdown · read_all HTMX 응답) — base.html #nav-notif-panel 안에 들어가요.
+.dropdown 래퍼는 base.html 에 있으므로 여기서는 패널 내용만 그려요.
+컨텍스트: notifications(최근 10개) · unread(안 읽은 수) · oob_badge(True면 nav 배지도 함께 갱신) · count
+{% endcomment %}
+<div class="notif-panel-header">
+  <p class="text-[15px] font-bold text-neutral-900">알림{% if unread %} <span class="text-brand-700 tabular">{{ unread }}</span>{% endif %}</p>
+  {% if unread %}
+    <button type="button" class="btn btn-ghost btn-sm -mr-2"
+            hx-post="{% url 'notifications:read_all' %}" hx-target="#nav-notif-panel" hx-swap="innerHTML">
+      {% include "components/icon.html" with name="check-double" %}모두 읽음
+    </button>
+  {% endif %}
+</div>
+{% if notifications %}
+  <ul class="notif-panel-list">
+    {% for n in notifications %}<li>{% include "notifications/partials/item.html" with n=n %}</li>{% endfor %}
+  </ul>
+{% else %}
+  <div class="flex flex-col items-center px-6 py-10 text-center">
+    <span class="notif-icon">{% include "components/icon.html" with name="bell" %}</span>
+    <p class="mt-3 text-[15px] font-semibold text-neutral-900">아직 알림이 없어요</p>
+    <p class="mt-1 text-[13px] text-neutral-500">가격 변동, 새 메시지, 거래 후기를 여기서 알려 드려요.</p>
+  </div>
+{% endif %}
+<a href="{% url 'notifications:list' %}" class="notif-panel-footer">알림 전체 보기</a>
+{% if oob_badge %}<span id="nav-notif-badge" hx-swap-oob="innerHTML">{% include "notifications/partials/badge.html" %}</span>{% endif %}

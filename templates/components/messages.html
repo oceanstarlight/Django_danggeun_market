@@ -1,0 +1,12 @@
+{% comment "usage" %}
+Django messages → 토스트 (base.html의 #toast-stack 안에서 include, app.js가 3초 뒤 자동으로 닫아요)
+  {% include "components/messages.html" %}
+JS에서 직접 띄우기: Poly.toast("저장했어요", "success")
+HTMX 응답 헤더: HX-Trigger: {"showToast": {"message": "찜했어요", "level": "success"}}
+{% endcomment %}{% for message in messages %}{% with level=message.level_tag %}
+<div class="toast toast-{% if level == 'error' %}danger{% elif level == 'debug' %}info{% else %}{{ level|default:'info' }}{% endif %}" role="{% if level == 'error' or level == 'warning' %}alert{% else %}status{% endif %}" data-toast>
+  {% if level == "success" %}{% include "components/icon.html" with name="check" %}{% elif level == "error" or level == "warning" %}{% include "components/icon.html" with name="alert" %}{% else %}{% include "components/icon.html" with name="info" %}{% endif %}
+  <p class="toast-message">{{ message }}</p>
+  <button type="button" class="toast-close" data-toast-close aria-label="알림 닫기">{% include "components/icon.html" with name="x" %}</button>
+</div>
+{% endwith %}{% endfor %}
