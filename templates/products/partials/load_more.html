@@ -8,8 +8,8 @@
     <span class="hide-on-request">더보기</span>
     <span class="show-on-request"><span class="spinner"></span></span>
   </a>
-  <p class="text-[13px] text-neutral-400">{{ page_obj.end_index }} / {{ page_obj.paginator.count }}</p>
+  <p class="text-[13px] text-neutral-500">{{ page_obj.end_index }} / {{ page_obj.paginator.count }}</p>
 </div>
 {% elif page_obj.number > 1 %}
-<p class="col-span-full pt-4 text-center text-[13px] text-neutral-400">모든 상품을 다 봤어요</p>
+<p class="col-span-full pt-4 text-center text-[13px] text-neutral-500">모든 상품을 다 봤어요</p>
 {% endif %}

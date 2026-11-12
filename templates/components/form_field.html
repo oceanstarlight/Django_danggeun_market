@@ -11,11 +11,11 @@
     </label>
   {% elif wt == "checkboxselectmultiple" or wt == "radioselect" %}
     <fieldset>
-      <legend class="label">{{ field.label }}{% if not field.field.required %} <span class="font-normal text-neutral-400">(선택)</span>{% endif %}</legend>
+      <legend class="label">{{ field.label }}{% if not field.field.required %} <span class="font-normal text-neutral-500">(선택)</span>{% endif %}</legend>
       <div class="choice-list">{% for choice in field %}<label for="{{ choice.id_for_label }}">{{ choice.tag }}<span>{{ choice.choice_label }}</span></label>{% endfor %}</div>
     </fieldset>
   {% else %}
-    <label for="{{ field.id_for_label }}" class="label{% if hide_label %} sr-only{% endif %}">{{ field.label }}{% if not field.field.required %} <span class="font-normal text-neutral-400">(선택)</span>{% endif %}</label>
+    <label for="{{ field.id_for_label }}" class="label{% if hide_label %} sr-only{% endif %}">{{ field.label }}{% if not field.field.required %} <span class="font-normal text-neutral-500">(선택)</span>{% endif %}</label>
     {% if suffix %}<div class="input-affix">{{ field }}<span class="input-suffix">{{ suffix }}</span></div>{% else %}{{ field }}{% endif %}
   {% endif %}
   {% if field.help_text %}<p class="help" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</p>{% endif %}

@@ -6,7 +6,6 @@ Supabase 클라이언트는 실제로 필요할 때만 만든다(지연 생성).
 """
 
 import logging
-import mimetypes
 import uuid
 from pathlib import PurePosixPath
 
@@ -18,6 +17,19 @@ logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp", "heic", "heif"}
 DEFAULT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+
+# 저장 확장자 -> Content-Type. 클라이언트가 보낸 content_type 은 절대 쓰지 않는다.
+CONTENT_TYPES = {
+    "jpg": "image/jpeg",
+    "png": "image/png",
+    "gif": "image/gif",
+    "webp": "image/webp",
+    "heic": "image/heic",
+    "heif": "image/heif",
+}
+# Pillow 가 알려 주는 실제 포맷 -> 저장 확장자 (MPO 는 아이폰 JPEG)
+PIL_FORMATS = {"JPEG": "jpg", "MPO": "jpg", "PNG": "png", "GIF": "gif", "WEBP": "webp"}
+HEIF_BRANDS = {b"heic", b"heix", b"hevc", b"hevx", b"heim", b"heis", b"mif1", b"msf1"}
 
 
 class StorageError(Exception):
@@ -45,8 +57,8 @@ def _max_size():
     return getattr(settings, "MAX_UPLOAD_IMAGE_SIZE", DEFAULT_MAX_SIZE)
 
 
-def validate_image(file):
-    """확장자와 크기를 검사하고 소문자 확장자를 반환한다."""
+def _check_name_and_size(file):
+    """이름(확장자)과 크기만 빠르게 검사한다."""
     if not file or not getattr(file, "name", ""):
         raise StorageError("이미지 파일을 선택해 주세요.")
     ext = PurePosixPath(file.name).suffix.lower().lstrip(".")
@@ -57,7 +69,36 @@ def validate_image(file):
         raise StorageError("이미지는 10MB 이하만 올릴 수 있어요.")
     if size == 0:
         raise StorageError("비어 있는 파일이에요.")
-    return "jpg" if ext == "jpeg" else ext
+
+
+def detect_image_format(data: bytes) -> str:
+    """파일 내용을 보고 실제 이미지 포맷의 확장자를 돌려준다. 이미지가 아니면 StorageError.
+
+    확장자만 바꾼 HTML/JS 같은 파일을 막기 위해 서버에서 직접 판별한다.
+    """
+    # HEIC/HEIF 는 Pillow 기본 미지원 → ISO BMFF 'ftyp' 박스의 브랜드로 판별
+    if len(data) >= 12 and data[4:8] == b"ftyp" and data[8:12] in HEIF_BRANDS:
+        return "heic" if data[8:12] != b"mif1" else "heif"
+    from io import BytesIO
+
+    from PIL import Image
+
+    try:
+        with Image.open(BytesIO(data)) as img:
+            fmt = img.format
+            img.verify()
+    except Exception as exc:  # noqa: BLE001 - Pillow 예외 타입이 다양함
+        raise StorageError("이미지 파일을 읽을 수 없어요.") from exc
+    ext = PIL_FORMATS.get(fmt or "")
+    if not ext:
+        raise StorageError("jpg, png, gif, webp 이미지만 올릴 수 있어요.")
+    return ext
+
+
+def validate_image(file):
+    """확장자·크기·실제 내용을 검사하고, 내용 기준 저장 확장자를 반환한다."""
+    _check_name_and_size(file)
+    return detect_image_format(_read_bytes(file))
 
 
 def _clean_folder(folder):
@@ -86,15 +127,17 @@ def upload_image(file, folder: str) -> str:
 
     실패하면 StorageError 를 던진다.
     """
-    ext = validate_image(file)
-    folder = _clean_folder(folder)
-    path = f"{folder}/{uuid.uuid4().hex}.{ext}"
+    _check_name_and_size(file)
     data = _read_bytes(file)
     if len(data) > _max_size():
         raise StorageError("이미지는 10MB 이하만 올릴 수 있어요.")
+    # 확장자·Content-Type 모두 실제 내용에서 정한다 (클라이언트 값 무시)
+    ext = detect_image_format(data)
+    folder = _clean_folder(folder)
+    path = f"{folder}/{uuid.uuid4().hex}.{ext}"
 
     if settings.USE_SUPABASE_STORAGE:
-        return _upload_supabase(path, data, file, ext)
+        return _upload_supabase(path, data, ext)
     return _upload_local(path, data)
 
 
@@ -108,8 +151,8 @@ def _upload_local(path, data):
         raise StorageError("이미지를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.") from exc
 
 
-def _upload_supabase(path, data, file, ext):
-    content_type = getattr(file, "content_type", None) or mimetypes.guess_type(f"x.{ext}")[0] or "image/jpeg"
+def _upload_supabase(path, data, ext):
+    content_type = CONTENT_TYPES[ext]
     try:
         bucket = _get_supabase_client().storage.from_(settings.SUPABASE_BUCKET)
         bucket.upload(

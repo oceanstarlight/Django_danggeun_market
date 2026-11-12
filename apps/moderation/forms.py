@@ -20,7 +20,7 @@ class ReportForm(StyledFormMixin, forms.ModelForm):
                 attrs={
                     "rows": 3,
                     "maxlength": DETAIL_MAX_LENGTH,
-                    "placeholder": "상황을 알려주시면 더 빠르게 확인할 수 있어요. (선택)",
+                    "placeholder": "상황을 알려주시면 더 빠르게 확인할 수 있어요.",
                 }
             ),
         }

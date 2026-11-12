@@ -73,9 +73,11 @@
           {% include "components/avatar.html" with user=seller %}
           <div class="min-w-0 flex-1">
             <p class="truncate text-[15px] font-semibold text-neutral-900">{{ seller|display_name }}</p>
-            <p class="truncate text-[13px] text-neutral-500">
-              {% if product.region %}{{ product.region.dong }}{% elif profile.region %}{{ profile.region.dong }}{% else %}동네 미설정{% endif %}
-              · 판매 {{ seller_stats.total }} · 거래완료 {{ seller_stats.sold }}
+            {# 모바일에서 거래 횟수가 잘리지 않게 줄바꿈 허용 (sm 이상은 한 줄) #}
+            <p class="text-[13px] leading-[18px] text-neutral-500 sm:truncate">
+              <span class="whitespace-nowrap">{% if product.region %}{{ product.region.dong }}{% elif profile.region %}{{ profile.region.dong }}{% else %}동네 미설정{% endif %}</span>
+              <span class="whitespace-nowrap">· 판매 {{ seller_stats.total }}</span>
+              <span class="whitespace-nowrap">· 거래완료 {{ seller_stats.sold }}</span>
             </p>
           </div>
           {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}

@@ -2,16 +2,17 @@
 매너온도 표시 (온도 숫자 + 막대). 기본값 36.5
   {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
 파라미터: temperature(Decimal/float, 0~99) · compact(True면 숫자만 한 줄)
-구간: ~30 차가워요(회색) · ~36.5 보통(연한 틸) · ~45 따뜻해요(틸) · ~60 뜨거워요(앰버) · 60~ 최고예요(빨강)
+구간: ~30 차가워요(회색) · ~36.5 보통 · ~45 따뜻해요 · ~60 뜨거워요 · 60~ 최고예요
+글자는 대비(4.5:1)를 위해 neutral-600/brand-700/800만 쓰고, 단계는 막대 색(틸 농도)으로만 보여 줘요. 빨강은 위험 표시 전용이라 쓰지 않아요.
 {% endcomment %}{% with t=temperature|default:36.5 %}{% if compact %}
-<span class="manner-value {% if t < 30 %}text-neutral-500{% elif t < 36.5 %}text-brand-600{% elif t < 45 %}text-brand-700{% elif t < 60 %}text-amber-600{% else %}text-red-600{% endif %}" title="매너온도">{{ t|floatformat:1 }}°C</span>
+<span class="manner-value {% if t < 30 %}text-neutral-600{% elif t < 45 %}text-brand-700{% else %}text-brand-800{% endif %}" title="매너온도">{{ t|floatformat:1 }}°C</span>
 {% else %}
 <div class="manner" aria-label="매너온도 {{ t|floatformat:1 }}도">
-  <span class="manner-value {% if t < 30 %}text-neutral-500{% elif t < 36.5 %}text-brand-600{% elif t < 45 %}text-brand-700{% elif t < 60 %}text-amber-600{% else %}text-red-600{% endif %}">
+  <span class="manner-value {% if t < 30 %}text-neutral-600{% elif t < 45 %}text-brand-700{% else %}text-brand-800{% endif %}">
     {{ t|floatformat:1 }}°C
-    <span class="text-base" aria-hidden="true">{% if t < 30 %}🌧️{% elif t < 36.5 %}🙂{% elif t < 45 %}😊{% elif t < 60 %}😄{% else %}🔥{% endif %}</span>
+    <span class="text-base" aria-hidden="true">{% if t < 30 %}🌧️{% elif t < 36.5 %}🙂{% elif t < 45 %}😊{% elif t < 60 %}😄{% else %}🌟{% endif %}</span>
   </span>
-  <span class="manner-track" aria-hidden="true"><span class="manner-bar {% if t < 30 %}bg-neutral-400{% elif t < 36.5 %}bg-brand-400{% elif t < 45 %}bg-brand-600{% elif t < 60 %}bg-amber-500{% else %}bg-red-500{% endif %}" style="width: {{ t|stringformat:'.1f' }}%"></span></span>
+  <span class="manner-track" aria-hidden="true"><span class="manner-bar {% if t < 30 %}bg-neutral-400{% elif t < 36.5 %}bg-brand-300{% elif t < 45 %}bg-brand-500{% elif t < 60 %}bg-brand-700{% else %}bg-brand-900{% endif %}" style="width: {{ t|stringformat:'.1f' }}%"></span></span>
   <span class="manner-label">매너온도</span>
 </div>
 {% endif %}{% endwith %}

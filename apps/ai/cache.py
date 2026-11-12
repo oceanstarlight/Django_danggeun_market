@@ -74,12 +74,14 @@ def log_usage(feature, *, user=None, model_name="", cached=False, success=True, 
 
 
 def cached_call(feature, payload_parts, fn, *, user=None, model_name: str | None = None,
-                refresh: bool = False) -> AIResult:
+                refresh: bool = False, validate=None) -> AIResult:
     """캐시를 확인하고 없으면 fn() 을 호출해 저장한다.
 
     feature: AIFeature 값 · payload_parts: 해시에 들어갈 str/bytes 목록
     fn: 인자 없는 함수 → (dict, AIUsage). AIServiceError 를 던질 수 있다.
     refresh=True 면 캐시를 건너뛰고 새로 생성해서 덮어쓴다 ('다시 생성').
+    validate: dict 를 받아 형식이 틀리면 AIServiceError 를 던지는 함수(선택).
+      잘못된 응답은 캐시에 저장하지 않고, 예전에 저장된 잘못된 캐시는 무시한다.
     """
     model_name = model_name or settings.GEMINI_MODEL
     input_hash = make_input_hash(feature, model_name, payload_parts)
@@ -87,6 +89,11 @@ def cached_call(feature, payload_parts, fn, *, user=None, model_name: str | None
 
     if not refresh:
         hit = AIResultCache.objects.filter(**lookup).only("pk", "response").first()
+        if hit is not None and validate is not None:
+            try:
+                validate(hit.response)
+            except AIServiceError:
+                hit = None  # 형식이 틀린 옛 캐시 → 새로 호출해서 덮어쓴다
         if hit is not None:
             AIResultCache.objects.filter(pk=hit.pk).update(hit_count=F("hit_count") + 1)
             usage = AIUsage(model=model_name, latency_ms=0)
@@ -95,6 +102,8 @@ def cached_call(feature, payload_parts, fn, *, user=None, model_name: str | None
 
     try:
         data, usage = fn()
+        if validate is not None:
+            validate(data)
     except AIServiceError as exc:
         log_usage(feature, user=user, model_name=model_name, success=False, error=exc.detail)
         raise

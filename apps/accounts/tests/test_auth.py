@@ -120,6 +120,20 @@ class RegisterServiceTests(TestCase):
 class CheckDuplicateTests(TestCase):
     url = reverse("accounts:check_duplicate")
 
+    def setUp(self):
+        from django.core.cache import cache
+
+        cache.clear()  # IP 당 요청 제한 카운터 초기화
+
+    def test_throttled_after_limit(self):
+        from apps.accounts import views
+
+        for _ in range(views.CHECK_LIMIT):
+            self.client.get(self.url, {"username": "fresh_1"})
+        res = self.client.get(self.url, {"username": "fresh_1"})
+        self.assertContains(res, "잠시 후 다시 확인해 주세요.")
+        self.assertNotContains(res, "사용할 수 있는 아이디예요.")
+
     def test_username(self):
         make_user(username="exists_1")
         self.assertContains(self.client.get(self.url, {"username": "EXISTS_1"}), "이미 사용 중인 아이디예요.")
@@ -134,8 +148,11 @@ class CheckDuplicateTests(TestCase):
 
     def test_phone(self):
         make_user(phone="010-1111-2222")
-        self.assertContains(self.client.get(self.url, {"phone": "01011112222"}), "이미 가입된 휴대폰 번호예요.")
-        self.assertContains(self.client.get(self.url, {"phone": "010-3333-4444"}), "사용할 수 있는 번호예요.")
+        # 가입 여부는 알려 주지 않고 형식만 확인한다 (개인정보 조회 방지)
+        taken = self.client.get(self.url, {"phone": "01011112222"})
+        self.assertNotContains(taken, "이미 가입된")
+        self.assertContains(taken, "올바른 번호 형식이에요.")
+        self.assertContains(self.client.get(self.url, {"phone": "010-3333-4444"}), "올바른 번호 형식이에요.")
         self.assertContains(self.client.get(self.url, {"phone": "abc"}), "형식으로")
 
     def test_empty_value_renders_nothing(self):

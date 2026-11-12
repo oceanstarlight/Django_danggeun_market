@@ -33,30 +33,11 @@ class MultipleImageField(forms.FileField):
         cleaned = [super(MultipleImageField, self).clean(f, initial) for f in files]
         for f in cleaned:
             try:
+                # 확장자·크기·실제 이미지 내용까지 core.storage 에서 검사
                 validate_image(f)
             except StorageError as exc:
                 raise forms.ValidationError(f"{f.name}: {exc}") from exc
-            _verify_image_content(f)
         return cleaned
-
-
-def _verify_image_content(file):
-    """Pillow 로 실제 이미지인지 확인 (확장자만 바꾼 파일 차단). HEIC 는 Pillow 미지원이라 건너뜀."""
-    name = (file.name or "").lower()
-    if name.endswith((".heic", ".heif")):
-        return
-    try:
-        from PIL import Image
-    except ImportError:  # pragma: no cover - Pillow 는 requirements 에 포함
-        return
-    try:
-        file.seek(0)
-        with Image.open(file) as img:
-            img.verify()
-    except Exception as exc:  # noqa: BLE001 - Pillow 예외 타입이 다양함
-        raise forms.ValidationError(f"{file.name}: 이미지 파일을 읽을 수 없어요.") from exc
-    finally:
-        file.seek(0)
 
 
 class ProductForm(StyledFormMixin, forms.ModelForm):

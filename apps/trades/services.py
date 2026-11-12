@@ -11,6 +11,7 @@ from django.urls import reverse
 from apps.accounts.models import Profile
 from apps.chat.models import ChatRoom
 from apps.core.templatetags.poly_tags import display_name
+from apps.moderation.services import is_blocked_between
 from apps.notifications.models import Notification
 from apps.notifications.services import notify
 from apps.products.models import Product
@@ -91,6 +92,8 @@ def complete_trade(product, seller, buyer=None) -> Product:
             raise TradeError("나 자신을 구매자로 선택할 수 없어요.")
         if not ChatRoom.objects.filter(product=product, seller=seller, buyer=buyer).exists():
             raise TradeError("이 상품으로 채팅한 이웃 중에서 선택해 주세요.")
+        if is_blocked_between(seller, buyer):
+            raise TradeError("차단 관계인 이웃은 구매자로 선택할 수 없어요.")
 
     with transaction.atomic():
         # 동시에 두 번 눌러도 한 번만 처리되도록 행 잠금
@@ -136,8 +139,12 @@ def review_block_reason(product, user):
     """후기를 쓸 수 없는 이유(문구). 쓸 수 있으면 None."""
     if product.status != Product.Status.SOLD or not product.buyer_id:
         return "거래완료된 상품에만 후기를 남길 수 있어요."
-    if review_target(product, user) is None:
+    target = review_target(product, user)
+    if target is None:
         return "거래한 당사자만 후기를 남길 수 있어요."
+    # 차단 이후에는 서로 더 이상 상호작용하지 않는다 (후기·매너온도 반영 포함)
+    if is_blocked_between(user, target):
+        return "차단 관계인 이웃에게는 후기를 남길 수 없어요."
     if Review.objects.filter(product=product, reviewer=user).exists():
         return "이미 이 거래의 후기를 남겼어요."
     return None

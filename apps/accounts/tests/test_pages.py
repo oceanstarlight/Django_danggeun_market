@@ -207,6 +207,15 @@ class ProfileEditTests(TestCase):
         self.post(remove_avatar="on")
         self.assertEqual(Profile.objects.get(user=self.me).avatar_url, "")
 
+    def test_avatar_html_disguised_as_png_is_rejected(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        evil = SimpleUploadedFile("evil.png", b"<html><script>alert(1)</script></html>", content_type="text/html")
+        res = self.post(avatar=evil)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("avatar", res.context["form"].errors)
+        self.assertEqual(Profile.objects.get(user=self.me).avatar_url, "")
+
     def test_invalid_avatar_extension(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
 

@@ -143,10 +143,11 @@ def fraud_refresh(request, product_id):
         raise PermissionDenied("판매자만 다시 분석할 수 있어요.")
 
     analysis = fraud.analyze_product(product, force=True, user=request.user)
-    if analysis is None or not analysis.is_warning:
+    # AI 가 실패해 규칙 검사만 했으면 결과와 관계없이 그 사실을 먼저 알린다
+    if analysis is not None and analysis.source == analysis.Source.RULE:
+        text, level = "규칙 검사만 했어요. AI 분석은 잠시 후 다시 시도해 주세요.", "warning"
+    elif analysis is None or not analysis.is_warning:
         text, level = "다시 확인해 보니 의심 신호가 없어요.", "success"
-    elif analysis.source == analysis.Source.RULE:
-        text, level = "규칙 검사로 다시 확인했어요. AI 분석은 잠시 후 다시 시도해 주세요.", "warning"
     else:
         text, level = "다시 분석했어요. 표시된 문구를 확인해 주세요.", "info"
 

@@ -101,6 +101,18 @@ class CompleteTradeServiceTests(TradeFixtureMixin, TestCase):
         self.product.refresh_from_db()
         self.assertEqual(self.product.status, Product.Status.SELLING)
 
+    def test_blocked_buyer_cannot_be_chosen(self):
+        from apps.moderation.models import Block
+
+        Block.objects.create(blocker=self.buyer, blocked=self.seller)
+        with self.assertRaisesMessage(services.TradeError, "차단"):
+            services.complete_trade(self.product, self.seller, self.buyer)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.status, Product.Status.SELLING)
+        self.assertFalse(Notification.objects.filter(user=self.buyer).exists())
+        # 구매자 후보 목록에서도 빠진다
+        self.assertEqual([r.buyer_id for r in selectors.chat_partners(self.product)], [self.other_buyer.pk])
+
     def test_cannot_complete_twice(self):
         services.complete_trade(self.product, self.seller, self.buyer)
         with self.assertRaisesMessage(services.TradeError, "이미 거래완료"):
@@ -187,6 +199,23 @@ class CreateReviewServiceTests(TradeFixtureMixin, TestCase):
         no_buyer = make_product(self.seller, status=Product.Status.SOLD)
         with self.assertRaises(services.TradeError):
             services.create_review(no_buyer, self.seller, 5)
+
+    def test_no_review_across_block(self):
+        from apps.moderation.models import Block
+
+        Block.objects.create(blocker=self.buyer, blocked=self.seller)
+        with self.assertRaisesMessage(services.TradeError, "차단"):
+            services.create_review(self.sold, self.seller, 1)
+        self.assertEqual(temperature_of(self.buyer), Decimal("36.5"))
+
+    def test_reviewed_sale_cannot_be_reverted(self):
+        from apps.products.services import ProductActionError, change_status
+
+        services.create_review(self.sold, self.buyer, 5)
+        with self.assertRaisesMessage(ProductActionError, "후기"):
+            change_status(self.sold, Product.Status.SELLING)
+        self.sold.refresh_from_db()
+        self.assertEqual((self.sold.status, self.sold.buyer), (Product.Status.SOLD, self.buyer))
 
     def test_review_block_reason(self):
         self.assertIsNone(services.review_block_reason(self.sold, self.buyer))

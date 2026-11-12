@@ -150,7 +150,7 @@
         <a href="{% url 'chat:list' %}" class="text-neutral-600 hover:text-neutral-900">채팅</a>
       </nav>
     </div>
-    <div class="container-page border-t border-neutral-200 py-5 text-xs text-neutral-400">© 2026 폴리마켓 · 대학교 웹프로그래밍 기말 프로젝트</div>
+    <div class="container-page border-t border-neutral-200 py-5 text-xs text-neutral-500">© 2026 폴리마켓 · 대학교 웹프로그래밍 기말 프로젝트</div>
   </footer>
 
   {# ───────── 모바일 하단 고정 CTA (블록이 비어 있으면 숨김) ───────── #}
@@ -172,7 +172,8 @@
       {% include "components/icon.html" with name="chat" %}채팅
       {% if nav_unread_chats %}<span class="nav-dot"></span><span class="sr-only">안 읽은 메시지 {{ nav_unread_chats }}개</span>{% endif %}
     </a>
-    <a href="{% url 'accounts:mypage' %}" class="tabbar-item"{% if ns == 'accounts' %} aria-current="page"{% endif %}>
+    {# 내 정보: 마이페이지·프로필 수정·내 공개 프로필에서만 활성 (로그인/가입/남의 프로필 제외) #}
+    <a href="{% url 'accounts:mypage' %}" class="tabbar-item"{% if ns == 'accounts' and un == 'mypage' or ns == 'accounts' and un == 'profile_edit' or ns == 'accounts' and un == 'seller_profile' and user.is_authenticated and request.resolver_match.kwargs.username == user.username %} aria-current="page"{% endif %}>
       {% include "components/icon.html" with name="user" %}내 정보
     </a>
   </nav>

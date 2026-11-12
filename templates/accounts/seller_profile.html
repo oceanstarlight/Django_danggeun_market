@@ -57,7 +57,7 @@
         <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
           <dt class="text-xs text-neutral-500">평균 별점</dt>
           <dd class="mt-1 inline-flex items-center gap-0.5 text-lg font-bold text-neutral-900 tabular">
-            {% if summary.avg is not None %}{% include "components/icon.html" with name="star-fill" class="h-4 w-4 text-amber-400" %}{{ summary.avg|floatformat:1 }}{% else %}<span class="text-neutral-400">-</span>{% endif %}
+            {% if summary.avg is not None %}{% include "components/icon.html" with name="star-fill" class="h-4 w-4 text-amber-400" %}{{ summary.avg|floatformat:1 }}{% else %}<span class="text-neutral-500">-</span>{% endif %}
           </dd>
         </div>
       </dl>

@@ -10,7 +10,7 @@
       {% if room.last_message_at %}<span aria-hidden="true">·</span><time class="shrink-0" datetime="{{ room.last_message_at|date:'c' }}">{{ room.last_message_at|timeago }}</time>{% endif %}
     </p>
     <p class="mt-0.5 truncate text-sm{% if room.unread %} font-medium text-neutral-900{% else %} text-neutral-600{% endif %}">
-      {% if room.last_message_content %}{% if room.is_mine_last %}<span class="text-neutral-400">나: </span>{% endif %}{{ room.last_message_content }}{% else %}<span class="text-neutral-400">아직 대화가 없어요</span>{% endif %}
+      {% if room.last_message_content %}{% if room.is_mine_last %}<span class="text-neutral-500">나: </span>{% endif %}{{ room.last_message_content }}{% else %}<span class="text-neutral-500">아직 대화가 없어요</span>{% endif %}
     </p>
     <p class="mt-1 flex items-center gap-1.5 text-xs text-neutral-500">
       {% if product.status != product.Status.SELLING %}{% include "components/status_badge.html" with status=product.status label=product.get_status_display %}{% endif %}

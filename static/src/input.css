@@ -281,7 +281,7 @@
   .tab:focus-visible { @apply rounded-sm outline-none ring-2 ring-brand-500; }
   .tab-active,
   .tab-active:hover { @apply border-brand-700 font-semibold text-neutral-900; }
-  .tab-count { @apply text-[13px] font-medium text-neutral-400; }
+  .tab-count { @apply text-[13px] font-medium text-neutral-500; }
 
   /* ── 드롭다운 ── */
   .dropdown {
@@ -423,7 +423,7 @@
   .empty-state-desc { @apply mt-1.5 max-w-xs text-sm leading-[22px] text-neutral-500; }
 
   /* ── 매너온도 ── */
-  .manner { @apply inline-flex min-w-[132px] flex-col items-end gap-1.5; }
+  .manner { @apply inline-flex min-w-[96px] shrink-0 flex-col items-end gap-1.5 sm:min-w-[132px]; }
   .manner-value { @apply inline-flex items-center gap-1 text-base font-bold leading-none; font-variant-numeric: tabular-nums; }
   .manner-track { @apply h-1.5 w-full overflow-hidden rounded-full bg-neutral-200; }
   .manner-bar { @apply block h-full rounded-full; transition: width 400ms var(--poly-ease); }
@@ -433,7 +433,7 @@
   .bubble { @apply max-w-[75%] whitespace-pre-line break-words px-3.5 py-2 text-[15px] leading-[22px]; }
   .bubble-me { @apply rounded-[16px] rounded-br-[4px] bg-brand-700 text-white; }
   .bubble-other { @apply rounded-[16px] rounded-bl-[4px] bg-neutral-100 text-neutral-900; }
-  .bubble-meta { @apply shrink-0 text-[11px] leading-4 text-neutral-400; }
+  .bubble-meta { @apply shrink-0 text-[11px] leading-4 text-neutral-500; }
 
   /* 썸네일 (보조) */
   .thumb { @apply aspect-square shrink-0 rounded-md bg-neutral-100 object-cover ring-1 ring-inset ring-black/5; }
@@ -515,10 +515,11 @@
     @apply flex h-14 w-14 items-center justify-center rounded-lg border border-neutral-200 bg-white text-[26px] transition-transform duration-150 motion-reduce:transition-none;
   }
   .products-category-item:hover .products-category-icon { @apply border-brand-200 bg-brand-50; transform: translateY(-2px); }
-  .products-category-name { @apply line-clamp-2 text-[13px] font-medium leading-[18px] text-neutral-700; word-break: keep-all; }
+  /* 4열 모바일에서 긴 이름(취미/게임/음반)도 두 줄 높이를 미리 잡아 줄 높이를 맞춘다 */
+  .products-category-name { @apply line-clamp-2 min-h-8 text-[12px] font-medium leading-4 text-neutral-700 sm:min-h-[36px] sm:text-[13px] sm:leading-[18px]; word-break: keep-all; }
 
   /* 가로 스크롤 레일 (최근 본 상품) */
-  .products-rail { @apply -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .products-rail { @apply -mx-4 flex scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:scroll-px-0 md:px-0; scrollbar-width: none; scroll-snap-type: x proximity; }
   .products-rail::-webkit-scrollbar { display: none; }
   .products-rail > li { @apply w-28 shrink-0 md:w-32; scroll-snap-align: start; }
   .products-rail-item { @apply block rounded-md; }

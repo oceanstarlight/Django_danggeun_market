@@ -381,6 +381,12 @@ class ProductListViewTests(ProductTestMixin, TestCase):
 
 
 class ProductDetailViewTests(ProductTestMixin, TestCase):
+    def test_sold_product_chat_button_disabled_for_anonymous(self):
+        product = self.make_product(status=Product.Status.SOLD)
+        response = self.client.get(reverse("products:detail", args=[product.pk]))
+        self.assertContains(response, "거래가 끝났어요")
+        self.assertNotContains(response, "채팅하기</a>")
+
     def test_detail_renders_and_counts_view_once_per_session(self):
         product = self.make_product()
         ProductImage.objects.create(product=product, image_url="/media/1.png", order=0)

@@ -12,8 +12,21 @@ from apps.ai.prompts import negotiation as P
 
 HISTORY_SIZE = 10
 
+# 감지/추출에 쓰는 최대 글자 수 (긴 메시지로 CPU 를 오래 잡지 않게)
+MAX_SCAN_CHARS = 500
+
+# 숫자 덩어리의 '맨 앞'에서만 매치가 시작되게 하는 가드.
+# 이게 없으면 긴 숫자열의 모든 위치에서 재시도해 시간이 제곱으로 늘어난다.
+_NUM_START = r"(?<![\d.,])"
+
 # 금액 표현: "35만원", "35만 5천원", "2.5만", "355,000원", "25000원", "5천원"
-_PRICE_EXPR = r"(?:(?<!\d)만\s*원|\d+(?:\.\d+)?\s*만\s*(?:\d\s*천)?\s*원?|\d{1,3}(?:,\d{3})+\s*원?|\d{4,}\s*원?|\d\s*천\s*원)"
+_PRICE_EXPR = (
+    r"(?:(?<!\d)만\s*원"
+    rf"|{_NUM_START}\d+(?:\.\d+)?\s*만\s*(?:\d\s*천)?\s*원?"
+    rf"|{_NUM_START}\d{{1,3}}(?:,\d{{3}})+\s*원?"
+    rf"|{_NUM_START}\d{{4,}}\s*원?"
+    rf"|{_NUM_START}\d\s*천\s*원)"
+)
 
 NEGOTIATION_RE = re.compile(
     r"깎|네고|nego|에누리|할인|디씨|\bdc\b|싸게|저렴하게|"
@@ -24,33 +37,52 @@ NEGOTIATION_RE = re.compile(
     re.IGNORECASE,
 )
 
-_MAN_RE = re.compile(r"(\d+(?:\.\d+)?)\s*만\s*(?:(\d)\s*천)?")
+_MAN_RE = re.compile(r"(?<![\d.])(\d+(?:\.\d+)?)\s*만\s*(?:(\d)\s*천)?")
 _COMMA_RE = re.compile(r"(?<![\d.])(\d{1,3}(?:,\d{3})+|\d{4,})\s*원?")
 _CHEON_RE = re.compile(r"(?<![\d만])(\d)\s*천\s*원")
+# 금액 바로 뒤에 오면 '제시가'가 아니라 '깎아 달라는 금액'으로 본다. 예) "2만원 빼서", "5천원만 빼주세요"
+_DISCOUNT_AFTER_RE = re.compile(r"\s*원?\s*(?:만|정도|쯤|만큼)?\s*(?:빼|깎|할인|에누리|디씨|dc|내려|낮춰)", re.IGNORECASE)
 
 
 def detect_negotiation(text: str) -> bool:
     """메시지가 가격 협상 요청인지 키워드/금액 패턴으로 판별 (AI 호출 없음)."""
-    if not text or not text.strip():
+    text = (text or "")[:MAX_SCAN_CHARS]
+    if not text.strip():
         return False
     return bool(NEGOTIATION_RE.search(text))
 
 
-def extract_offer_price(text: str) -> int | None:
-    """메시지 속 첫 금액을 원 단위 정수로 (없으면 None)."""
-    text = text or ""
-    candidates = []
+def _amounts(text: str) -> list[tuple[int, int, int]]:
+    """메시지 속 금액 후보 (시작 위치, 끝 위치, 원 단위 값)."""
+    found = []
     for match in _MAN_RE.finditer(text):
         value = float(match.group(1)) * 10_000 + int(match.group(2) or 0) * 1_000
-        candidates.append((match.start(), int(value)))
+        found.append((match.start(), match.end(), int(value)))
     for match in _COMMA_RE.finditer(text):
-        candidates.append((match.start(), int(match.group(1).replace(",", ""))))
+        found.append((match.start(), match.end(), int(match.group(1).replace(",", ""))))
     for match in _CHEON_RE.finditer(text):
-        candidates.append((match.start(), int(match.group(1)) * 1_000))
-    candidates = [c for c in candidates if c[1] > 0]
+        found.append((match.start(), match.end(), int(match.group(1)) * 1_000))
+    return sorted(c for c in found if c[2] > 0)
+
+
+def extract_offer_price(text: str, list_price: int | None = None) -> int | None:
+    """구매자가 제시한 가격을 원 단위 정수로 추정 (없으면 None).
+
+    "2만원 빼 주세요"처럼 할인액이면 판매가에서 뺀 값을 쓰고, 판매가를 모르면 None.
+    판매가 이상인 금액은 제시가로 보지 않는다.
+    """
+    text = (text or "")[:MAX_SCAN_CHARS]
+    candidates = _amounts(text)
     if not candidates:
         return None
-    return min(candidates)[1]
+    start, end, value = candidates[0]
+    if _DISCOUNT_AFTER_RE.match(text, end):
+        if not list_price:
+            return None
+        value = list_price - value
+    if value <= 0 or (list_price and value >= list_price):
+        return None
+    return value
 
 
 def _history(message) -> list[tuple[str, str]]:
@@ -106,7 +138,7 @@ def generate_drafts(message, *, user=None, regenerate: bool = False) -> AIResult
     반환: AIResult(data={"drafts": [{tone, text, price}], "offered_price": int|None}, cached, usage)
     """
     product = message.room.product
-    offered = extract_offer_price(message.content)
+    offered = extract_offer_price(message.content, list_price=product.price)
     prompt = P.build_prompt(
         title=product.title,
         price=product.price,

@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
+from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render, resolve_url
@@ -79,11 +80,38 @@ def signup(request):
     return render(request, "accounts/signup.html", {"form": form, "next": request.GET.get("next", "")})
 
 
+# 실시간 확인 남용(계정 존재 여부 대량 조회) 방지: IP 당 5분에 60번
+CHECK_LIMIT = 60
+CHECK_WINDOW = 300
+
+
+def _client_ip(request) -> str:
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    return (forwarded.split(",")[0].strip() if forwarded else "") or request.META.get("REMOTE_ADDR", "")
+
+
+def _check_throttled(request) -> bool:
+    """간단한 캐시 카운터. 한도를 넘으면 True."""
+    key = f"dupcheck:{_client_ip(request)}"
+    cache.add(key, 0, CHECK_WINDOW)
+    try:
+        count = cache.incr(key)
+    except ValueError:  # 그 사이 만료됨
+        cache.set(key, 1, CHECK_WINDOW)
+        count = 1
+    return count > CHECK_LIMIT
+
+
 @require_GET
 def check_duplicate(request):
-    """회원가입 입력 중 실시간 중복 확인 (HTMX partial)."""
+    """회원가입 입력 중 실시간 중복 확인 (HTMX partial).
+
+    휴대폰 번호는 개인정보라 형식만 확인하고, 가입 여부는 제출할 때만 알려 준다.
+    """
     result = {"ok": None, "message": ""}
-    if "username" in request.GET:
+    if _check_throttled(request):
+        result = {"ok": None, "message": "잠시 후 다시 확인해 주세요."}
+    elif "username" in request.GET:
         value = request.GET["username"].strip()
         if value:
             error = username_format_error(value)
@@ -110,10 +138,8 @@ def check_duplicate(request):
             phone = normalize_phone(value)
             if phone is None:
                 result = {"ok": False, "message": "010-1234-5678 형식으로 입력해 주세요."}
-            elif selectors.is_phone_taken(phone):
-                result = {"ok": False, "message": "이미 가입된 휴대폰 번호예요."}
             else:
-                result = {"ok": True, "message": "사용할 수 있는 번호예요."}
+                result = {"ok": True, "message": "올바른 번호 형식이에요."}
     return render(request, "accounts/partials/duplicate_check.html", result)
 
 

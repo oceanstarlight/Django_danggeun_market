@@ -106,6 +106,32 @@ class VisionServiceTests(AIDataMixin, TestCase):
         with self.assertRaises(AIInputError):
             vision.recognize_product([])
 
+    def test_malformed_response_is_not_cached(self):
+        from apps.ai.client import AIServiceError
+        from apps.ai.models import AIResultCache
+
+        with fake_gemini({"foo": 1}), self.assertRaises(AIServiceError):
+            vision.recognize_product(self.IMG)
+        self.assertFalse(AIResultCache.objects.exists())
+        # 다음 요청은 캐시가 아니라 다시 호출된다
+        good = {"category_slug": "books", "title": "책", "condition": "GOOD", "confidence": 0.8, "notes": ""}
+        with fake_gemini(good) as client:
+            result = vision.recognize_product(self.IMG)
+        self.assertFalse(result.cached)
+        self.assertEqual(client.generate_json.call_count, 1)
+
+    def test_poisoned_cache_row_is_ignored(self):
+        from apps.ai.models import AIResultCache
+
+        with fake_gemini({"category_slug": "books", "confidence": 0.5}):
+            vision.recognize_product(self.IMG)
+        AIResultCache.objects.update(response={"foo": 1})  # 예전 버전이 남긴 잘못된 캐시
+        good = {"category_slug": "digital", "title": "폰", "condition": "GOOD", "confidence": 0.9, "notes": ""}
+        with fake_gemini(good):
+            result = vision.recognize_product(self.IMG)
+        self.assertEqual(result.data["category_slug"], "digital")
+        self.assertEqual(AIResultCache.objects.get().response["category_slug"], "digital")
+
 
 # ───────────────────────── (3) 사기 탐지 ─────────────────────────
 
@@ -138,6 +164,24 @@ class FraudRuleTests(TestCase):
             "",
         ]:
             self.assertEqual(fraud.check_text_rules(text), [], text)
+
+    def test_common_listing_phrases_are_not_flagged(self):
+        # 사이즈·치수·가격표 숫자, 부정문("카톡은 안 해요")은 오탐하지 않는다
+        for text in [
+            "나이키 운동화 사이즈 250 260 270 280 있어요",
+            "상의 5000 3000 2000원씩이에요",
+            "책상 크기 1200 600 750 mm",
+            "카톡은 안 해요",
+            "결제 링크는 보내지 않아요",
+            "에스크로 같은 건 안 쓰고 직접 만나서 거래해요",
+            "선결제 아니고 만나서 현금으로 해요",
+            "사이즈 250 260 270 다 있어요? 카톡은 안 해요",
+        ]:
+            self.assertEqual(fraud.check_text_rules(text), [], text)
+        # 공백 숫자라도 계좌 문맥이면 잡는다
+        self.assertHit("입금 계좌 1002 123 456789 입니다", "계좌번호")
+        # 부정이 아닌 다른 매치가 있으면 잡는다
+        self.assertHit("카톡은 안 해요. 대신 카톡 아이디 scam1 로 주세요", "외부 메신저")
 
     def test_phone_is_not_account(self):
         hits = fraud.check_text_rules("010-1234-5678")
@@ -235,6 +279,28 @@ class FraudAnalysisTests(AIDataMixin, TestCase):
         self.assertIn(fraud.RULE_BELOW_MARKET, hits)
         self.assertIn("중앙값", context)
 
+        # 고가 브랜드 소모품/구형 공기계는 '비정상 저가'로 보지 않는다
+        for title in ["다이슨 필터", "PS5 듀얼센스", "아이패드 펜슬", "샤넬 립스틱", "아이폰 6s 공기계 32기가"]:
+            item = self.make_product(title=title, content="상태 좋아요", price=30000)
+            self.assertNotIn(fraud.RULE_PREMIUM_CHEAP, fraud.price_rules(item)[0], title)
+        # 단독으로는 경고 수준(30)에 닿지 않는다
+        self.assertLess(fraud.RULE_PREMIUM_CHEAP.weight, fraud.LEVEL_MEDIUM)
+
+    def test_malformed_ai_response_is_not_cached(self):
+        from apps.ai.models import AIResultCache
+
+        product = self.make_product()
+        with fake_gemini({"foo": 1}):
+            self.assertEqual(fraud.analyze_product(product).source, FraudAnalysis.Source.RULE)
+        self.assertFalse(AIResultCache.objects.exists())
+        with fake_gemini({"risk_score": "high?", "reasons": []}):
+            self.assertEqual(fraud.analyze_product(product).source, FraudAnalysis.Source.RULE)
+        self.assertFalse(AIResultCache.objects.exists())
+        # 다음 저장 때 실제로 다시 호출된다
+        with fake_gemini({"risk_score": 4, "reasons": []}) as client:
+            self.assertEqual(fraud.analyze_product(product).source, FraudAnalysis.Source.AI)
+        self.assertEqual(client.generate_json.call_count, 1)
+
     def test_unsaved_product_returns_none(self):
         self.assertIsNone(fraud.analyze_product(Product(title="x")))
 
@@ -255,8 +321,24 @@ class NegotiationTests(AIDataMixin, TestCase):
         self.assertEqual(negotiation.extract_offer_price("2만5천원"), 25000)
         self.assertEqual(negotiation.extract_offer_price("2.5만 어때요"), 25000)
         self.assertEqual(negotiation.extract_offer_price("380,000원에 주세요"), 380000)
-        self.assertEqual(negotiation.extract_offer_price("5천원만 빼주세요"), 5000)
         self.assertIsNone(negotiation.extract_offer_price("네고 되나요"))
+        # 할인액 표현은 판매가에서 뺀다
+        self.assertEqual(negotiation.extract_offer_price("5천원만 빼주세요", list_price=30000), 25000)
+        self.assertEqual(negotiation.extract_offer_price("2만원 빼서 가능할까요?", list_price=50000), 30000)
+        self.assertEqual(negotiation.extract_offer_price("3000원 할인 되나요", list_price=18000), 15000)
+        self.assertIsNone(negotiation.extract_offer_price("2만원 빼서 가능할까요?", list_price=18000))
+        self.assertIsNone(negotiation.extract_offer_price("5천원만 빼주세요"))
+        # 판매가 이상은 제시가가 아님
+        self.assertIsNone(negotiation.extract_offer_price("20만원에 가능?", list_price=180000))
+
+    def test_detect_negotiation_is_fast_on_long_digits(self):
+        import time
+
+        started = time.perf_counter()
+        for _ in range(20):
+            negotiation.detect_negotiation("1" * 4000)
+            negotiation.extract_offer_price("1" * 4000, list_price=10000)
+        self.assertLess(time.perf_counter() - started, 1.0)
 
     def _room(self):
         product = self.make_product()

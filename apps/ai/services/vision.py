@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from apps.ai import client as ai_client
 from apps.ai.cache import AIResult, cached_call
+from apps.ai.client import MSG_INVALID, AIServiceError
 from apps.ai.images import AIInputError
 from apps.ai.models import AIFeature
 from apps.ai.prompts import vision as P
@@ -18,6 +19,25 @@ def _categories():
     from apps.products.models import Category
 
     return list(Category.objects.order_by("order", "id").values_list("pk", "slug", "name"))
+
+
+def validate_raw(data) -> None:
+    """캐시에 넣기 전 원본 응답 검사: category_slug 와 숫자 confidence 가 있어야 한다.
+
+    (목록에 없는 slug 는 normalize 에서 '기타'로 보정 — 스키마 enum 으로 거의 생기지 않음)
+    """
+    if not isinstance(data, dict):
+        raise AIServiceError(MSG_INVALID, detail=f"vision not dict: {data!r}"[:300])
+    slug = data.get("category_slug")
+    if not isinstance(slug, str) or not slug.strip():
+        raise AIServiceError(MSG_INVALID, detail=f"vision category missing: {data!r}"[:300])
+    confidence = data.get("confidence")
+    if isinstance(confidence, bool) or not isinstance(confidence, (int, float, str)):
+        raise AIServiceError(MSG_INVALID, detail="vision confidence missing")
+    try:
+        float(confidence)
+    except ValueError as exc:
+        raise AIServiceError(MSG_INVALID, detail=f"vision bad confidence: {confidence!r}"[:300]) from exc
 
 
 def normalize(data: dict, categories) -> dict:
@@ -68,6 +88,6 @@ def recognize_product(images: list[tuple[bytes, str]], *, user=None, regenerate:
 
     # 캐시에는 원본 응답을 저장하고, 카테고리 pk 등은 매번 현재 DB 기준으로 보강
     parts = [P.VERSION, system, prompt, *[data for data, _mime in images]]
-    result = cached_call(AIFeature.VISION, parts, call, user=user, refresh=regenerate)
+    result = cached_call(AIFeature.VISION, parts, call, user=user, refresh=regenerate, validate=validate_raw)
     result.data = normalize(result.data, categories)
     return result

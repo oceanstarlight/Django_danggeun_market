@@ -157,6 +157,7 @@ def change_status(product, status):
     """판매중 ↔ 예약중 변경. 거래완료로는 바로 바꿀 수 없다(ProductActionError).
 
     거래완료 상품을 다시 판매중/예약중으로 돌리면 구매자 지정이 해제된다.
+    단, 이미 거래 후기가 있으면 되돌릴 수 없다(같은 상품으로 후기 중복 방지).
     반환: 실제로 바뀌었으면 True.
     """
     if status == Product.Status.SOLD:
@@ -165,6 +166,9 @@ def change_status(product, status):
         raise ProductActionError("올바르지 않은 상태예요.")
     if product.status == status:
         return False
+    # 후기가 남은 거래를 되돌리면 같은 상품으로 후기를 여러 번 받을 수 있어서 막는다
+    if product.status == Product.Status.SOLD and product.reviews.exists():
+        raise ProductActionError("후기가 남은 거래는 되돌릴 수 없어요.")
     product.status = status
     fields = ["status", "updated_at"]
     if product.buyer_id:

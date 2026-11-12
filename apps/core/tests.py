@@ -15,11 +15,22 @@ from django.utils import timezone
 
 from apps.accounts.models import Profile, Region
 from apps.core.forms import StyledFormMixin
-from apps.core.storage import StorageError, upload_image
+from apps.core.storage import StorageError, upload_image, validate_image
 from apps.core.templatetags import poly_tags
 from apps.products.models import Category
 
 User = get_user_model()
+
+
+def _image_bytes(fmt="PNG"):
+    """테스트용 1x1 실제 이미지 바이트."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    buf = BytesIO()
+    Image.new("RGB", (2, 2), (10, 120, 110)).save(buf, format=fmt)
+    return buf.getvalue()
 
 
 class PriceFilterTests(SimpleTestCase):
@@ -109,18 +120,49 @@ class StorageLocalTests(SimpleTestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_saves_to_media_root(self):
-        file = SimpleUploadedFile("photo.JPEG", b"\xff\xd8\xff fake jpeg", content_type="image/jpeg")
+        data = _image_bytes("JPEG")
+        file = SimpleUploadedFile("photo.JPEG", data, content_type="image/jpeg")
         url = upload_image(file, "products/1")
         self.assertTrue(url.startswith("/media/products/1/"))
         self.assertTrue(url.endswith(".jpg"))
         saved = Path(self.tmp) / url.removeprefix("/media/")
         self.assertTrue(saved.exists())
-        self.assertEqual(saved.read_bytes(), b"\xff\xd8\xff fake jpeg")
+        self.assertEqual(saved.read_bytes(), data)
 
     def test_folder_traversal_is_cleaned(self):
-        file = SimpleUploadedFile("a.png", b"png", content_type="image/png")
+        file = SimpleUploadedFile("a.png", _image_bytes(), content_type="image/png")
         url = upload_image(file, "../../etc")
         self.assertTrue(url.startswith("/media/etc/"))
+
+    def test_rejects_html_disguised_as_png(self):
+        # 확장자만 바꾼 HTML 은 내용 검사에서 막힌다
+        evil = SimpleUploadedFile("evil.png", b"<html><script>alert(1)</script></html>", content_type="text/html")
+        with self.assertRaises(StorageError):
+            upload_image(evil, "avatars")
+        evil.seek(0)
+        with self.assertRaises(StorageError):
+            validate_image(evil)
+
+    def test_extension_follows_real_format(self):
+        # .png 이름이어도 실제 내용이 JPEG 이면 .jpg 로 저장
+        file = SimpleUploadedFile("photo.png", _image_bytes("JPEG"), content_type="text/html")
+        self.assertTrue(upload_image(file, "x").endswith(".jpg"))
+
+    def test_supabase_content_type_comes_from_server(self):
+        from unittest import mock
+
+        bucket = mock.MagicMock()
+        bucket.get_public_url.return_value = "https://cdn.example/x.png?"
+        client = mock.MagicMock()
+        client.storage.from_.return_value = bucket
+        file = SimpleUploadedFile("a.png", _image_bytes(), content_type="text/html")
+        with override_settings(USE_SUPABASE_STORAGE=True), mock.patch(
+            "apps.core.storage._get_supabase_client", return_value=client
+        ):
+            url = upload_image(file, "products")
+        self.assertEqual(url, "https://cdn.example/x.png")
+        options = bucket.upload.call_args.kwargs["file_options"]
+        self.assertEqual(options["content-type"], "image/png")
 
     def test_rejects_bad_extension(self):
         file = SimpleUploadedFile("evil.exe", b"MZ", content_type="application/octet-stream")

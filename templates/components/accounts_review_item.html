@@ -10,7 +10,7 @@
   <div class="min-w-0 flex-1">
     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
       <a href="{% url 'accounts:seller_profile' review.reviewer.username %}" class="text-[15px] font-semibold text-neutral-900 hover:underline">{{ review.reviewer|display_name }}</a>
-      <span class="text-[13px] text-neutral-400"><time datetime="{{ review.created_at|date:'c' }}">{{ review.created_at|timeago }}</time></span>
+      <span class="text-[13px] text-neutral-500"><time datetime="{{ review.created_at|date:'c' }}">{{ review.created_at|timeago }}</time></span>
     </div>
     <div class="mt-1 flex items-center gap-0.5" role="img" aria-label="별점 5점 만점에 {{ review.rating }}점">
       {% for i in "12345" %}{% if forloop.counter <= review.rating %}{% include "components/icon.html" with name="star-fill" class="h-4 w-4 text-amber-400" %}{% else %}{% include "components/icon.html" with name="star" class="h-4 w-4 text-neutral-300" %}{% endif %}{% endfor %}

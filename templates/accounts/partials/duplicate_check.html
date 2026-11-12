@@ -1,5 +1,5 @@
 {% comment "usage" %}
 회원가입 · 프로필 수정 입력 중 실시간 중복 확인 결과 (accounts:check_duplicate 가 렌더)
-컨텍스트: ok(True | False | None) · message
+컨텍스트: ok(True | False | None) · message (ok=None 이고 message 가 있으면 중립 안내, 예: 요청 제한)
 대상 요소: <div id="check-<필드명>" aria-live="polite"></div>
-{% endcomment %}{% if ok %}<p class="mt-1.5 flex items-start gap-1 text-[13px] font-medium leading-[18px] text-brand-700">{% include "components/icon.html" with name="check" class="mt-px h-4 w-4 shrink-0" %}<span>{{ message }}</span></p>{% elif ok is False %}<p class="field-error">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>{{ message }}</span></p>{% endif %}
+{% endcomment %}{% if ok %}<p class="mt-1.5 flex items-start gap-1 text-[13px] font-medium leading-[18px] text-brand-700">{% include "components/icon.html" with name="check" class="mt-px h-4 w-4 shrink-0" %}<span>{{ message }}</span></p>{% elif ok is False %}<p class="field-error">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>{{ message }}</span></p>{% elif message %}<p class="help">{{ message }}</p>{% endif %}

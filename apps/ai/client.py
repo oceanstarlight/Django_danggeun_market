@@ -233,14 +233,14 @@ def _live_calls_blocked() -> bool:
 _client_cache: dict[tuple, GeminiClient] = {}
 
 
-def get_client(timeout: float | None = None) -> GeminiClient:
+def get_client(timeout: float | None = None, max_retries: int = 1) -> GeminiClient:
     """서비스가 쓰는 클라이언트 팩토리 (테스트에서는 이 함수를 mock 한다)."""
     if _live_calls_blocked():
         raise AIUnavailableError(detail="live AI calls are disabled during tests")
-    key = (settings.GEMINI_API_KEY, settings.GEMINI_MODEL, timeout)
+    key = (settings.GEMINI_API_KEY, settings.GEMINI_MODEL, timeout, max_retries)
     client = _client_cache.get(key)
     if client is None:
-        client = GeminiClient(timeout=timeout)
+        client = GeminiClient(timeout=timeout, max_retries=max_retries)
         _client_cache[key] = client
     return client
 
