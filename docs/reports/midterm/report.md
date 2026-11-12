@@ -32,7 +32,7 @@
 
 **폴리마켓(Poly Market)**은 Django로 구현한 **동네 중고거래 웹 서비스**로, 국내 중고거래 플랫폼인 당근마켓을 클론 코딩한 프로젝트이다(`README.md` 1~3행: "Django로 만드는 동네 중고거래 플랫폼 — 당근마켓 클론 코딩 프로젝트"). 목표는 중고거래의 기본 흐름인 **회원가입 → 상품 등록 → 찜 → 판매자와의 실시간 채팅**을 하나의 웹 애플리케이션 안에서 구현하는 것이다.
 
-- **서비스 이름**: 커밋 `542643f`(2026-10-29, "폴리마켓 UI 디자인 적용")에서 "폴리 / 폴리마켓"으로 변경되었다. 화면에서는 `templates/market/main.html` 12행과 `templates/market/header.html` 9행(로고 `alt="폴리마켓"`)에서 이 이름을 사용한다.
+- **서비스 이름**: 커밋 `542643f`(2026-10-29, "폴리마켓 UI 디자인 적용")에서 "폴리 / 폴리마켓"으로 변경되었다. 화면에서는 `templates/market/main.html` 12행과 `templates/market/header.html` 12행(로고 텍스트 "폴리")에서 이 이름을 사용한다(9행의 `alt="폴리마켓"`은 HTML 주석 안의 예시라 화면에 출력되지 않는다).
 - **프로젝트 구성**: 설정 패키지 `config/`와 단일 앱 `market/`으로 이루어져 있다(`config/settings.py` 44~55행 `INSTALLED_APPS`, `config/urls.py`에서 `market.urls` include).
 
 ### 1.2 구현 범위 요약
@@ -59,9 +59,9 @@
 | 2026-10-29 | `542643f` → `830f825` (PR #1) | 공용 `style.css`와 공통 `header.html` 도입, 템플릿 리디자인, 서비스명 변경 |
 | 2026-10-29 | `595c2db` → `003d344` (PR #2) | README 로컬 환경 세팅(Linux/Windows) 추가 및 변경 이력 최신화 |
 | 2026-11-05 | `4ed4f7c` | Render 배포 설정: `SECRET_KEY` 환경 변수화, `ALLOWED_HOSTS` 정리, WhiteNoise·`STATIC_ROOT`, `/state/` 추가, `build.sh`·`requirements.txt` 추가, `staticfiles/` 커밋 |
-| 2026-11-05 | `b204548`, `c22e13e`, `113fd8f`, `ee841ef` | `build.sh` 루트 이동, gunicorn 추가, Render 도메인 허용 및 `DEBUG = False` |
+| 2026-11-05 | `b204548`, `c22e13e`, `113fd8f`, `ee841ef` | `build.sh` 루트 이동, `requirements.txt`에 gunicorn·uvicorn·whitenoise·click 추가(이후 `requirments.txt`와 내용 동일), Render 도메인 허용 및 `DEBUG = False` |
 
-개발은 **9월 환경 구축(프로젝트 생성·Supabase 연동) → 10월 초·중순 기능 구현(인증, 상품, 찜, 실시간 채팅) → 10월 말 UI·문서 정비 → 11월 초 Render 배포**의 네 단계로 진행되었다. 커밋 날짜(9/10, 9/17, 10/8, 10/22, 10/29, 11/5)가 모두 수요일로, 대략 주 단위로 작업이 이어졌다.
+개발은 **9월 환경 구축(프로젝트 생성·Supabase 연동) → 10월 초·중순 기능 구현(인증, 상품, 찜, 실시간 채팅) → 10월 말 UI·문서 정비 → 11월 초 Render 배포**의 네 단계로 진행되었다. 커밋 날짜(9/10, 9/17, 10/8, 10/22, 10/29, 11/5)가 모두 목요일로, 대략 주 단위로 작업이 이어졌다.
 
 ---
 
@@ -134,7 +134,7 @@ Django_danggeun_market/
 ├── market/                     # 유일한 애플리케이션
 │   ├── models.py               # Profile, Product, Wishlist, ChatRoom, ChatMessage
 │   ├── forms.py                # SignUpForm, ProductForm
-│   ├── views.py                # 함수 기반 뷰 14개 (490행)
+│   ├── views.py                # 함수 기반 뷰 14개 (491행)
 │   ├── urls.py                 # HTTP URL 패턴 14개
 │   ├── consumers.py            # ChatConsumer (JsonWebsocketConsumer)
 │   ├── routing.py              # websocket_urlpatterns
@@ -337,7 +337,7 @@ def chat_count(self):
 
 ## 5. 기능 구현
 
-> 아래 코드 발췌는 원본(인자를 한 줄에 하나씩 쓰는 스타일)에서 줄바꿈만 줄였으며 로직은 동일하다.
+> 아래 코드 발췌는 원본(인자를 한 줄에 하나씩 쓰는 스타일)에서 줄바꿈을 줄이고, 일부는 중간 변수를 합치거나 핵심이 아닌 줄을 `...`로 생략했다.
 
 ### 5.1 회원가입
 
@@ -385,7 +385,7 @@ if image:
 product.save()
 ```
 
-`ProductForm`(104~128행)은 `Product`의 `ModelForm`이며, 모델에 없는 `image = forms.ImageField(required=False)`를 따로 선언해 업로드 결과 URL만 `image_url`에 저장한다. 등록·수정은 `product_form.html`을 공유하고 `page_title`로 제목("중고상품 등록"/"상품 수정")을 구분한다.
+`ProductForm`(104~129행)은 `Product`의 `ModelForm`이며, 모델에 없는 `image = forms.ImageField(required=False)`를 따로 선언해 업로드 결과 URL만 `image_url`에 저장한다. 등록·수정은 `product_form.html`을 공유하고 `page_title`로 제목("중고상품 등록"/"상품 수정")을 구분한다.
 
 `product_update`와 `product_delete`는 `@login_required`로 로그인을 확인한 뒤 `if product.seller != request.user: raise PermissionDenied`로 작성자를 검사한다(282~283행, 343~344행). 수정 시 새 이미지를 올린 경우에만 `image_url`을 바꾸고, 삭제는 GET에서 확인 화면을, POST에서만 `product.delete()`를 실행한다. 상세 템플릿은 작성자에게만 수정·삭제 버튼을 보여 주지만, URL 직접 접근은 뷰의 `PermissionDenied`가 차단한다.
 
@@ -493,7 +493,7 @@ chatSocket.onmessage = function(event) {
 ### 6.3 레이아웃과 반응형
 
 ```css
-/* style.css 88~97행 */
+/* style.css 88~97행 (row-gap·align-items·padding 생략) */
 .site {
     display: grid;
     grid-template-columns: var(--col-logo) minmax(0, var(--col-main)) var(--col-side);
@@ -537,7 +537,7 @@ chatSocket.onmessage = function(event) {
 
 *그림 1. 메인 화면(비로그인). 로고, 본문(카테고리 타일과 인기 상품 순위), 사이드(지도 박스와 "나의 폴리" 카드)의 3단 그리드이다.*
 
-**상품 목록 (`product_list.html`)**: 알약형 탭 바, 섹션 제목(검색 시 `"{{ query }}" 중고거래 검색 결과`, 아니면 "중고거래 인기매물"과 개수), 툴바([필터], [지역 선택], [＋ 판매글 작성], [💬 내 채팅]), 3열 상품 카드 그리드로 구성된다. 네고 가능 상품에는 "네고 가능" 배지가 붙고, 사이드에는 인기 검색어 칩 10개가 있다.
+**상품 목록 (`product_list.html`)**: 알약형 탭 바, 섹션 제목(검색 시 `"{{ query }}" 중고거래 검색 결과`, 아니면 "중고거래 인기매물"이며, 두 경우 모두 뒤에 개수(`{{ products|length }}개`)가 붙음), 툴바([필터], [지역 선택], [＋ 판매글 작성], [💬 내 채팅]), 3열 상품 카드 그리드로 구성된다. 네고 가능 상품에는 "네고 가능" 배지가 붙고, 사이드에는 인기 검색어 칩 10개가 있다.
 
 ![상품 목록 화면](images/02_product_list.png)
 
@@ -585,7 +585,7 @@ chatSocket.onmessage = function(event) {
 
 *그림 10. 상품 삭제 확인 화면. 되돌릴 수 없는 동작이므로 빨간색 `btn-danger` 버튼으로 강조했다.*
 
-공통 헤더 include, `display: contents`, `.site` 3단 그리드 덕분에 10개 화면이 같은 틀(로고 / 본문 / 사이드)을 공유하며, 사이드가 필요 없는 화면은 `<aside>`를 생략한다. 한편 `<!-- 사진! ... -->` 주석으로 남은 이미지 자리(로고, 지도, 아바타, 아이콘), `href="#"` 링크(일부 타일·탭, 필터, 지역 선택), 정의만 되고 쓰이지 않는 `.main-wide` 클래스(`style.css` 112~114행)는 아직 정리되지 않은 자리 표시자이다.
+공통 헤더 include, `display: contents`, `.site` 3단 그리드 덕분에 9개 화면이 같은 틀(로고 / 본문 / 사이드)을 공유하며, 사이드가 필요 없는 화면은 `<aside>`를 생략한다. 한편 `<!-- 사진! ... -->` 주석으로 남은 이미지 자리(로고, 지도, 아바타, 아이콘), `href="#"` 링크(일부 타일·탭, 필터, 지역 선택), 정의만 되고 쓰이지 않는 `.main-wide` 클래스(`style.css` 112~114행)는 아직 정리되지 않은 자리 표시자이다.
 
 ---
 
@@ -618,7 +618,7 @@ if render_host:
     ALLOWED_HOSTS.append(render_host)
 ```
 
-초기에는 `ALLOWED_HOSTS = ['*']`, `DEBUG = True`였으나 `4ed4f7c`에서 로컬 호스트와 `RENDER_EXTERNAL_HOSTNAME` 방식으로 바뀌었고, 마지막 커밋 `ee841ef`에서 Render 도메인을 명시적으로 추가하고 `DEBUG`를 `False`로 바꾸었다. WebSocket 라우터의 `AllowedHostsOriginValidator`도 이 목록으로 Origin을 검사한다.
+`startproject` 직후에는 `ALLOWED_HOSTS = []`, `DEBUG = True`였고 `e4919a2`에서 `ALLOWED_HOSTS = ['*']`로 바뀌었으나 `4ed4f7c`에서 로컬 호스트와 `RENDER_EXTERNAL_HOSTNAME` 방식으로 바뀌었고, 마지막 커밋 `ee841ef`에서 Render 도메인을 명시적으로 추가하고 `DEBUG`를 `False`로 바꾸었다. WebSocket 라우터의 `AllowedHostsOriginValidator`도 이 목록으로 Origin을 검사한다.
 
 ### 7.3 DB, 정적 파일, 헬스 체크
 
@@ -648,7 +648,7 @@ if render_host:
 ### 8.2 구조·코드 품질
 
 - **테스트 없음**: `market/tests.py`는 `TestCase` import와 주석 한 줄뿐인 기본 파일이다.
-- **로직 집중**: 인증·상품·찜·채팅·업로드 호출이 모두 `market/views.py`(490행)의 함수형 뷰에 있고, 서비스 레이어 없이 단일 앱에 들어 있다.
+- **로직 집중**: 인증·상품·찜·채팅·업로드 호출이 모두 `market/views.py`(491행)의 함수형 뷰에 있고, 서비스 레이어 없이 단일 앱에 들어 있다.
 - **N+1 쿼리와 페이지네이션 부재**: `wish_count`/`chat_count`가 호출마다 `COUNT` 쿼리를 실행하는데, `main.html` 126~127행과 `product_list.html` 131·133행이 상품마다 이를 호출해 상품 수 × 2번의 추가 쿼리가 발생한다. `annotate(Count(...))`나 페이지네이션은 없다.
 - **Storage 클라이언트의 import 시점 생성과 검증 부재**: `storage.py` 12~15행이 모듈 최상단에서 `create_client()`를 호출하므로 환경 변수가 잘못되면 `views.py` import 시점에 실패할 수 있다. `upload()` 예외 처리, 파일 형식·크기 검증도 없다.
 - **공통 base 템플릿 없음**: 페이지 템플릿 9개가 `<!DOCTYPE html>`, `<head>`, CSS 링크를 각자 반복하며 `{% extends %}`를 쓰지 않는다.
