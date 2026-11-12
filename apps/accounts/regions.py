@@ -13,6 +13,7 @@ products 앱도 쓰므로 accounts.selectors(상품 모델을 import) 와 분리
 import re
 from dataclasses import dataclass, field
 
+from django.forms.utils import flatatt
 from django.urls import reverse
 
 from .models import Region
@@ -27,15 +28,43 @@ def korean_sort_key(value):
     return [int(part) if part.isdigit() else part for part in _NUM_RE.split(value or "")]
 
 
+PARAM_MAX_LENGTH = 20
+_PK_RE = re.compile(r"[0-9]{1,18}")
+
+
+def clean_param(value, max_length=PARAM_MAX_LENGTH):
+    """GET/POST 로 받은 시/도·시/군/구 이름을 안전하게: 문자열이 아니면 '', NUL(\\x00)이 섞이면 ''(PostgreSQL 은
+    text 에 NUL 을 못 넣어 쿼리 자체가 실패함), 앞뒤 공백 제거, 최대 길이로 자름."""
+    if not isinstance(value, str) or "\x00" in value:
+        return ""
+    return value.strip()[:max_length]
+
+
+def parse_pk(value):
+    """'123' / 123 → 123, 그 밖(빈 값, '²' 같은 유니코드 숫자, 음수, 너무 긴 값 …) → None."""
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value if value > 0 else None
+    value = str(value or "").strip()
+    return int(value) if _PK_RE.fullmatch(value) else None
+
+
 def _official():
     return Region.objects.filter(code__isnull=False)
 
 
+def _keep_list(keep):
+    """keep: None | Region | Region 여러 개 → [Region, ...] (None 은 뺌)."""
+    if keep is None:
+        return []
+    if isinstance(keep, Region):
+        return [keep]
+    return [r for r in keep if r is not None]
+
+
 def sido_choices(current=None):
-    """시/도 이름 목록."""
+    """시/도 이름 목록. current(Region 또는 여러 개): 코드가 없어도 목록에 끼워 넣을 행."""
     names = set(_official().order_by().values_list("sido", flat=True).distinct())
-    if current is not None:
-        names.add(current.sido)
+    names.update(r.sido for r in _keep_list(current))
     return sorted(names, key=korean_sort_key)
 
 
@@ -44,8 +73,7 @@ def sigungu_choices(sido, current=None):
     if not sido:
         return []
     names = set(_official().filter(sido=sido).order_by().values_list("sigungu", flat=True).distinct())
-    if current is not None and current.sido == sido:
-        names.add(current.sigungu)
+    names.update(r.sigungu for r in _keep_list(current) if r.sido == sido)
     return sorted(names, key=korean_sort_key)
 
 
@@ -54,27 +82,36 @@ def dong_choices(sido, sigungu, current=None):
     if not (sido and sigungu):
         return []
     items = dict(_official().filter(sido=sido, sigungu=sigungu).order_by().values_list("pk", "dong"))
-    if current is not None and (current.sido, current.sigungu) == (sido, sigungu):
-        items[current.pk] = current.dong
+    for r in _keep_list(current):
+        if (r.sido, r.sigungu) == (sido, sigungu):
+            items[r.pk] = r.dong
     return sorted(items.items(), key=lambda item: korean_sort_key(item[1]))
 
 
-def sido_exists(sido):
-    return bool(sido) and Region.objects.filter(sido=sido).exists()
+def sido_exists(sido, keep=None):
+    """고를 수 있는 시/도인지 (코드 있는 행, 또는 keep 에 든 행 기준 — select 목록과 같은 규칙)."""
+    if not sido:
+        return False
+    return any(r.sido == sido for r in _keep_list(keep)) or _official().filter(sido=sido).exists()
 
 
-def sigungu_exists(sido, sigungu):
-    return bool(sido and sigungu) and Region.objects.filter(sido=sido, sigungu=sigungu).exists()
+def sigungu_exists(sido, sigungu, keep=None):
+    if not (sido and sigungu):
+        return False
+    return (
+        any((r.sido, r.sigungu) == (sido, sigungu) for r in _keep_list(keep))
+        or _official().filter(sido=sido, sigungu=sigungu).exists()
+    )
 
 
 def region_by_pk(value):
-    """'123' / 123 / Region → Region 또는 None."""
+    """'123' / 123 / Region → Region 또는 None. (숫자가 아닌 값은 쿼리 없이 None)"""
     if isinstance(value, Region):
         return value
-    value = str(value or "").strip()
-    if not value.isdigit():
+    pk = parse_pk(value)
+    if pk is None:
         return None
-    return Region.objects.filter(pk=int(value)).first()
+    return Region.objects.filter(pk=pk).first()
 
 
 # ───────── 템플릿(components/region_select.html) 컨텍스트 ─────────
@@ -99,7 +136,8 @@ def placeholders(mode, sido="", sigungu=""):
         return {
             "sido": "전체 지역",
             "sigungu": f"{sido} 전체" if sido else "시/군/구",
-            "dong": f"{sigungu} 전체" if sigungu else "읍/면/동",
+            # '성남시 분당구' 처럼 두 단어면 마지막만 ('분당구 전체') — 모바일 3칸에서 잘리지 않게
+            "dong": f"{sigungu.split()[-1]} 전체" if sigungu else "읍/면/동",
         }
     return {"sido": "시/도 선택", "sigungu": "시/군/구 선택", "dong": "읍/면/동 선택"}
 
@@ -115,16 +153,18 @@ def build_select_context(
     attrs=None,
     dong_empty_value="",
     legend="",
+    keep=None,
 ):
     """3단 select 렌더 컨텍스트.
 
     names: {"sido": ..., "sigungu": ..., "dong": ...} — 마지막(dong) 이름이 폼 필드 이름이고 값은 Region pk.
     region 이 있으면 sido/sigungu 는 region 기준으로 맞춘다. (서버에서 옵션까지 다 그려서 왕복이 없음)
     mode: "form"(가입·프로필·상품 폼, HTMX 로 다음 단계를 불러옴) | "filter"(목록 필터, 바꾸면 폼이 바로 제출됨)
+    keep: 코드가 없어도(예전 시드 행) 목록에 보여줄 Region — 예: 목록 필터에서 내 동네.
     """
     if region is not None:
         sido, sigungu = region.sido, region.sigungu
-    current = region
+    current = _keep_list(region) + _keep_list(keep)
     sidos = sido_choices(current)
     if sido not in sidos:
         sido, sigungu = "", ""
@@ -179,6 +219,6 @@ def build_select_context(
         "mode": mode,
         "legend": legend,
         "extra_class": extra_class,
-        "attrs": attrs,
+        "attrs_html": flatatt(attrs),
         "options_url": reverse("accounts:region_options") if use_htmx else "",
     }

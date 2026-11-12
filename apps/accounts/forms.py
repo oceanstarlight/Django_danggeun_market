@@ -6,13 +6,15 @@ from datetime import date
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.db.models import Q
 from django.urls import reverse_lazy
-from django.utils.choices import BaseChoiceIterator
+from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 
 from apps.core.forms import StyledFormMixin
 from apps.core.storage import StorageError, validate_image
 
-from . import selectors
+from . import regions, selectors
 from .models import Profile, Region
 
 User = get_user_model()
@@ -53,41 +55,126 @@ def normalize_phone(value: str) -> str | None:
     return f"{digits[:3]}-{digits[3:7]}-{digits[7:]}"
 
 
-# ───────── 동네 선택 (시/군/구별 optgroup) ─────────
+# ───────── 동네 선택 (시/도 → 시/군/구 → 읍/면/동) ─────────
+class RegionValue(str):
+    """제출된 Region pk 문자열 + 함께 고른 시/도·시/군/구 (검증 실패 후 다시 그릴 때 쓰려고)."""
+
+    def __new__(cls, value="", sido="", sigungu=""):
+        obj = super().__new__(cls, value or "")
+        obj.sido = regions.clean_param(sido)
+        obj.sigungu = regions.clean_param(sigungu)
+        return obj
+
+
+class RegionSelect(forms.Widget):
+    """select 3개(시/도 · 시/군/구 · 읍/면/동)로 그리는 위젯. 제출 값은 마지막 select 의 Region pk.
+
+    이름: <name>_sido, <name>_sigungu, <name>(= pk). 렌더는 templates/components/region_select.html.
+    """
+
+    template_name = "components/region_select.html"
+
+    def __init__(self, attrs=None, mode="form"):
+        super().__init__(attrs)
+        self.mode = mode
+
+    def subwidget_names(self, name):
+        return {"sido": f"{name}_sido", "sigungu": f"{name}_sigungu", "dong": name}
+
+    def value_from_datadict(self, data, files, name):
+        names = self.subwidget_names(name)
+        return RegionValue(data.get(names["dong"], ""), data.get(names["sido"], ""), data.get(names["sigungu"], ""))
+
+    def value_omitted_from_data(self, data, files, name):
+        return not any(key in data for key in self.subwidget_names(name).values())
+
+    def id_for_label(self, id_):
+        return f"{id_}_sido" if id_ else id_
+
+    def selection(self, value):
+        """value(pk / RegionValue / Region) → (sido, sigungu, Region|None).
+
+        제출한 시/도·시/군/구와 맞지 않는 pk 면(RegionChoiceField 가 에러로 돌려보냄) 고른 위 단계를 그대로 보여준다.
+        """
+        region = regions.region_by_pk(value)
+        sido, sigungu = getattr(value, "sido", ""), getattr(value, "sigungu", "")
+        if region is not None and not region_matches(region, sido, sigungu):
+            region = None
+        if region is not None:
+            return region.sido, region.sigungu, region
+        return sido, sigungu, None
+
+    def get_context(self, name, value, attrs):
+        attrs = self.build_attrs(self.attrs, attrs)
+        sido, sigungu, region = self.selection(value)
+        return {
+            "region_select": regions.build_select_context(
+                id_prefix=attrs.get("id") or f"id_{name}",
+                names=self.subwidget_names(name),
+                sido=sido,
+                sigungu=sigungu,
+                region=region,
+                mode=self.mode,
+                attrs=attrs,
+            )
+        }
+
+    def render(self, name, value, attrs=None, renderer=None):
+        # 프로젝트 templates/ 의 컴포넌트를 그대로 쓰려고 폼 렌더러 대신 템플릿 로더로 그린다
+        return mark_safe(render_to_string(self.template_name, self.get_context(name, value, attrs)))
+
+
+def region_matches(region, sido="", sigungu=""):
+    """함께 제출된 위 단계(비어 있으면 검사 안 함)가 region 과 맞는지."""
+    if sido and region.sido != sido:
+        return False
+    if sigungu and region.sigungu != sigungu:
+        return False
+    return True
+
+
 class RegionChoiceField(forms.ModelChoiceField):
-    """'서울특별시' 그룹 아래 '강남구 역삼동'을 고르는 select."""
+    """시/도 → 시/군/구 → 읍/면/동 을 차례로 고르는 동네 필드. cleaned_data 는 Region.
+
+    새로 고를 수 있는 건 행정동 코드가 있는 행뿐이에요. 예전 시드 행(code 없음)은 폼이 allow() 로 허락한
+    값(지금 내 동네, 수정 중인 상품의 동네)일 때만 통과해요.
+    """
+
+    widget = RegionSelect
 
     def __init__(self, **kwargs):
-        kwargs.setdefault("queryset", Region.objects.all())
-        kwargs.setdefault("empty_label", "동네를 선택해 주세요")
+        kwargs.setdefault("queryset", Region.objects.filter(code__isnull=False))
+        kwargs.setdefault("empty_label", None)
         kwargs.setdefault("label", "내 동네")
-        kwargs.setdefault("error_messages", {"required": "동네를 선택해 주세요.", "invalid_choice": "목록에서 동네를 골라 주세요."})
+        messages_ = {
+            "required": "동네를 선택해 주세요.",
+            "incomplete": "읍/면/동까지 선택해 주세요.",
+            "invalid_choice": "목록에서 동네를 골라 주세요.",
+            "mismatch": "고른 시/도·시/군/구와 읍/면/동이 맞지 않아요. 다시 골라 주세요.",
+        }
+        messages_.update(kwargs.pop("error_messages", None) or {})
+        kwargs["error_messages"] = messages_
         super().__init__(**kwargs)
 
-    def grouped_choices(self):
-        # 실제 렌더링 시점에만 조회 (쿼리 1번)
-        groups: dict[str, list] = {}
-        for region in self.queryset:
-            groups.setdefault(region.sido, []).append((region.pk, f"{region.sigungu} {region.dong}"))
-        if self.empty_label is not None:
-            yield ("", self.empty_label)
-        yield from groups.items()
+    def clean(self, value):
+        if self.required and not str(value or "").strip() and getattr(value, "sido", ""):
+            # 시/도(·시/군/구)까지만 고르고 멈춘 경우
+            raise forms.ValidationError(self.error_messages["incomplete"], code="required")
+        if str(value or "").strip() and regions.parse_pk(value) is None:
+            # 'abc', '²', NUL 이 섞인 값 등 → 쿼리 없이 같은 안내
+            raise forms.ValidationError(self.error_messages["invalid_choice"], code="invalid_choice")
+        region = super().clean(value)
+        if region is not None and not region_matches(
+            region, getattr(value, "sido", ""), getattr(value, "sigungu", "")
+        ):
+            raise forms.ValidationError(self.error_messages["mismatch"], code="mismatch")
+        return region
 
-    def _get_choices(self):
-        # 지연 iterable 반환 — 클래스 정의/폼 생성 시 DB를 건드리지 않게 (migrate 전에도 import 가능)
-        return _LazyGroupedChoices(self)
-
-    choices = property(_get_choices, forms.ChoiceField.choices.fset)
-
-
-class _LazyGroupedChoices(BaseChoiceIterator):
-    """순회할 때마다 RegionChoiceField.grouped_choices()를 새로 계산한다."""
-
-    def __init__(self, field):
-        self.field = field
-
-    def __iter__(self):
-        return iter(list(self.field.grouped_choices()))
+    def allow(self, *allowed):
+        """코드가 없는 예전 행이라도 이 Region(또는 pk)들은 그대로 받는다 (지금 값 유지용)."""
+        pks = {getattr(r, "pk", r) for r in allowed if r}
+        if pks:
+            self.queryset = Region.objects.filter(Q(code__isnull=False) | Q(pk__in=pks))
 
 
 def _check_attrs(field_name: str, **extra):
@@ -241,6 +328,11 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
                 }
             ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 지금 내 동네가 예전 시드 행이어도 바꾸지 않고 저장할 수 있게
+        self.fields["region"].allow(self.instance.region_id)
 
     def clean_nickname(self):
         nickname = normalize_nickname(self.cleaned_data.get("nickname"))

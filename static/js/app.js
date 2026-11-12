@@ -7,6 +7,9 @@
  * - 이미지 미리보기: <input type="file" data-preview-target="#sel" [data-preview-max="10"]>
  * - 확인창: [data-confirm="정말 삭제할까요?"] (링크/버튼 클릭, 폼 제출)
  * - 텍스트영역 자동 높이: textarea[data-autoresize]
+ * - 동네 3단 선택: [data-region-select] select[data-region-level] — 위 단계가 바뀌면 아래 단계를 비우고 잠금,
+ *   다음 단계 옵션은 htmx(hx-get → accounts:region_options)가 채우면 다시 열림
+ *   (불러오는 중엔 '불러오는 중…' + aria-busy, 실패하면 '다시 불러오기' 옵션)
  * - HTMX: 요청 중 body.is-loading, 에러 토스트, 새로 들어온 콘텐츠 재초기화(htmx.onLoad)
  */
 (function () {
@@ -241,6 +244,76 @@
   });
   document.addEventListener("input", function (e) {
     if (e.target.matches("textarea[data-autoresize]")) autoresize(e.target);
+  });
+
+  /* ───────── 동네 3단 선택 (components/region_select.html) ───────── */
+  var REGION_LEVELS = ["sido", "sigungu", "dong"];
+  function resetRegionSelect(select) {
+    select.innerHTML = "";
+    var option = document.createElement("option");
+    option.value = select.getAttribute("data-empty-value") || "";
+    option.textContent = select.getAttribute("data-placeholder") || "";
+    select.appendChild(option);
+    select.disabled = true;
+  }
+  // 캡처 단계: 목록 필터의 자동 제출(버블 단계)보다 먼저 아래 단계를 비워서, 바뀐 위 단계 기준으로 제출되게
+  document.addEventListener("change", function (e) {
+    var select = e.target;
+    if (!select.matches || !select.matches("[data-region-select] select[data-region-level]")) return;
+    var root = select.closest("[data-region-select]");
+    var index = REGION_LEVELS.indexOf(select.getAttribute("data-region-level"));
+    $all("select[data-region-level]", root).forEach(function (lower) {
+      if (REGION_LEVELS.indexOf(lower.getAttribute("data-region-level")) > index) resetRegionSelect(lower);
+    });
+  }, true);
+  document.addEventListener("htmx:afterSwap", function (e) {
+    var target = e.target;
+    if (target && target.matches && target.matches("select[data-region-level]")) {
+      target.removeAttribute("aria-busy");
+      target.disabled = target.options.length <= 1;
+    }
+  });
+  // 다음 단계를 불러오는 동안: 그 select 에 '불러오는 중…' + aria-busy (전역 로딩 바는 data-silent 라 안 뜸)
+  function regionRequestTarget(e) {
+    var elt = e.detail && e.detail.elt;
+    if (!elt || !elt.matches || !elt.matches("[data-region-select] select[data-region-level]")) return null;
+    var target = e.detail.target || document.querySelector(elt.getAttribute("hx-target"));
+    return target && target.matches && target.matches("select[data-region-level]") ? target : null;
+  }
+  function regionOption(value, label) {
+    var option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    return option;
+  }
+  document.addEventListener("htmx:beforeRequest", function (e) {
+    var target = regionRequestTarget(e);
+    if (!target) return;
+    resetRegionSelect(target);
+    target.options[0].textContent = "불러오는 중…";
+    target.setAttribute("aria-busy", "true");
+  });
+  // 불러오지 못하면: 그 select 를 열어 '다시 불러오기'를 고를 수 있게 (같은 위 단계를 다시 고르면 change 가 안 생겨서)
+  function regionRequestFailed(e) {
+    var target = regionRequestTarget(e);
+    if (!target) return;
+    target.innerHTML = "";
+    target.appendChild(regionOption(target.getAttribute("data-empty-value") || "", "불러오지 못했어요"));
+    var retry = regionOption("retry", "다시 불러오기");
+    retry.setAttribute("data-region-retry", e.detail.elt.id);
+    target.appendChild(retry);
+    target.removeAttribute("aria-busy");
+    target.disabled = false;
+  }
+  ["htmx:responseError", "htmx:sendError", "htmx:timeout"].forEach(function (name) {
+    document.addEventListener(name, regionRequestFailed);
+  });
+  document.addEventListener("change", function (e) {
+    var select = e.target;
+    if (!select.matches || !select.matches("select[data-region-level]")) return;
+    var option = select.options[select.selectedIndex];
+    var source = option && option.hasAttribute("data-region-retry") && document.getElementById(option.getAttribute("data-region-retry"));
+    if (source && window.htmx) window.htmx.trigger(source, "change");
   });
 
   /* ───────── HTMX 연동 ───────── */

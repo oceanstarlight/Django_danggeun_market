@@ -52,9 +52,9 @@ USERS = [
      "합정·망원 근처에서 거래해요. 깨끗하게 쓴 물건만 올려요.", "38.4"),
     ("junho", "준호아빠", "이준호", "1988-09-03", "010-5100-0002", ("서울특별시", "마포구", "합정동"),
      "아이 물건 정리하고 있어요. 주말 직거래를 좋아해요.", "41.2"),
-    ("seoyeon", "서연이네책방", "박서연", "1999-01-27", "010-5100-0003", ("서울특별시", "마포구", "망원동"),
+    ("seoyeon", "서연이네책방", "박서연", "1999-01-27", "010-5100-0003", ("서울특별시", "마포구", "망원1동"),
      "책이랑 취미용품을 아껴 써요. 문의는 채팅으로 편하게 주세요.", "37.1"),
-    ("dohyun", "도현", "최도현", "1993-11-18", "010-5100-0004", ("경기도", "성남시 분당구", "정자동"),
+    ("dohyun", "도현", "최도현", "1993-11-18", "010-5100-0004", ("경기도", "성남시 분당구", "정자1동"),
      "판교 출퇴근길에 거래 가능해요.", "36.8"),
     ("quick", "급처분해요", "", None, "010-5100-0005", ("서울특별시", "마포구", "서교동"),
      "", "36.5"),
@@ -320,6 +320,8 @@ class Command(BaseCommand):
         users = {}
         for key, nickname, name, birth, phone, region_key, bio, temp in USERS:
             region = Region.objects.filter(sido=region_key[0], sigungu=region_key[1], dong=region_key[2]).first()
+            if region is None:
+                raise CommandError(f"동네 '{' '.join(region_key)}' 이(가) 없어요. migrate 로 행정동 목록을 먼저 넣어 주세요.")
             # 다른 사람이 같은 닉네임/번호를 이미 쓰고 있으면 비워서 충돌을 피한다
             if Profile.objects.filter(nickname=nickname).exists():
                 nickname = f"{nickname}_{key}"[:20]

@@ -102,11 +102,12 @@ class DisplayNameAndQuerystringTests(TestCase):
 
 class SeedDataTests(TestCase):
     def test_regions_and_categories_seeded(self):
-        self.assertGreaterEqual(Region.objects.count(), 40)
+        self.assertGreaterEqual(Region.objects.count(), 3559)
         self.assertEqual(Category.objects.count(), 15)
         self.assertEqual(Category.objects.first().slug, "digital")
-        region = Region.objects.get(sigungu="강남구", dong="역삼동")
-        self.assertEqual(region.name, "서울특별시 강남구 역삼동")
+        region = Region.objects.get(sido="서울특별시", sigungu="강남구", dong="역삼1동")
+        self.assertEqual(region.name, "서울특별시 강남구 역삼1동")
+        self.assertEqual(region.code, "1168064000")
 
 
 class StorageLocalTests(SimpleTestCase):
@@ -376,6 +377,10 @@ class SeedDemoCommandTests(TestCase):
         with self.settings(DEBUG=True, MEDIA_ROOT=self.media, USE_SUPABASE_STORAGE=False):
             call_command("seed_demo", stdout=StringIO())
             self.assertEqual(Product.objects.filter(seller__username__startswith="demo_").count(), 24)
+            # 데모 동네는 모두 공식 행정동(코드 있음)
+            demo_profiles = Profile.objects.filter(user__username__startswith="demo_")
+            self.assertEqual(demo_profiles.filter(region__code__isnull=False).count(), demo_profiles.count())
+            self.assertFalse(Product.objects.filter(seller__username__startswith="demo_", region__code__isnull=True).exists())
             self.assertEqual(Product.objects.filter(status=Product.Status.SOLD).count(), 2)
             self.assertGreaterEqual(Review.objects.count(), 3)
             self.assertTrue(ChatMessage.objects.filter(content__contains="130만원에 가능할까요").exists())

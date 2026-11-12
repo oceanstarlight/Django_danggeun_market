@@ -8,6 +8,7 @@ app_name = "accounts"
 urlpatterns = [
     path("accounts/signup/", views.signup, name="signup"),
     path("accounts/signup/check/", views.check_duplicate, name="check_duplicate"),  # HTMX 중복 확인
+    path("accounts/regions/options/", views.region_options, name="region_options"),  # HTMX 동네 3단 선택
     path("accounts/login/", views.login_view, name="login"),
     path("accounts/logout/", views.logout_view, name="logout"),  # POST
     path("accounts/me/", views.mypage, name="mypage"),

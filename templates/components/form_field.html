@@ -2,6 +2,7 @@
 폼 필드 1개 렌더 (라벨 · 위젯 · 도움말 · 에러). 위젯 클래스는 StyledFormMixin이 붙여요.
   {% include "components/form_field.html" with field=form.title %}
   {% include "components/form_field.html" with field=form.price suffix="원" %}
+동네 필드(RegionChoiceField)는 시/도·시/군/구·읍/면/동 select 3개로 그려요.
 파라미터: field(BoundField) · suffix(입력창 오른쪽 접미사, 선택) · hide_label(True면 라벨 숨김) · class(래퍼 추가 클래스)
 {% endcomment %}{% if field.is_hidden %}{{ field }}{% else %}{% with wt=field.widget_type %}
 <div class="field{% if field.errors %} field-has-error{% endif %}{% if class %} {{ class }}{% endif %}">
@@ -9,6 +10,12 @@
     <label for="{{ field.id_for_label }}" class="inline-flex cursor-pointer items-center gap-2.5 text-[15px] font-medium text-neutral-800">
       {{ field }}<span>{{ field.label }}</span>
     </label>
+  {% elif wt == "regionselect" %}
+    {# 동네 3단 선택 (components/region_select.html) — 묶음 제목은 legend, select 마다 숨은 라벨이 있어요 #}
+    <fieldset>
+      <legend class="label{% if hide_label %} sr-only{% endif %}">{{ field.label }}{% if not field.field.required %} <span class="font-normal text-neutral-500">(선택)</span>{% endif %}</legend>
+      {{ field }}
+    </fieldset>
   {% elif wt == "checkboxselectmultiple" or wt == "radioselect" %}
     <fieldset>
       <legend class="label">{{ field.label }}{% if not field.field.required %} <span class="font-normal text-neutral-500">(선택)</span>{% endif %}</legend>

@@ -1,7 +1,10 @@
 """상품 조회 로직 (읽기 전용). 뷰와 다른 앱(마이페이지 등)에서 함께 쓴다."""
 
+from dataclasses import dataclass
+
 from django.db.models import Count, Exists, OuterRef, Prefetch, Q, Subquery
 
+from apps.accounts import regions as region_lookup
 from apps.accounts.models import Region
 from apps.moderation.services import blocked_user_ids
 
@@ -64,17 +67,95 @@ def resolve_region(user, value):
         return ("me", mine) if mine else ("all", None)
     if value == "all":
         return "all", None
-    if value.isdigit():
-        region = Region.objects.filter(pk=int(value)).first()
-        if region:
-            if mine and region.pk == mine.pk:
-                return "me", mine
-            return str(region.pk), region
+    region = region_lookup.region_by_pk(value)  # '²' 같은 유니코드 숫자 · 음수 등은 None
+    if region is not None:
+        if mine and region.pk == mine.pk:
+            return "me", mine
+        return str(region.pk), region
     return "all", None
 
 
-def search_products(user, *, q="", category=None, region=None, status="all", sort="latest"):
-    """목록/검색 쿼리셋. category 는 Category, region 은 Region 또는 None."""
+@dataclass(frozen=True)
+class RegionFilter:
+    """목록의 동네 필터.
+
+    value: "me"(내 동네) | "all"(전체) | "<pk>"(특정 읍/면/동) | "sido"(시/도 전체) | "sigungu"(시/군/구 전체)
+    """
+
+    value: str = "all"
+    region: Region | None = None
+    sido: str = ""
+    sigungu: str = ""
+
+    @property
+    def is_all(self):
+        return self.value == "all"
+
+    @property
+    def label(self):
+        """화면에 보여줄 이름 (예: '강원특별자치도 춘천시 전체')."""
+        if self.region is not None:
+            return self.region.name
+        if self.sigungu:
+            return f"{self.sido} {self.sigungu} 전체"
+        if self.sido:
+            return f"{self.sido} 전체"
+        return "전체 지역"
+
+    @property
+    def selection(self):
+        """3단 select 에 미리 골라 둘 (sido, sigungu, Region|None)."""
+        if self.region is not None:
+            return self.region.sido, self.region.sigungu, self.region
+        return self.sido, self.sigungu, None
+
+    def query_params(self):
+        """이 필터를 유지하는 GET 파라미터 (내 동네는 기본값이라 비움)."""
+        if self.value == "me":
+            return {}
+        if self.region is not None:
+            return {"region": str(self.region.pk)}
+        if self.sido:
+            params = {"sido": self.sido}
+            if self.sigungu:
+                params["sigungu"] = self.sigungu
+            return params
+        return {"region": "all"}
+
+
+def resolve_region_filter(user, *, region="", sido=None, sigungu=""):
+    """GET 파라미터 → RegionFilter.
+
+    - sido 파라미터가 있으면(3단 select 로 제출) 고른 단계까지만 거른다:
+      region(pk)이 그 시/도·시/군/구에 속하면 그 동, 아니면 시/군/구 전체, 아니면 시/도 전체, 시/도가 비면 전체.
+      (위 단계를 바꾸면 아래 단계 값이 남아 있어도 무시돼요)
+    - sido 가 없으면 예전 규칙 그대로: region = me | all | <pk> | ""(내 동네가 있으면 me, 없으면 all)
+    """
+    mine = user_region(user)
+    if sido is not None:
+        # NUL·비문자열은 빈 값으로 (PostgreSQL 은 NUL 이 든 문자열로 쿼리하면 에러)
+        sido = region_lookup.clean_param(sido)
+        sigungu = region_lookup.clean_param(sigungu)
+        # select 목록과 같은 기준(코드 있는 행 + 내 동네)으로 확인해야 화면과 실제 필터가 어긋나지 않아요
+        if not region_lookup.sido_exists(sido, keep=mine):
+            return RegionFilter("all")
+        if not region_lookup.sigungu_exists(sido, sigungu, keep=mine):
+            return RegionFilter("sido", sido=sido)
+        picked = region_lookup.region_by_pk(region)
+        if picked is not None and (picked.sido, picked.sigungu) == (sido, sigungu):
+            if mine and picked.pk == mine.pk:
+                return RegionFilter("me", region=mine)
+            return RegionFilter(str(picked.pk), region=picked)
+        return RegionFilter("sigungu", sido=sido, sigungu=sigungu)
+    value, picked = resolve_region(user, region)
+    return RegionFilter(value, region=picked)
+
+
+def search_products(user, *, q="", category=None, region=None, sido="", sigungu="", status="all", sort="latest"):
+    """목록/검색 쿼리셋. category 는 Category, region 은 Region 또는 None.
+
+    region 이 없을 때 sido(+sigungu)를 주면 그 시/도(시/군/구) 전체에서 찾는다.
+    """
     qs = visible_products(user)
     for term in (q or "").split()[:5]:
         qs = qs.filter(Q(title__icontains=term) | Q(content__icontains=term))
@@ -82,6 +163,10 @@ def search_products(user, *, q="", category=None, region=None, status="all", sor
         qs = qs.filter(category=category)
     if region is not None:
         qs = qs.filter(region=region)
+    elif sido:
+        qs = qs.filter(region__sido=sido)
+        if sigungu:
+            qs = qs.filter(region__sigungu=sigungu)
     if status == "selling":
         qs = qs.filter(status=Product.Status.SELLING)
     qs = with_card_data(qs)
@@ -188,11 +273,3 @@ def user_chat_room(user, product):
     from apps.chat.models import ChatRoom
 
     return ChatRoom.objects.filter(product=product, buyer=user).only("id").first()
-
-
-def regions_grouped():
-    """동네 select 용: [(시/도 시/군/구, [Region, ...]), ...]"""
-    groups = {}
-    for region in Region.objects.all():
-        groups.setdefault(f"{region.sido} {region.sigungu}", []).append(region)
-    return list(groups.items())

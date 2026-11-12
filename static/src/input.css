@@ -170,6 +170,14 @@
   .input-affix { @apply relative; }
   .input-affix > .input { @apply pr-10; }
   .input-suffix { @apply pointer-events-none absolute inset-y-0 right-3 flex items-center text-[15px] font-medium text-neutral-500; }
+  /* 동네 3단 선택 (components/region_select.html): 모바일은 세로로, sm 부터 한 줄 */
+  .region-select { @apply grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]; }
+  .region-select-item { @apply min-w-0; }
+  .region-select-control { @apply pr-8; }
+  /* 목록 필터: 모바일도 한 줄(3칸)로 — 세로로 쌓이면 첫 화면 절반 이상을 필터가 차지해요 */
+  .region-select-filter { @apply w-full grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 sm:w-auto sm:flex-none sm:gap-2 sm:grid-cols-[176px_152px_144px]; }
+  .region-select-filter .region-select-control { @apply h-10 pl-2.5 pr-7 text-[13px] sm:pl-3 sm:pr-8 sm:text-sm; background-position: right 0.375rem center; }
+  @media (min-width: 640px) { .region-select-filter .region-select-control { background-position: right 0.5rem center; } }
   .choice-list { @apply flex flex-wrap gap-2; }
   .choice-list label { @apply inline-flex cursor-pointer items-center gap-2 text-[15px] text-neutral-800; }
 
@@ -535,6 +543,7 @@
   /* 목록 필터 바 */
   .products-filter { @apply flex flex-wrap items-center gap-2 border-b border-neutral-200 pb-4; }
   .products-filter-select { @apply h-10 w-auto min-w-0 flex-1 text-sm sm:flex-none sm:min-w-[140px]; }
+  .products-filter-chip { @apply h-10 max-w-full; }
 
   /* 상세 갤러리: 모바일 스크롤 스냅 + 점, 데스크톱 화살표 + 썸네일 */
   .products-gallery { @apply relative overflow-hidden bg-neutral-100 md:rounded-lg md:ring-1 md:ring-inset md:ring-black/5; }

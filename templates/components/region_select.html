@@ -1,0 +1,24 @@
+{% comment "usage" %}
+동네 3단 선택 (시/도 → 시/군/구 → 읍/면/동). 마지막 select 의 값(Region pk)이 폼 필드 값이에요.
+- 폼: RegionChoiceField 의 위젯(RegionSelect)이 이 템플릿을 그려요 → {% include "components/form_field.html" with field=form.region %}
+- 목록 필터: apps.accounts.regions.build_select_context(mode="filter") 결과를 넘겨요
+  {% include "components/region_select.html" with region_select=region_select %}
+파라미터: region_select(dict) — levels[RegionLevel] · mode("form"|"filter") · options_url · attrs_html · extra_class
+동작: 위 단계를 바꾸면 아래 단계가 비워지고 잠겨요(static/js/app.js). form 모드는 HTMX 로 다음 단계 옵션을
+불러오고(accounts:region_options, 불러오는 중·실패 표시와 '다시 불러오기'도 app.js), filter 모드는 고르면
+폼이 제출돼 서버가 다음 단계를 그려요(키보드 화살표로 훑을 땐 Enter·포커스 이동 때 제출, product_list.html).
+autocomplete="off": 뒤로 가기 때 브라우저가 예전 선택값을 덮어써서 화면과 실제 값이 어긋나는 걸 막아요.
+{% endcomment %}<div class="region-select{% if region_select.mode == "filter" %} region-select-filter{% endif %}{% if region_select.extra_class %} {{ region_select.extra_class }}{% endif %}" data-region-select>
+  {% for lv in region_select.levels %}
+    <div class="region-select-item">
+      <label for="{{ lv.id }}" class="sr-only">{% if region_select.legend %}{{ region_select.legend }} {% endif %}{{ lv.label }}</label>
+      <select id="{{ lv.id }}" name="{{ lv.name }}" class="select region-select-control"
+              data-region-level="{{ lv.level }}" data-placeholder="{{ lv.placeholder }}" data-empty-value="{{ lv.empty_value }}" autocomplete="off"
+              {% if lv.disabled %}disabled{% endif %}{{ region_select.attrs_html }}
+              {% if lv.hx_target %}hx-get="{{ region_select.options_url }}" hx-trigger="change" hx-target="{{ lv.hx_target }}" hx-swap="innerHTML" hx-vals='{{ lv.hx_vals }}'{% if lv.hx_include %} hx-include="{{ lv.hx_include }}"{% endif %} hx-sync="closest [data-region-select]:replace" data-silent{% endif %}>
+        <option value="{{ lv.empty_value }}">{{ lv.placeholder }}</option>
+        {% for value, label, selected in lv.options %}<option value="{{ value }}"{% if selected %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+  {% endfor %}
+</div>

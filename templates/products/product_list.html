@@ -2,7 +2,7 @@
 {% load poly_tags %}
 {% comment %}
 상품 목록/검색 (products:list)
-필터는 모두 URL(GET)에 남고, '더보기'는 HTMX 로 다음 페이지를 이어 붙여요 (partials/product_grid.html).
+필터는 모두 URL(GET)에 남고 (동네: ?region=me|all|<pk> 또는 ?sido=&sigungu=&region=), '더보기'는 HTMX 로 다음 페이지를 이어 붙여요 (partials/product_grid.html).
 {% endcomment %}
 {% block title %}{% if q %}‘{{ q }}’ 검색 결과{% elif current_category %}{{ current_category.name }}{% else %}중고거래{% endif %}{% endblock %}
 
@@ -12,8 +12,8 @@
   {# ───────── 제목 ───────── #}
   <header class="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
     <div class="min-w-0">
-      <p class="text-[13px] font-medium text-neutral-500">
-        {% if region_value == "me" and my_region %}{{ my_region.name }}{% elif current_region %}{{ current_region.name }}{% else %}전체 지역{% endif %}
+      <p class="text-[13px] font-medium text-neutral-500" id="products-region-label">
+        <span class="sr-only">동네: </span>{% if region_value == "me" %}내 동네 · {% endif %}{{ region_filter.label }}
       </p>
       <h1 class="page-title mt-0.5 truncate">
         {% if q %}‘{{ q }}’ 검색 결과{% elif current_category %}<span aria-hidden="true">{{ current_category.icon }}</span> {{ current_category.name }}{% else %}중고거래{% endif %}
@@ -35,7 +35,7 @@
   </nav>
 
   {# ───────── 필터 · 정렬 (바뀌면 자동 적용) ───────── #}
-  <form method="get" action="{% url 'products:list' %}" class="products-filter" data-products-autosubmit>
+  <form method="get" action="{% url 'products:list' %}" class="products-filter" autocomplete="off" data-products-autosubmit>
     {% if current_category %}<input type="hidden" name="category" value="{{ current_category.slug }}">{% endif %}
 
     {# 모바일 검색창 (데스크톱은 상단 내비 검색창 사용, 숨겨져도 값은 함께 전송돼요) #}
@@ -44,20 +44,14 @@
       <input type="search" name="q" value="{{ q }}" class="input pl-10" placeholder="검색어를 입력해 주세요" aria-label="검색어" enterkeyhint="search" data-no-autosubmit>
     </div>
 
-    <label class="sr-only" for="filter-region">동네</label>
-    <select id="filter-region" name="region" class="select products-filter-select">
-      {% if my_region %}<option value="me"{% if region_value == "me" %} selected{% endif %}>내 동네 · {{ my_region.dong }}</option>{% endif %}
-      <option value="all"{% if region_value == "all" %} selected{% endif %}>전체 지역</option>
-      {% for group, regions in region_groups %}
-        <optgroup label="{{ group }}">
-          {% for r in regions %}
-            {% if not my_region or r.pk != my_region.pk %}
-              <option value="{{ r.pk }}"{% if region_value == r.pk|stringformat:'s' %} selected{% endif %}>{{ r.dong }}</option>
-            {% endif %}
-          {% endfor %}
-        </optgroup>
-      {% endfor %}
-    </select>
+    {# 동네: '내 동네' 바로가기 + 시/도 → 시/군/구 → 읍/면/동 (어느 단계에서 멈춰도 그 범위 전체로 걸러요) #}
+    {% if my_region %}
+      {% querystring region="me" sido="" sigungu="" page="" as my_region_url %}
+      <a href="{{ my_region_url }}" class="chip products-filter-chip{% if region_value == 'me' %} chip-active{% endif %}"{% if region_value == 'me' %} aria-current="true"{% endif %}>
+        {% include "components/icon.html" with name="map-pin" %}<span class="truncate">내 동네 · {{ my_region.dong }}</span>
+      </a>
+    {% endif %}
+    {% include "components/region_select.html" with region_select=region_select %}
 
     <label class="sr-only" for="filter-sort">정렬</label>
     <select id="filter-sort" name="sort" class="select products-filter-select">
@@ -66,14 +60,14 @@
       {% endfor %}
     </select>
 
-    <label class="inline-flex h-10 w-full cursor-pointer items-center gap-2 text-sm font-medium text-neutral-700 sm:w-auto">
+    <label class="inline-flex h-10 cursor-pointer items-center gap-2 text-sm font-medium text-neutral-700">
       <input type="checkbox" name="status" value="selling" class="checkbox"{% if status_value == "selling" %} checked{% endif %}>
       거래 가능만 보기
     </label>
 
     <noscript><button type="submit" class="btn btn-secondary btn-sm">적용</button></noscript>
     {% if has_filters %}
-      <a href="{% url 'products:list' %}{% if region_value != 'me' %}?region={{ region_value }}{% endif %}" class="btn btn-ghost btn-sm ml-auto">{% include "components/icon.html" with name="refresh" %}초기화</a>
+      <a href="{{ reset_url }}" class="btn btn-ghost btn-sm ml-auto">{% include "components/icon.html" with name="refresh" %}초기화</a>
     {% endif %}
   </form>
 
@@ -87,10 +81,78 @@
 {% block scripts %}
 <script>
   // 필터 select/체크박스가 바뀌면 바로 적용 (검색창은 Enter 로 제출)
-  document.addEventListener("change", function (e) {
-    var form = e.target.closest("form[data-products-autosubmit]");
-    if (!form || e.target.hasAttribute("data-no-autosubmit")) return;
-    if (form.requestSubmit) form.requestSubmit(); else form.submit();
-  });
+  // - 닫힌 select 에서 화살표·Home/End·글자 키로 값을 훑을 땐 매번 제출하지 않고, Enter 또는 포커스를 옮길 때 한 번 제출해요.
+  //   (키 한 번마다 새로고침되면 키보드로는 원하는 시/도·시/군/구까지 갈 수 없음)
+  //   키보드로 고른 뒤 새로고침되면 다음 단계 select(없으면 같은 select)로 포커스를 돌려줘요.
+  // - 뒤로/앞으로 가기(bfcache)로 돌아오면 서버가 그린 상태로 되돌려 실제 필터와 select 가 어긋나지 않게 해요.
+  (function () {
+    var FOCUS_KEY = "products-filter-focus";
+    var NAV_KEYS = /^(ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Home|End|PageUp|PageDown)$/;
+    var keyAt = 0;
+
+    function submit(form, select, byKeyboard) {
+      if (byKeyboard && select && select.id) {
+        var next = select.matches("[data-region-level]") ? nextRegionSelect(select) : null;
+        try { sessionStorage.setItem(FOCUS_KEY, (next || select).id); } catch (err) { /* 저장 불가: 포커스 복원만 생략 */ }
+      }
+      if (form.requestSubmit) form.requestSubmit(); else form.submit();
+    }
+    function nextRegionSelect(select) {
+      var order = ["sido", "sigungu", "dong"];
+      var level = order[order.indexOf(select.getAttribute("data-region-level")) + 1];
+      var root = select.closest("[data-region-select]");
+      return level && root ? root.querySelector('select[data-region-level="' + level + '"]') : null;
+    }
+
+    document.addEventListener("keydown", function (e) {
+      var el = e.target;
+      if (!el.closest || el.tagName !== "SELECT" || !el.closest("form[data-products-autosubmit]")) return;
+      if (e.key === "Enter") {
+        if (el.hasAttribute("data-autosubmit-pending")) {
+          e.preventDefault();
+          el.removeAttribute("data-autosubmit-pending");
+          submit(el.form, el, true);
+        }
+        return;
+      }
+      if (e.altKey || e.ctrlKey || e.metaKey) return;  // Alt+↓ 등은 목록 열기
+      var key = e.key || "";
+      if (NAV_KEYS.test(key) || (key.length === 1 && key !== " ")) keyAt = Date.now();
+    });
+    document.addEventListener("change", function (e) {
+      var el = e.target;
+      var form = el.closest("form[data-products-autosubmit]");
+      if (!form || el.hasAttribute("data-no-autosubmit")) return;
+      if (el.tagName === "SELECT" && Date.now() - keyAt < 300) {
+        el.setAttribute("data-autosubmit-pending", "");  // 키보드로 훑는 중 → Enter/포커스 이동 때 제출
+        return;
+      }
+      submit(form, el, false);
+    });
+    document.addEventListener("focusout", function (e) {
+      var el = e.target;
+      if (!el.hasAttribute || !el.hasAttribute("data-autosubmit-pending")) return;
+      el.removeAttribute("data-autosubmit-pending");
+      var form = el.closest("form[data-products-autosubmit]");
+      if (form) submit(form, el, true);
+    });
+
+    // 키보드로 고른 뒤 새로고침됐으면 포커스 복원
+    var focusId = null;
+    try { focusId = sessionStorage.getItem(FOCUS_KEY); sessionStorage.removeItem(FOCUS_KEY); } catch (err) { focusId = null; }
+    var target = focusId && document.getElementById(focusId);
+    if (target && !target.disabled) target.focus();
+
+    // 뒤로/앞으로 가기: bfcache 로 살아난 페이지는 떠날 때의 select 상태(아래 단계가 비워진 채 등)를 들고 있어서,
+    // 처음 서버가 그린 select 와 폼 값으로 되돌린다
+    var filterForm = document.querySelector("form[data-products-autosubmit]");
+    var regionRoot = filterForm && filterForm.querySelector("[data-region-select]");
+    var initialRegionHtml = regionRoot ? regionRoot.innerHTML : null;
+    window.addEventListener("pageshow", function (e) {
+      if (!e.persisted || !filterForm) return;
+      if (regionRoot && initialRegionHtml !== null) regionRoot.innerHTML = initialRegionHtml;
+      filterForm.reset();
+    });
+  })();
 </script>
 {% endblock %}
