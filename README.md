@@ -281,7 +281,7 @@ Django_danggeun_market/
 │   ├── vendor/htmx.min.js
 │   └── img/                    # 로고 · 파비콘 · 플레이스홀더 (SVG)
 │
-├── docs/reports/               # 보고서 (중간 보고서 등)
+├── docs/reports/               # 보고서 (중간·기말 보고서, 합본 PDF)
 ├── build.sh                    # Render 빌드 스크립트
 ├── requirements.txt
 ├── package.json / tailwind.config.js

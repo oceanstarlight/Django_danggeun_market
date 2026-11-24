@@ -3,8 +3,8 @@
 | 항목 | 내용 |
 |---|---|
 | 과목 담당 | 고진형 교수님 |
-| 제출자 | 학번: ____ / 이름: ____ |
-| 제출일 | [작성 예정] |
+| 제출자 | 학번: 2605111001 / 이름: 김민규 |
+| 완성일 | 2026-11-24 |
 | 저장소 | https://github.com/oceanstarlight/Django_danggeun_market |
 | 분석 기준 | git HEAD `ee841ef` (allow host render) |
 
