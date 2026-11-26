@@ -1,0 +1,77 @@
+/* === chat === */
+@layer components {
+  .chat-list { @apply flex flex-col; }
+  .chat-list > * + * { border-top: var(--rule-hair) solid var(--color-rule); }
+  .chat-list-item {
+    @apply relative -mx-4 flex items-center gap-3 px-4 py-4 md:mx-0 md:px-3;
+    transition: background-color var(--dur-micro) steps(1);
+  }
+  .chat-list-item:hover { background: var(--color-paper-2); }
+  .chat-list-item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  .chat-unread {
+    @apply inline-flex h-6 min-w-[24px] shrink-0 items-center justify-center rounded-sm px-1.5 text-xs font-black leading-none;
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 채팅방: 화면 높이를 채우는 앱형 레이아웃 (메시지 영역만 스크롤) */
+  .chat-shell {
+    @apply mx-auto flex w-full max-w-3xl flex-col bg-paper md:my-6 md:overflow-hidden md:rounded-card;
+    height: calc(100dvh - var(--poly-nav-h));
+  }
+  @media (min-width: 768px) {
+    .chat-shell { height: calc(100dvh - var(--poly-nav-h) - 48px); min-height: 520px; border: var(--rule-bar) solid var(--color-rule); }
+  }
+  .chat-header { @apply flex h-14 shrink-0 items-center gap-1.5 bg-paper-2 px-2 md:gap-2 md:px-3; border-bottom: var(--rule-bar) solid var(--color-rule); }
+  .chat-conn { @apply hidden shrink-0 items-center gap-1.5 rounded-sm px-2 py-1 text-xs font-bold text-muted; }
+  .chat-conn[data-state="connecting"],
+  .chat-conn[data-state="offline"] { @apply inline-flex; }
+  .chat-conn[data-state="offline"] { background: var(--color-accent-wash); color: var(--color-accent); }
+
+  .chat-product-bar { @apply flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2.5 bg-paper-2 px-4 py-3; border-bottom: var(--rule-hair) solid var(--color-rule); }
+  .chat-product-link { @apply flex min-w-0 flex-1 basis-56 items-center gap-3 rounded-card; }
+  .chat-product-link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .chat-product-actions { @apply flex w-full items-center gap-2 sm:w-auto; }
+
+  .chat-scroll { @apply flex-1 overflow-y-auto overscroll-contain bg-paper px-3 pb-3 pt-4 md:px-5; }
+  .chat-scroll:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -4px; }
+  .chat-safety { @apply mx-auto mb-2 flex max-w-md items-start gap-2 rounded-card bg-paper-2 px-3 py-2.5 text-sm text-ink-2; border: var(--rule-hair) solid var(--color-rule); }
+  .chat-safety > svg { @apply mt-0.5 text-accent-2; }
+  .chat-older { @apply flex justify-center py-2; }
+  .chat-date-sep { @apply my-4 flex justify-center; }
+  .chat-date-sep > span { @apply rounded-sm bg-paper-3 px-3 py-1 text-xs font-bold text-ink-2; }
+  .chat-row { @apply mt-1 flex items-start gap-2; }
+  .chat-row-first { @apply mt-3; }
+  .chat-row-me { @apply flex-row-reverse; }
+  .chat-avatar-slot { @apply w-8 shrink-0; }
+  .chat-stack { @apply flex min-w-0 max-w-[80%] flex-col items-start md:max-w-[70%]; }
+  .chat-row-me .chat-stack { @apply items-end; }
+  .chat-line { @apply flex max-w-full items-end gap-1.5; }
+  .chat-row-me .chat-line { @apply flex-row-reverse; }
+  .chat-line > .bubble { @apply min-w-0 max-w-none; }
+  .chat-meta { @apply flex shrink-0 flex-col items-start gap-0.5 pb-0.5; }
+  .chat-row-me .chat-meta { @apply items-end; }
+  .chat-read { @apply text-xs font-bold leading-4 text-accent-2; }
+  .chat-warning { @apply mt-1.5 flex max-w-full items-start gap-1.5 rounded-sm px-2.5 py-1.5 text-sm text-ink; background: var(--color-error-wash); border: var(--rule-hair) solid var(--color-error); }
+  .chat-nego { @apply mt-1.5 flex max-w-full flex-col items-start gap-2; }
+  .chat-nego-result:empty { display: none; }
+  .chat-nego-result { @apply w-full; }
+  .chat-row.is-new { animation: fade-up 200ms var(--ease-out) both; }
+
+  .chat-composer { @apply shrink-0 bg-paper-2 px-3 pt-2.5 md:px-4; border-top: var(--rule-bar) solid var(--color-rule); padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .chat-form { @apply flex items-end gap-2; }
+  .chat-input { @apply min-h-[44px] flex-1 resize-none py-[8px] leading-6; }
+  .chat-send { @apply h-11 w-11 shrink-0; }
+  .chat-send > svg { @apply h-5 w-5; }
+}
+
+body:has(.chat-shell) > footer { display: none; }
+@media (max-width: 767.98px) {
+  body:has(.chat-shell) .tabbar { display: none; }
+  body:has(.chat-shell) { --poly-tabbar-h: 0px; }
+  body:has(.chat-shell) .toast-stack { bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-row.is-new { animation: none; }
+}

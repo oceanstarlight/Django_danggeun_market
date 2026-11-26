@@ -1,0 +1,46 @@
+/* === ai === */
+@layer components {
+  .ai-results { @apply mt-4 space-y-3 empty:mt-0; }
+  .ai-result { @apply rounded-card bg-paper p-4; border: var(--rule-hair) solid var(--color-rule); }
+  .ai-result .ai-card-header { @apply mb-2; }
+  .ai-result-label { @apply mb-1 text-sm font-bold text-accent-2; }
+  .ai-result-content { @apply whitespace-pre-line break-keep text-base text-ink-2; }
+  .ai-facts { @apply grid grid-cols-2 gap-x-4 gap-y-3 text-base; }
+
+  /* 확신도 막대 (<progress>) */
+  .ai-meter { @apply mt-1.5 block h-2 w-full overflow-hidden rounded-sm bg-paper-3; appearance: none; border: 0; }
+  .ai-meter::-webkit-progress-bar { @apply rounded-sm bg-paper-3; }
+  .ai-meter::-webkit-progress-value { background: var(--color-accent-2); }
+  .ai-meter::-moz-progress-bar { background: var(--color-accent-2); }
+  .ai-meter-low::-webkit-progress-value { background: var(--color-accent); }
+  .ai-meter-low::-moz-progress-bar { background: var(--color-accent); }
+
+  /* 협상 답장 초안 */
+  .ai-drafts { @apply max-w-sm p-3; }
+  .ai-draft {
+    @apply block w-full rounded-card bg-paper-2 px-3 py-2.5 text-left;
+    border: var(--rule-bar) solid var(--color-rule);
+    transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
+  }
+  .ai-draft:hover { border-color: var(--color-accent-2); }
+  .ai-draft:active { translate: 1px 1px; }
+  .ai-draft:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .ai-draft[aria-pressed="true"] { border-color: var(--color-accent-2); background: var(--color-accent-2-wash); }
+  .ai-draft-tone { @apply flex items-center gap-1.5 text-sm font-bold text-accent-2; }
+  .ai-draft-price { @apply rounded-sm bg-paper-3 px-1.5 py-px tabular-nums text-ink; }
+  .ai-draft-text { @apply mt-0.5 block break-keep text-base text-ink-2; }
+
+  /* 사기 배너 '자세히' */
+  .ai-details { @apply mt-2; }
+  .ai-details > summary { @apply inline-flex cursor-pointer select-none items-center gap-1 text-sm font-bold underline-offset-4; }
+  .ai-details > summary:hover { text-decoration: underline; }
+  .ai-details > summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .ai-reasons { @apply mt-2 list-disc space-y-1 pl-5 text-sm; }
+
+  .ai-applied { animation: ai-applied 1.6s var(--ease-out); }
+}
+@keyframes ai-applied {
+  0% { outline: 3px solid var(--color-accent-2); outline-offset: 2px; }
+  100% { outline: 3px solid transparent; outline-offset: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { .ai-applied { animation: none; } }

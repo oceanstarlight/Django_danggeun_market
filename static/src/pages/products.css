@@ -1,0 +1,99 @@
+/* === products === */
+/* 홈 · 목록 · 상세 · 등록 폼 전용 보조 클래스 (products 담당) */
+@layer components {
+  /* 홈 히어로 (화면 전용 클래스는 홈 담당이 다시 짠다) */
+  .products-hero { @apply bg-paper-2; border-bottom: var(--rule-bar) solid var(--color-rule); }
+  .products-hero-search { @apply relative max-w-xl; }
+  .products-hero-search > svg { @apply pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted; }
+  .products-hero-input {
+    @apply h-14 w-full rounded-card bg-paper pl-12 pr-28 text-lg text-ink;
+    border: var(--rule-bar) solid var(--color-ink-2);
+  }
+  .products-hero-input:focus { border-color: var(--color-ink); outline: 2px solid var(--color-focus); outline-offset: 2px; box-shadow: none; }
+
+  /* 카테고리: 이모지 대신 글자만, 메뉴 행처럼 */
+  .products-category-grid { @apply grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6; }
+  .products-category-item {
+    @apply flex h-12 items-center rounded-card bg-paper-2 px-4 text-base font-bold text-ink-2;
+    border: var(--rule-bar) solid var(--color-rule);
+    transition: background-color var(--dur-micro) steps(1), color var(--dur-micro) steps(1), border-color var(--dur-micro) steps(1);
+  }
+  .products-category-item:hover { background: var(--color-accent); color: var(--color-accent-ink); border-color: var(--color-ink); }
+  .products-category-item:active { translate: 1px 1px; }
+  .products-category-item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .products-category-icon { @apply hidden; }
+  .products-category-name { @apply truncate; word-break: keep-all; }
+
+  /* 가로 스크롤 레일 (최근 본 상품) */
+  .products-rail { @apply -mx-4 flex scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:scroll-px-0 md:px-0; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .products-rail::-webkit-scrollbar { display: none; }
+  .products-rail > li { @apply w-32 shrink-0 md:w-36; scroll-snap-align: start; }
+  .products-rail-item { @apply block rounded-card; }
+  .products-rail-item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+
+  /* 인기 순위 */
+  .products-rank {
+    @apply pointer-events-none absolute left-2 top-2 inline-flex h-7 min-w-7 items-center justify-center rounded-sm px-1.5 text-sm font-black;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: var(--rule-hair) solid var(--color-rule);
+    font-variant-numeric: tabular-nums;
+  }
+  .products-rank-top { background: var(--color-accent); color: var(--color-accent-ink); border-color: var(--color-accent-ink); }
+
+  /* 목록 필터 바 */
+  .products-filter { @apply flex flex-wrap items-center gap-2 pb-5; border-bottom: var(--rule-bar) solid var(--color-rule); }
+  .products-filter-select { @apply h-10 w-auto min-w-0 flex-1 text-sm sm:min-w-[140px] sm:flex-none; }
+  .products-filter-chip { @apply h-10 max-w-full; }
+
+  /* 상세 갤러리: 모바일 스크롤 스냅 + 점, 데스크톱 화살표 + 썸네일 */
+  .products-gallery { @apply relative overflow-hidden bg-paper-3 md:rounded-card; }
+  @media (min-width: 768px) { .products-gallery { border: var(--rule-bar) solid var(--color-rule); } }
+  .products-gallery-track { @apply flex aspect-square w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain; scrollbar-width: none; }
+  .products-gallery-track::-webkit-scrollbar { display: none; }
+  .products-gallery-track:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -4px; }
+  .products-gallery-slide { @apply h-full w-full shrink-0 snap-center; scroll-snap-stop: always; }
+  .products-gallery-img { @apply h-full w-full object-cover; }
+  .products-gallery-nav {
+    @apply absolute top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-card bg-paper-2 text-ink lg:inline-flex;
+    border: var(--rule-bar) solid var(--color-ink-2);
+    transition: background-color var(--dur-micro) var(--ease-out);
+  }
+  .products-gallery-nav:hover { background: var(--color-accent); color: var(--color-accent-ink); }
+  .products-gallery-nav:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .products-gallery-counter {
+    @apply absolute bottom-3 right-3 rounded-sm bg-paper px-2.5 py-1 text-sm font-bold text-ink;
+    font-variant-numeric: tabular-nums;
+  }
+  .products-gallery-dots { @apply absolute inset-x-0 bottom-3 flex justify-center gap-1.5 lg:hidden; }
+  .products-gallery-dot { @apply h-2 w-2 rounded-sm bg-paper-3; border: var(--rule-hair) solid var(--color-ink-2); }
+  .products-gallery-dot[data-active] { background: var(--color-accent-2); }
+  .products-gallery-thumbs { @apply mt-3 hidden grid-cols-8 gap-2 lg:grid; }
+  .products-gallery-thumb {
+    @apply overflow-hidden rounded-card opacity-60;
+    border: var(--rule-bar) solid var(--color-rule);
+    transition: opacity var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+  }
+  .products-gallery-thumb:hover { opacity: 1; }
+  .products-gallery-thumb > img { @apply aspect-square w-full object-cover; }
+  .products-gallery-thumb[aria-selected="true"] { opacity: 1; border-color: var(--color-accent); }
+  .products-gallery-thumb:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+  /* 상세 하단 '다른 상품' (6개 기준) */
+  .products-related-grid { @apply grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 lg:grid-cols-6 lg:gap-x-4; }
+  .products-related-grid > * { min-width: 0; }
+
+  /* 등록 폼: 사진 업로드 타일 + 기존 사진 삭제 토글 */
+  .products-upload-tile {
+    @apply flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-card bg-paper-2 text-sm font-bold text-muted;
+    border: var(--rule-bar) dashed var(--color-muted);
+    transition: border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+  }
+  .products-upload-tile:hover { border-color: var(--color-accent); color: var(--color-ink); }
+  .peer:focus-visible ~ .products-upload-tile { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .products-existing:focus-within { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .products-remove-btn { @apply absolute right-1 top-1 inline-flex h-7 w-7 items-center justify-center rounded-sm bg-paper text-ink; border: var(--rule-hair) solid var(--color-ink-2); }
+  .products-remove-overlay { @apply absolute inset-0 hidden items-center justify-center text-sm font-bold text-ink; background: var(--color-veil); }
+  .peer:checked ~ .products-remove-overlay { @apply flex; }
+  .peer:checked ~ .products-remove-btn { @apply hidden; }
+}

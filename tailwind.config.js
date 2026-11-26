@@ -1,5 +1,9 @@
-/** 폴리마켓 Tailwind 설정 — 디자인 토큰은 design_brief 기준 */
-const defaultTheme = require("tailwindcss/defaultTheme");
+/**
+ * 폴리마켓 Tailwind 설정: Hallmark Arcade 테마
+ * 모든 색·폰트·그림자는 static/src/tokens.css 의 토큰(var)을 가리킨다.
+ * Tailwind 기본 팔레트(neutral, red, violet ...)는 일부러 쓰지 않는다(colors 를 통째로 교체).
+ * 토큰 색은 var() 라서 `bg-ink/50` 같은 투명도 수식어는 동작하지 않는다. 필요하면 CSS 에서 color-mix() 로.
+ */
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -17,107 +21,77 @@ module.exports = {
     "bubble", "bubble-me", "bubble-other", "bubble-meta", "preview-grid", "preview-item", "preview-item-badge",
     "animate-pop", "card-interactive", "alert-accent", "spinner",
   ],
-  // 다크모드는 토큰만 준비 (class 전략, 현재 미사용)
   darkMode: "class",
   theme: {
+    colors: {
+      transparent: "transparent",
+      current: "currentColor",
+      inherit: "inherit",
+      paper: { DEFAULT: "var(--color-paper)", 2: "var(--color-paper-2)", 3: "var(--color-paper-3)" },
+      ink: { DEFAULT: "var(--color-ink)", 2: "var(--color-ink-2)" },
+      muted: "var(--color-muted)",
+      rule: "var(--color-rule)",
+      accent: { DEFAULT: "var(--color-accent)", 2: "var(--color-accent-2)", ink: "var(--color-accent-ink)" },
+      focus: "var(--color-focus)",
+      error: "var(--color-error)",
+      success: "var(--color-success)",
+      shade: "var(--color-shade)",
+    },
+    fontFamily: {
+      display: "var(--font-display)",
+      sans: "var(--font-body)",
+      body: "var(--font-body)",
+      figure: "var(--font-outlier)",
+    },
+    // 앱 화면용 고정 스케일(1.2 비율 근처). 본문은 16px 미만으로 내려가지 않는다.
+    fontSize: {
+      xs: ["13px", { lineHeight: "18px" }],
+      sm: ["14px", { lineHeight: "20px" }],
+      base: ["16px", { lineHeight: "26px" }],
+      lg: ["18px", { lineHeight: "26px" }],
+      xl: ["20px", { lineHeight: "28px" }],
+      "2xl": ["24px", { lineHeight: "30px" }],
+      "3xl": ["30px", { lineHeight: "34px" }],
+      "4xl": ["36px", { lineHeight: "40px" }],
+      "5xl": ["48px", { lineHeight: "50px" }],
+      caption: ["13px", { lineHeight: "18px" }],
+      body: ["16px", { lineHeight: "26px" }],
+      "body-lg": ["17px", { lineHeight: "28px" }],
+      h3: ["18px", { lineHeight: "24px", fontWeight: "900" }],
+      h2: ["22px", { lineHeight: "26px", letterSpacing: "-0.02em", fontWeight: "900" }],
+      h1: ["28px", { lineHeight: "32px" }],
+      display: ["40px", { lineHeight: "44px" }],
+    },
+    borderRadius: {
+      none: "0",
+      sm: "2px",
+      DEFAULT: "var(--radius-card)",
+      md: "var(--radius-card)",
+      lg: "var(--radius-card)",
+      card: "var(--radius-card)",
+      full: "9999px",
+    },
+    boxShadow: {
+      none: "none",
+      sm: "none",
+      DEFAULT: "none",
+      // 단단한 오프셋 그림자만 (흐림 0). press 는 누를 수 있는 것, slab 은 떠 있는 패널
+      press: "4px 4px 0 var(--color-accent-2)",
+      card: "var(--shadow-card)",
+      slab: "6px 6px 0 var(--color-shade)",
+      md: "6px 6px 0 var(--color-shade)",
+      lg: "6px 6px 0 var(--color-shade)",
+    },
     extend: {
-      colors: {
-        // 딥 틸 브랜드
-        brand: {
-          50: "#F0FDFA",
-          100: "#CCFBF1",
-          200: "#99F6E4",
-          300: "#5EEAD4",
-          400: "#2DD4BF",
-          500: "#14B8A6",
-          600: "#0D9488",
-          700: "#0F766E",
-          800: "#115E59",
-          900: "#134E4A",
-          DEFAULT: "#0F766E",
-        },
-        // 따뜻한 스톤 뉴트럴
-        neutral: {
-          0: "#FFFFFF",
-          50: "#FAFAF9",
-          100: "#F5F5F4",
-          200: "#E7E5E4",
-          300: "#D6D3D1",
-          400: "#A8A29E",
-          500: "#78716C",
-          600: "#57534E",
-          700: "#44403C",
-          800: "#292524",
-          900: "#1C1917",
-        },
-        success: { DEFAULT: "#15803D", soft: "#F0FDF4" },
-        warning: { DEFAULT: "#B45309", soft: "#FFFBEB" },
-        danger: { DEFAULT: "#B91C1C", soft: "#FEF2F2" },
-        info: { DEFAULT: "#1D4ED8", soft: "#EFF6FF" },
-      },
-      fontFamily: {
-        sans: [
-          "Pretendard Variable",
-          "Pretendard",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "system-ui",
-          "Apple SD Gothic Neo",
-          "Noto Sans KR",
-          "Malgun Gothic",
-          ...defaultTheme.fontFamily.sans,
-        ],
-      },
-      fontSize: {
-        caption: ["13px", { lineHeight: "18px" }],
-        body: ["15px", { lineHeight: "24px" }],
-        "body-lg": ["16px", { lineHeight: "28px" }],
-        h3: ["17px", { lineHeight: "24px", fontWeight: "600" }],
-        h2: ["20px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "700" }],
-        h1: ["24px", { lineHeight: "32px", letterSpacing: "-0.015em", fontWeight: "700" }],
-        display: ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
-      },
-      borderRadius: {
-        sm: "6px",
-        md: "10px",
-        lg: "16px",
-      },
-      boxShadow: {
-        sm: "0 1px 2px 0 rgb(28 25 23 / 0.05)",
-        md: "0 4px 12px -2px rgb(28 25 23 / 0.08), 0 2px 4px -2px rgb(28 25 23 / 0.04)",
-        lg: "0 16px 32px -8px rgb(28 25 23 / 0.14), 0 4px 8px -4px rgb(28 25 23 / 0.06)",
-      },
+      borderWidth: { bar: "var(--rule-bar)" },
       spacing: {
         "safe-b": "env(safe-area-inset-bottom)",
       },
-      keyframes: {
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
-        pop: {
-          "0%": { transform: "scale(1)" },
-          "40%": { transform: "scale(1.25)" },
-          "100%": { transform: "scale(1)" },
-        },
-        "fade-up": {
-          "0%": { opacity: "0", transform: "translateY(8px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        "fade-in": {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
-        },
-      },
-      animation: {
-        shimmer: "shimmer 1.5s linear infinite",
-        pop: "pop 250ms ease-out",
-        "fade-up": "fade-up 200ms ease-out both",
-        "fade-in": "fade-in 150ms ease-out both",
-      },
+      maxWidth: { page: "var(--container)" },
       transitionTimingFunction: {
-        out: "cubic-bezier(0.16, 1, 0.3, 1)",
+        out: "var(--ease-out)",
       },
+      transitionDuration: { micro: "120ms", short: "220ms" },
     },
   },
   plugins: [require("@tailwindcss/forms")({ strategy: "class" })],
