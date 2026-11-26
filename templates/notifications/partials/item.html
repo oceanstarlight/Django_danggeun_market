@@ -7,7 +7,7 @@
   <span class="notif-icon {{ n.icon_class }}">{% include "components/icon.html" with name=n.icon_name class="h-5 w-5" %}</span>
   <span class="min-w-0 flex-1">
     <span class="notif-message">{{ n.message }}</span>
-    <span class="notif-meta block">{{ n.get_kind_display }} · <time datetime="{{ n.created_at|date:'c' }}">{{ n.created_at|timeago }}</time></span>
+    <span class="notif-meta"><span>{{ n.get_kind_display }}</span><time datetime="{{ n.created_at|date:'c' }}">{{ n.created_at|timeago }}</time></span>
   </span>
-  {% if not n.is_read %}<span class="notif-unread-dot" aria-hidden="true"></span><span class="sr-only">안 읽음</span>{% endif %}
+  {% if not n.is_read %}<span class="notif-unread-mark" aria-hidden="true"></span><span class="sr-only">안 읽음</span>{% endif %}
 </a>

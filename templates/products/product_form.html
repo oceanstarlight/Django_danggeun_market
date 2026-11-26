@@ -9,12 +9,12 @@
 {% block title %}{% if is_edit %}상품 수정{% else %}내 물건 팔기{% endif %}{% endblock %}
 
 {% block content %}
-<div class="container-page max-w-3xl py-6 md:py-10">
-  <header class="mb-6 flex items-center gap-2">
+<div class="container-page products-screen max-w-3xl py-6 md:py-10">
+  <header class="products-form-head">
     <a href="{% if is_edit %}{% url 'products:detail' product.pk %}{% else %}{% url 'core:home' %}{% endif %}" class="btn btn-ghost btn-icon -ml-2 md:hidden" aria-label="뒤로 가기">{% include "components/icon.html" with name="chevron-left" %}</a>
-    <div>
+    <div class="min-w-0">
       <h1 class="page-title">{% if is_edit %}상품 정보 수정{% else %}내 물건 팔기{% endif %}</h1>
-      {% if not is_edit %}<p class="mt-1 text-sm text-neutral-500">사진을 올리면 AI가 제목과 설명 초안을 만들어 드려요.</p>{% endif %}
+      {% if not is_edit %}<p class="mt-2 text-base text-ink-2">사진을 올리면 AI가 제목과 설명 초안을 만들어 드려요.</p>{% endif %}
     </div>
   </header>
 
@@ -31,9 +31,9 @@
 
     {# ───────── 사진 ───────── #}
     <section class="field{% if form.images.errors or form.remove_images.errors %} field-has-error{% endif %}" aria-labelledby="photos-label">
-      <div class="mb-2 flex items-baseline justify-between">
-        <h2 id="photos-label" class="label mb-0">사진 <span class="font-normal text-neutral-500">(선택)</span></h2>
-        <span class="text-[13px] tabular-nums text-neutral-500"><span data-photo-count>{{ existing_images|length }}</span> / {{ max_images }}</span>
+      <div class="mb-3 flex items-baseline justify-between">
+        <h2 id="photos-label" class="label mb-0">사진 <span class="font-normal text-muted">(선택)</span></h2>
+        <span class="text-sm font-bold tabular-nums text-muted"><span class="text-ink" data-photo-count>{{ existing_images|length }}</span> / {{ max_images }}</span>
       </div>
 
       <div class="preview-grid">
@@ -93,7 +93,7 @@
       <div><p class="alert-title">안전하게 거래해요</p><p>선입금 요구, 외부 메신저 유도, 개인정보 요청 문구는 사기 의심 신호로 표시될 수 있어요.</p></div>
     </div>
 
-    <div class="hidden items-center justify-end gap-2 border-t border-neutral-200 pt-6 md:flex">
+    <div class="products-form-actions">
       <a href="{% if is_edit %}{% url 'products:detail' product.pk %}{% else %}{% url 'core:home' %}{% endif %}" class="btn btn-ghost btn-lg">취소</a>
       <button type="submit" class="btn btn-primary btn-lg min-w-[160px]">{% if is_edit %}수정 완료{% else %}등록하기{% endif %}</button>
     </div>

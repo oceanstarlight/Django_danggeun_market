@@ -12,11 +12,11 @@
   <input type="hidden" name="variant" value="{{ variant }}">
   {% if variant == "cta" %}
     <button type="submit" class="btn btn-ghost btn-icon btn-lg shrink-0" aria-pressed="{% if is_wished %}true{% else %}false{% endif %}" aria-label="{% if is_wished %}찜 해제하기{% else %}찜하기{% endif %}">
-      <span class="{% if animate %}animate-pop {% endif %}inline-flex">{% if is_wished %}{% include "components/icon.html" with name="heart-fill" class="h-6 w-6 text-red-500" %}{% else %}{% include "components/icon.html" with name="heart" class="h-6 w-6 text-neutral-600" %}{% endif %}</span>
+      <span class="{% if animate %}animate-pop {% endif %}inline-flex">{% if is_wished %}{% include "components/icon.html" with name="heart-fill" class="h-6 w-6 text-accent" %}{% else %}{% include "components/icon.html" with name="heart" class="h-6 w-6 text-ink-2" %}{% endif %}</span>
     </button>
   {% else %}
     <button type="submit" class="btn btn-secondary btn-lg shrink-0 tabular-nums" aria-pressed="{% if is_wished %}true{% else %}false{% endif %}" aria-label="{% if is_wished %}찜 해제하기{% else %}찜하기{% endif %}, 찜 {{ wish_count }}개">
-      <span class="{% if animate %}animate-pop {% endif %}inline-flex">{% if is_wished %}{% include "components/icon.html" with name="heart-fill" class="h-5 w-5 text-red-500" %}{% else %}{% include "components/icon.html" with name="heart" class="h-5 w-5" %}{% endif %}</span>
+      <span class="{% if animate %}animate-pop {% endif %}inline-flex">{% if is_wished %}{% include "components/icon.html" with name="heart-fill" class="h-5 w-5 text-accent" %}{% else %}{% include "components/icon.html" with name="heart" class="h-5 w-5" %}{% endif %}</span>
       <span>{{ wish_count }}</span>
     </button>
   {% endif %}

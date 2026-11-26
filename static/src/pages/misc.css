@@ -1,4 +1,92 @@
 /* === misc === */
 /* 오류 페이지·스타일가이드·신고·차단 등 기타 화면 전용 보조 클래스 */
 @layer components {
+  /* 화면 위 '돌아가기' 링크 (아이콘 + 동사) */
+  .page-back {
+    @apply -ml-1 inline-flex h-9 items-center gap-1 rounded-sm px-1 text-sm font-bold text-muted;
+    transition: color var(--dur-micro) var(--ease-out);
+  }
+  .page-back:hover { color: var(--color-ink); }
+  .page-back:active { translate: -1px 0; }
+  .page-back:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .page-back > svg { @apply h-4 w-4 shrink-0; }
+  .page-lede { @apply mt-2 text-base text-ink-2; }
+
+  /* ── 오류 화면: 제목 한 줄, 문장 하나, 행동 하나 ── */
+  .error-screen { @apply mx-auto flex w-full max-w-xl flex-col items-start py-16 md:py-24; }
+  .error-mark {
+    @apply mb-6 inline-flex h-16 w-16 items-center justify-center rounded-card bg-paper-2 text-accent-2;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
+  .error-mark > svg { @apply h-8 w-8; }
+  .error-screen .page-title { max-width: 18ch; }
+  .error-screen .page-lede { @apply mt-3 max-w-md; }
+
+  /* ── 신고: 대상 줄 + 사유 목록(선택한 사유는 엠버 커서 행) ── */
+  .mod-target { @apply flex min-w-0 items-center gap-2 pb-4 text-sm; border-bottom: var(--rule-hair) solid var(--color-rule); }
+  .mod-target > svg { @apply h-4 w-4 shrink-0 text-muted; }
+  .mod-target-label { @apply shrink-0 font-bold text-muted; }
+  .mod-target-value { @apply min-w-0 truncate text-base font-bold text-ink; }
+
+  .mod-reasons {
+    @apply overflow-hidden rounded-card bg-paper;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
+  .mod-reason {
+    @apply flex cursor-pointer items-start gap-3 px-3.5 py-3;
+    transition: background-color var(--dur-micro) steps(1), color var(--dur-micro) steps(1);
+  }
+  .mod-reason + .mod-reason { border-top: var(--rule-hair) solid var(--color-rule); }
+  .mod-reason:hover { background: var(--color-paper-3); }
+  .mod-reason:active { translate: 1px 0; }
+  .mod-reason:has(:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  .mod-reason-title { @apply block text-base font-bold text-ink; }
+  .mod-reason-desc { @apply mt-0.5 block text-sm text-muted; }
+  .mod-reason:has(:checked),
+  .mod-reason:has(:checked):hover { background: var(--color-accent); }
+  .mod-reason:has(:checked) .mod-reason-title,
+  .mod-reason:has(:checked) .mod-reason-desc { color: var(--color-accent-ink); }
+  .mod-reason:has(:checked) .radio { color: var(--color-accent-ink); border-color: var(--color-accent-ink); }
+
+  .mod-done-mark {
+    @apply mx-auto flex h-14 w-14 items-center justify-center rounded-card bg-paper-3 text-success;
+    border: var(--rule-bar) solid var(--color-success);
+  }
+  .mod-done-title { @apply mt-4 text-xl font-black text-ink; }
+
+  /* ── 차단 목록: 행마다 이웃 · 동네 · 차단 시각 · 해제 ── */
+  .block-list {
+    @apply overflow-hidden rounded-card bg-paper;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
+  .block-row { @apply flex items-center gap-3 px-4 py-3 md:px-5; }
+  .block-row + .block-row { border-top: var(--rule-hair) solid var(--color-rule); }
+  .block-who { @apply flex min-w-0 flex-1 items-center gap-3 rounded-sm; }
+  .block-who:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .block-who:hover .block-name { text-decoration: underline; text-decoration-color: var(--color-accent-2); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+  .block-who:active { translate: 1px 0; }
+  .block-name { @apply block truncate text-base font-bold text-ink; }
+  .block-meta { @apply mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted; }
+
+
+  /* ── 스타일가이드 (개발 전용) ── */
+  .sg-section { @apply space-y-4 pt-10; border-top: var(--rule-hair) solid var(--color-rule); }
+  .sg-swatches { @apply grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6; }
+  .sg-swatch { @apply min-w-0; }
+  .sg-swatch-chip { @apply block h-14 w-full rounded-card; border: var(--rule-bar) solid var(--color-rule); }
+  .sg-swatch-name { @apply mt-2 block text-sm font-bold text-ink; }
+  .sg-swatch-role { @apply block text-xs text-muted; }
+  .sg-type { @apply w-full text-left; }
+  .sg-type tr + tr { border-top: var(--rule-hair) solid var(--color-rule); }
+  .sg-type th { @apply w-32 py-3 pr-4 align-baseline text-sm font-bold text-muted md:w-44; }
+  .sg-type td { @apply min-w-0 py-3 align-baseline; }
+  .sg-figure { @apply inline-flex items-baseline gap-1.5; }
+  .sg-figure .figure { @apply text-5xl; }
+  .sg-figure .figure-unit { @apply text-xl; }
+  .sg-icons { @apply grid grid-cols-6 gap-3 text-ink-2 sm:grid-cols-8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-back, .mod-reason { transition: none; }
+  .page-back:active, .mod-reason:active, .block-who:active { translate: none; }
 }

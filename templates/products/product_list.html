@@ -7,19 +7,20 @@
 {% block title %}{% if q %}‘{{ q }}’ 검색 결과{% elif current_category %}{{ current_category.name }}{% else %}중고거래{% endif %}{% endblock %}
 
 {% block content %}
-<div class="container-page py-6 md:py-8">
+<div class="container-page products-screen py-6 md:py-8">
 
-  {# ───────── 제목 ───────── #}
-  <header class="mb-5 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-    <div class="min-w-0">
-      <p class="text-[13px] font-medium text-neutral-500" id="products-region-label">
-        <span class="sr-only">동네: </span>{% if region_value == "me" %}내 동네 · {% endif %}{{ region_filter.label }}
+  {# ───────── 제목 + 지금 보는 범위 ───────── #}
+  <header class="products-list-head">
+    <h1 class="page-title min-w-0 break-words text-balance">
+      {% if q %}‘<span class="products-query">{{ q }}</span>’ 검색 결과{% elif current_category %}{{ current_category.name }}{% else %}중고거래{% endif %}
+    </h1>
+    <div class="products-list-scope">
+      <p class="products-list-region" id="products-region-label">
+        {% include "components/icon.html" with name="map-pin" class="h-4 w-4 shrink-0" %}
+        <span class="sr-only">동네: </span>{% if region_value == "me" %}<span class="products-list-mine">내 동네</span>{% endif %}<span class="min-w-0">{{ region_filter.label }}</span>
       </p>
-      <h1 class="page-title mt-0.5 truncate">
-        {% if q %}‘{{ q }}’ 검색 결과{% elif current_category %}<span aria-hidden="true">{{ current_category.icon }}</span> {{ current_category.name }}{% else %}중고거래{% endif %}
-      </h1>
+      <p class="products-list-count" aria-live="polite">상품 <strong>{{ page_obj.paginator.count }}</strong>개</p>
     </div>
-    <p class="text-sm text-neutral-500" aria-live="polite">상품 <strong class="font-semibold text-neutral-800">{{ page_obj.paginator.count }}</strong>개</p>
   </header>
 
   {# ───────── 카테고리 칩 ───────── #}
@@ -27,9 +28,7 @@
     <div class="chip-row">
       <a href="{% querystring category='' page='' %}" class="chip shrink-0{% if not current_category %} chip-active{% endif %}"{% if not current_category %} aria-current="true"{% endif %}>전체</a>
       {% for c in categories %}
-        <a href="{% querystring category=c.slug page='' %}" class="chip shrink-0{% if current_category.pk == c.pk %} chip-active{% endif %}"{% if current_category.pk == c.pk %} aria-current="true"{% endif %}>
-          <span aria-hidden="true">{{ c.icon }}</span>{{ c.name }}
-        </a>
+        <a href="{% querystring category=c.slug page='' %}" class="chip shrink-0{% if current_category.pk == c.pk %} chip-active{% endif %}"{% if current_category.pk == c.pk %} aria-current="true"{% endif %}>{{ c.name }}</a>
       {% endfor %}
     </div>
   </nav>
@@ -40,7 +39,7 @@
 
     {# 모바일 검색창 (데스크톱은 상단 내비 검색창 사용, 숨겨져도 값은 함께 전송돼요) #}
     <div class="relative w-full md:hidden">
-      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">{% include "components/icon.html" with name="search" class="h-[18px] w-[18px]" %}</span>
+      <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">{% include "components/icon.html" with name="search" class="h-[18px] w-[18px]" %}</span>
       <input type="search" name="q" value="{{ q }}" class="input pl-10" placeholder="검색어를 입력해 주세요" aria-label="검색어" enterkeyhint="search" data-no-autosubmit>
     </div>
 
@@ -60,7 +59,7 @@
       {% endfor %}
     </select>
 
-    <label class="inline-flex h-10 cursor-pointer items-center gap-2 text-sm font-medium text-neutral-700">
+    <label class="products-filter-check">
       <input type="checkbox" name="status" value="selling" class="checkbox"{% if status_value == "selling" %} checked{% endif %}>
       거래 가능만 보기
     </label>

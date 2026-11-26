@@ -18,15 +18,15 @@
   {# ───── 상단: 상대 정보 + 메뉴 ───── #}
   <header class="chat-header">
     <a href="{% url 'chat:list' %}" class="btn btn-ghost btn-icon shrink-0" aria-label="채팅 목록으로">{% include "components/icon.html" with name="arrow-left" %}</a>
-    <a href="{% url 'accounts:seller_profile' partner.username %}" class="flex min-w-0 flex-1 items-center gap-2.5 rounded-md">
+    <a href="{% url 'accounts:seller_profile' partner.username %}" class="chat-partner">
       {% include "components/avatar.html" with user=partner size="sm" %}
       <span class="min-w-0">
-        <span class="flex items-center gap-1.5">
-          <span class="truncate text-[15px] font-semibold text-neutral-900">{{ partner|display_name }}</span>
+        <span class="chat-partner-head">
+          <span class="chat-partner-name">{{ partner|display_name }}</span>
           {% include "components/manner_temp.html" with temperature=partner.profile.manner_temperature compact=True %}
         </span>
-        <span class="block truncate text-xs text-neutral-500">
-          {% if is_seller %}구매 문의{% else %}판매자{% endif %}{% if partner.profile.region %} · {{ partner.profile.region.dong }}{% endif %}
+        <span class="chat-partner-sub">
+          <span>{% if is_seller %}구매 문의{% else %}판매자{% endif %}</span>{% if partner.profile.region %}<span>{{ partner.profile.region.dong }}</span>{% endif %}
         </span>
       </span>
     </a>
@@ -54,8 +54,8 @@
 
   {# ───── 메시지 ───── #}
   <div class="chat-scroll" id="chat-scroll" tabindex="0" aria-label="대화 내용">
-    <div class="chat-safety">
-      {% include "components/icon.html" with name="info" class="h-4 w-4 shrink-0" %}
+    <div class="chat-safety" role="note">
+      {% include "components/icon.html" with name="info" class="h-[18px] w-[18px] shrink-0" %}
       <p>선입금 요구나 외부 메신저·링크 유도는 사기일 수 있어요. 직접 만나서 거래해 주세요.</p>
     </div>
     <div id="chat-messages" aria-live="polite" aria-relevant="additions">

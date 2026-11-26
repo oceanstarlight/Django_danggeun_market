@@ -10,6 +10,6 @@
   {% if is_blocked %}
     <button type="submit" class="btn btn-secondary btn-sm{% if class %} {{ class }}{% endif %}">차단 해제</button>
   {% else %}
-    <button type="submit" class="btn btn-ghost btn-sm text-red-700 hover:bg-red-50 hover:text-red-800{% if class %} {{ class }}{% endif %}">{% include "components/icon.html" with name="ban" %}차단하기</button>
+    <button type="submit" class="btn btn-danger btn-sm{% if class %} {{ class }}{% endif %}">{% include "components/icon.html" with name="ban" %}차단하기</button>
   {% endif %}
 </form>

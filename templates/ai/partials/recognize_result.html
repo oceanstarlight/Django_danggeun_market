@@ -15,30 +15,29 @@ ai:recognize 결과 카드 (상품 폼 AI 패널의 #ai-result 안에 들어가�
   <dl class="ai-facts">
     <div>
       <dt class="ai-result-label">카테고리</dt>
-      <dd class="font-semibold text-neutral-900">{{ result.category_name|default:"기타" }}</dd>
+      <dd>{{ result.category_name|default:"기타" }}</dd>
     </div>
     <div>
       <dt class="ai-result-label">상품 상태</dt>
-      <dd class="font-semibold text-neutral-900">{{ result.condition_label }}</dd>
+      <dd>{{ result.condition_label }}</dd>
     </div>
     {% if result.title %}
       <div class="col-span-2">
         <dt class="ai-result-label">추천 제목</dt>
-        <dd class="text-neutral-900 break-keep">{{ result.title }}</dd>
+        <dd class="break-keep">{{ result.title }}</dd>
       </div>
     {% endif %}
   </dl>
 
   <div class="mt-4">
-    <div class="flex items-center justify-between text-[13px]">
-      <span class="font-semibold text-neutral-700" id="ai-conf-{{ uid }}">확신도</span>
-      <span class="tabular-nums text-neutral-600">{{ result.confidence_percent }}%
-        · {% if result.confidence >= 0.8 %}높아요{% elif result.confidence >= 0.5 %}보통이에요{% else %}낮아요{% endif %}</span>
+    <div class="ai-confidence">
+      <span class="font-bold text-ink-2" id="ai-conf-{{ uid }}">확신도</span>
+      <span class="ai-confidence-value"><span>{{ result.confidence_percent }}%</span><span>{% if result.confidence >= 0.8 %}높아요{% elif result.confidence >= 0.5 %}보통이에요{% else %}낮아요{% endif %}</span></span>
     </div>
     <progress class="ai-meter{% if low_confidence %} ai-meter-low{% endif %}" max="100" value="{{ result.confidence_percent }}" aria-labelledby="ai-conf-{{ uid }}">{{ result.confidence_percent }}%</progress>
   </div>
 
-  {% if result.notes %}<p class="mt-3 text-sm leading-6 text-neutral-700">{{ result.notes }}</p>{% endif %}
+  {% if result.notes %}<p class="mt-3 text-base text-ink-2">{{ result.notes }}</p>{% endif %}
 
   {% if low_confidence %}
     <div class="alert alert-warning mt-3">

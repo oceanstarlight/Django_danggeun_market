@@ -308,7 +308,7 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
     avatar = forms.FileField(
         label="프로필 사진",
         required=False,
-        help_text="jpg, png, gif, webp · 최대 10MB",
+        help_text="jpg, png, gif, webp (최대 10MB)",
         widget=forms.FileInput(attrs={"accept": "image/*", "data-avatar-input": ""}),
     )
     remove_avatar = forms.BooleanField(label="기본 이미지로 바꾸기", required=False)

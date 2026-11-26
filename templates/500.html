@@ -5,14 +5,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>잠시 문제가 생겼어요 · 폴리마켓</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Bungee&family=Chivo:wght@400;700;900&family=Noto+Sans+KR:wght@400;700;900&display=swap">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
-<body class="bg-white text-neutral-900">
-  <main class="container-page max-w-xl py-24 text-center">
-    <p class="text-5xl" aria-hidden="true">🔧</p>
-    <h1 class="page-title mt-6">잠시 문제가 생겼어요</h1>
-    <p class="muted mt-2">잠시 후 다시 시도해 주세요. 문제가 계속되면 새로고침해 주세요.</p>
-    <a href="/" class="btn btn-primary mt-8">홈으로 가기</a>
+<body class="bg-paper text-ink">
+  <main class="container-page">
+    <section class="error-screen" aria-labelledby="error-title">
+      <span class="error-mark" aria-hidden="true">{% include "components/icon.html" with name="alert" stroke="1.5" %}</span>
+      <h1 id="error-title" class="page-title">잠시 문제가 생겼어요</h1>
+      <p class="page-lede">잠시 후 다시 시도해 주세요. 문제가 계속되면 새로고침해 주세요.</p>
+      <a href="/" class="btn btn-primary mt-8">홈으로 가기</a>
+    </section>
   </main>
 </body>
 </html>

@@ -9,7 +9,7 @@
       class="flex items-center gap-2">
   {% csrf_token %}
   {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-  <label for="status-{{ product.pk }}" class="shrink-0 text-sm font-medium text-neutral-600">판매 상태</label>
+  <label for="status-{{ product.pk }}" class="shrink-0 text-sm font-bold text-ink-2">판매 상태</label>
   <select id="status-{{ product.pk }}" name="status" class="select flex-1">
     {% for value, label in status_choices %}
       <option value="{{ value }}"{% if product.status == value %} selected{% endif %}>{{ label }}</option>

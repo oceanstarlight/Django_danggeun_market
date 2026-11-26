@@ -1,18 +1,19 @@
 {% comment "usage" %}
 매너온도 표시 (온도 숫자 + 막대). 기본값 36.5
   {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
-파라미터: temperature(Decimal/float, 0~99) · compact(True면 숫자만 한 줄)
-구간: ~30 차가워요(회색) · ~36.5 보통 · ~45 따뜻해요 · ~60 뜨거워요 · 60~ 최고예요
-글자는 대비(4.5:1)를 위해 neutral-600/brand-700/800만 쓰고, 단계는 막대 색(틸 농도)으로만 보여 줘요. 빨강은 위험 표시 전용이라 쓰지 않아요.
+  {% include "components/manner_temp.html" with temperature=profile.manner_temperature big=True %}
+파라미터: temperature(Decimal/float, 0~99) · compact(True면 숫자만 한 줄, 본문 글꼴 굵게) · big(True면 점수판 숫자 Silkscreen 48px, 소수점은 본문 글꼴, 프로필 머리용)
+숫자는 애시드, 막대는 홈(big 은 rule 색) 위의 애시드 채움. 단계는 막대 길이로만 보여 줘요(이모지 없음).
 {% endcomment %}{% with t=temperature|default:36.5 %}{% if compact %}
-<span class="manner-value {% if t < 30 %}text-neutral-600{% elif t < 45 %}text-brand-700{% else %}text-brand-800{% endif %}" title="매너온도">{{ t|floatformat:1 }}°C</span>
+<span class="manner-value" title="매너온도">{{ t|floatformat:1 }}°C</span>
 {% else %}
-<div class="manner" aria-label="매너온도 {{ t|floatformat:1 }}도">
-  <span class="manner-value {% if t < 30 %}text-neutral-600{% elif t < 45 %}text-brand-700{% else %}text-brand-800{% endif %}">
-    {{ t|floatformat:1 }}°C
-    <span class="text-base" aria-hidden="true">{% if t < 30 %}🌧️{% elif t < 36.5 %}🙂{% elif t < 45 %}😊{% elif t < 60 %}😄{% else %}🌟{% endif %}</span>
-  </span>
-  <span class="manner-track" aria-hidden="true"><span class="manner-bar {% if t < 30 %}bg-neutral-400{% elif t < 36.5 %}bg-brand-300{% elif t < 45 %}bg-brand-500{% elif t < 60 %}bg-brand-700{% else %}bg-brand-900{% endif %}" style="width: {{ t|stringformat:'.1f' }}%"></span></span>
+<div class="manner{% if big %} manner-big{% endif %}" aria-label="매너온도 {{ t|floatformat:1 }}도">
+  {% if big %}
+    {% with v=t|floatformat:1 %}<span class="manner-figure"><span class="figure">{{ v|slice:":-2" }}<span class="figure-dot">.</span>{{ v|slice:"-1:" }}</span><span class="figure-unit">°C</span></span>{% endwith %}
+  {% else %}
+    <span class="manner-value">{{ t|floatformat:1 }}°C</span>
+  {% endif %}
+  <span class="manner-track" aria-hidden="true"><span class="manner-bar" style="width: {{ t|stringformat:'.1f' }}%"></span></span>
   <span class="manner-label">매너온도</span>
 </div>
 {% endif %}{% endwith %}

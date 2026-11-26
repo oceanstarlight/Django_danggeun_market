@@ -1,21 +1,50 @@
-/* === chat === */
+/* Hallmark · page: /chats/ (list, room, start), under the system stamp on line 1 of static/src/input.css · genre: playful · theme: Arcade (ember/grille) · scope: app · redesign: full · signature: the dense hairline chat list, ember only for unread, send and my bubbles */
+/* === chat === (Arcade: 목록은 촘촘한 줄, 채팅방은 화면 높이 앱 셸) */
 @layer components {
-  .chat-list { @apply flex flex-col; }
+  /* ── 목록 ── */
+  .chat-unread-summary { @apply text-sm font-bold text-muted; }
+  .chat-unread-summary > strong { @apply font-black text-ink; font-variant-numeric: tabular-nums; }
+
+  .chat-list { @apply flex flex-col; border-bottom: var(--rule-hair) solid var(--color-rule); }
   .chat-list > * + * { border-top: var(--rule-hair) solid var(--color-rule); }
   .chat-list-item {
-    @apply relative -mx-4 flex items-center gap-3 px-4 py-4 md:mx-0 md:px-3;
+    @apply relative -mx-4 flex items-center gap-3 px-4 py-4 md:mx-0 md:gap-4 md:px-3;
     transition: background-color var(--dur-micro) steps(1);
   }
   .chat-list-item:hover { background: var(--color-paper-2); }
+  .chat-list-item:active { background: var(--color-paper-3); }
   .chat-list-item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  /* 안 읽은 대화: 왼쪽 엠버 막대 대신 행 전체를 한 단 밝게 + 굵은 글 */
+  .chat-list-item.is-unread { background: var(--color-paper-2); }
+  .chat-list-item.is-unread:hover { background: var(--color-paper-3); }
+  .is-unread .chat-list-time { @apply font-black text-ink; }
+
+  .chat-list-body { @apply flex min-w-0 flex-1 flex-col gap-1; }
+  .chat-list-head { @apply flex min-w-0 items-baseline gap-2 text-sm leading-5 text-muted; }
+  /* 좁은 화면에서는 동네가 먼저 줄고 이름은 끝까지 남아요 */
+  .chat-list-name { @apply truncate text-base font-black text-ink; letter-spacing: -0.01em; flex-shrink: 0; max-width: 65%; }
+  .chat-list-region { @apply min-w-0 truncate font-bold; }
+  .chat-list-time { @apply ml-auto shrink-0 pl-2 text-xs font-bold; }
+  .chat-list-line { @apply flex min-w-0 items-center gap-3; }
+  .chat-list-last { @apply min-w-0 flex-1 truncate text-base text-ink-2; }
+  .is-unread .chat-list-last { @apply font-bold text-ink; }
+  .chat-list-mine { @apply text-muted; }
+  .chat-list-product { @apply flex min-w-0 items-center gap-2 text-sm text-muted; }
+  .chat-list-thumb { @apply h-14 w-14; }
+
   .chat-unread {
     @apply inline-flex h-6 min-w-[24px] shrink-0 items-center justify-center rounded-sm px-1.5 text-xs font-black leading-none;
     background: var(--color-accent);
     color: var(--color-accent-ink);
+    border: var(--rule-hair) solid var(--color-accent-ink);
     font-variant-numeric: tabular-nums;
   }
 
-  /* 채팅방: 화면 높이를 채우는 앱형 레이아웃 (메시지 영역만 스크롤) */
+  /* 채팅 화면의 아바타는 조용히: 엠버는 안 읽음·보내기·내 말풍선에만 */
+  .chat-list-item .avatar,
+  .chat-shell .avatar { background: var(--color-paper-3); color: var(--color-ink); border-color: var(--color-rule); }
+
+  /* ── 채팅방: 화면 높이를 채우는 앱형 레이아웃 (메시지 영역만 스크롤) ── */
   .chat-shell {
     @apply mx-auto flex w-full max-w-3xl flex-col bg-paper md:my-6 md:overflow-hidden md:rounded-card;
     height: calc(100dvh - var(--poly-nav-h));
@@ -23,55 +52,116 @@
   @media (min-width: 768px) {
     .chat-shell { height: calc(100dvh - var(--poly-nav-h) - 48px); min-height: 520px; border: var(--rule-bar) solid var(--color-rule); }
   }
-  .chat-header { @apply flex h-14 shrink-0 items-center gap-1.5 bg-paper-2 px-2 md:gap-2 md:px-3; border-bottom: var(--rule-bar) solid var(--color-rule); }
-  .chat-conn { @apply hidden shrink-0 items-center gap-1.5 rounded-sm px-2 py-1 text-xs font-bold text-muted; }
+  .chat-header { @apply flex h-16 shrink-0 items-center gap-1.5 bg-paper-2 px-2 md:gap-2 md:px-3; border-bottom: var(--rule-bar) solid var(--color-rule); }
+  .chat-partner { @apply flex min-w-0 flex-1 items-center gap-3 rounded-card py-1 pr-2; transition: background-color var(--dur-micro) steps(1); }
+  .chat-partner:hover .chat-partner-name { color: var(--color-accent-2); }
+  .chat-partner:active { translate: 1px 1px; }
+  .chat-partner:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .chat-partner-head { @apply flex min-w-0 items-baseline gap-2; }
+  .chat-partner-name { @apply truncate text-lg font-black leading-6 text-ink; letter-spacing: -0.01em; flex-shrink: 0; max-width: 70%; transition: color var(--dur-micro) var(--ease-out); }
+  .chat-partner-head .manner-value { @apply min-w-0 truncate text-sm text-accent-2; }
+  .chat-partner-sub { @apply flex min-w-0 items-center text-xs font-bold leading-4 text-muted; }
+  .chat-partner-sub > * { @apply truncate; }
+  .chat-partner-sub > * + * { @apply ml-2 pl-2; border-left: var(--rule-hair) solid var(--color-rule); }
+
+  .chat-conn { @apply hidden shrink-0 items-center gap-1.5 rounded-sm px-2 py-1 text-xs font-bold text-muted; border: var(--rule-hair) solid var(--color-rule); }
   .chat-conn[data-state="connecting"],
   .chat-conn[data-state="offline"] { @apply inline-flex; }
-  .chat-conn[data-state="offline"] { background: var(--color-accent-wash); color: var(--color-accent); }
+  .chat-conn[data-state="offline"] { background: var(--color-accent-wash); color: var(--color-accent); border-color: var(--color-accent); }
 
-  .chat-product-bar { @apply flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2.5 bg-paper-2 px-4 py-3; border-bottom: var(--rule-hair) solid var(--color-rule); }
+  .chat-product-bar { @apply flex shrink-0 flex-wrap items-center gap-x-4 gap-y-3 bg-paper-2 px-3 py-3 md:px-4; border-bottom: var(--rule-bar) solid var(--color-rule); }
   .chat-product-link { @apply flex min-w-0 flex-1 basis-56 items-center gap-3 rounded-card; }
+  .chat-product-link:hover .chat-product-title { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-accent-2); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  .chat-product-link:hover .thumb { border-color: var(--color-ink-2); }
+  .chat-product-link:active { translate: 1px 1px; }
   .chat-product-link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .chat-product-title { @apply truncate text-sm font-bold text-ink-2; }
+  .chat-product-price { @apply mt-1 flex flex-wrap items-baseline gap-x-2; }
   .chat-product-actions { @apply flex w-full items-center gap-2 sm:w-auto; }
+  /* 상품 띠(paper-2) 위의 셀렉트는 한 단 어두운 바닥으로 */
+  .chat-product-actions .select { background-color: var(--color-paper); color: var(--color-ink); }
+  /* 맥락 띠로 촘촘하게: 셀렉트·버튼 40px, 한 줄에 놓이는 sm 이상에서는 '판매 상태' 라벨을 화면 밖으로(값이 이미 상태를 말해요) */
+  .chat-product-actions .select { @apply h-10 py-0; }
+  .chat-product-actions .btn { @apply h-10; }
+  @media (min-width: 640px) {
+    .chat-product-actions label { @apply sr-only; }
+  }
+  /* 예약중은 윤곽선만: 칸을 채운 엠버 사각형은 이 화면에서 안 읽음 수만 뜻해요 */
+  .chat-list-product .badge-reserved,
+  .chat-product-bar .badge-reserved { background: transparent; color: var(--color-accent); border-color: var(--color-accent); }
 
-  .chat-scroll { @apply flex-1 overflow-y-auto overscroll-contain bg-paper px-3 pb-3 pt-4 md:px-5; }
+  .chat-scroll { @apply flex-1 overflow-y-auto overscroll-contain bg-paper px-3 pb-4 pt-4 md:px-6; }
   .chat-scroll:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -4px; }
-  .chat-safety { @apply mx-auto mb-2 flex max-w-md items-start gap-2 rounded-card bg-paper-2 px-3 py-2.5 text-sm text-ink-2; border: var(--rule-hair) solid var(--color-rule); }
-  .chat-safety > svg { @apply mt-0.5 text-accent-2; }
+  .chat-safety { @apply mx-auto mb-3 flex max-w-md items-start gap-2.5 rounded-card bg-paper-2 px-3.5 py-3 text-sm leading-6 text-ink-2; border: var(--rule-hair) solid var(--color-rule); }
+  .chat-safety > svg { @apply mt-[3px] text-accent-2; }
   .chat-older { @apply flex justify-center py-2; }
-  .chat-date-sep { @apply my-4 flex justify-center; }
-  .chat-date-sep > span { @apply rounded-sm bg-paper-3 px-3 py-1 text-xs font-bold text-ink-2; }
-  .chat-row { @apply mt-1 flex items-start gap-2; }
-  .chat-row-first { @apply mt-3; }
+
+  /* 날짜 구분: 가는 줄 사이의 라벨 */
+  .chat-date-sep { @apply my-5 flex items-center gap-3; }
+  .chat-date-sep::before,
+  .chat-date-sep::after { content: ""; @apply h-0 flex-1; border-top: var(--rule-hair) solid var(--color-rule); }
+  .chat-date-sep > span { @apply shrink-0 rounded-sm px-2.5 py-1 text-xs font-bold text-ink-2; border: var(--rule-hair) solid var(--color-rule); background: var(--color-paper-2); }
+
+  .chat-row { @apply mt-1.5 flex items-start gap-2; }
+  .chat-row-first { @apply mt-4; }
   .chat-row-me { @apply flex-row-reverse; }
   .chat-avatar-slot { @apply w-8 shrink-0; }
-  .chat-stack { @apply flex min-w-0 max-w-[80%] flex-col items-start md:max-w-[70%]; }
+  .chat-stack { @apply flex min-w-0 max-w-[80%] flex-col items-start md:max-w-[68%]; }
   .chat-row-me .chat-stack { @apply items-end; }
   .chat-line { @apply flex max-w-full items-end gap-1.5; }
   .chat-row-me .chat-line { @apply flex-row-reverse; }
   .chat-line > .bubble { @apply min-w-0 max-w-none; }
+  /* 말풍선: 정사각, 말하는 쪽 아래 모서리만 각지게 */
+  .chat-row .bubble-other { border: var(--rule-hair) solid var(--color-rule); border-top-left-radius: 0; }
+  .chat-row-me .bubble-me { border: var(--rule-hair) solid var(--color-accent); border-bottom-right-radius: 0; font-weight: 500; }
   .chat-meta { @apply flex shrink-0 flex-col items-start gap-0.5 pb-0.5; }
   .chat-row-me .chat-meta { @apply items-end; }
-  .chat-read { @apply text-xs font-bold leading-4 text-accent-2; }
-  .chat-warning { @apply mt-1.5 flex max-w-full items-start gap-1.5 rounded-sm px-2.5 py-1.5 text-sm text-ink; background: var(--color-error-wash); border: var(--rule-hair) solid var(--color-error); }
-  .chat-nego { @apply mt-1.5 flex max-w-full flex-col items-start gap-2; }
+  .chat-read { @apply text-xs font-bold leading-4 text-ink-2; }
+
+  .chat-warning { @apply mt-2 flex max-w-full items-start gap-2 rounded-card px-3 py-2 text-sm leading-6 text-ink; background: var(--color-error-wash); border: var(--rule-hair) solid var(--color-error); }
+  .chat-warning > svg { color: var(--color-error); }
+  .chat-warning-list { @apply mt-0.5 flex flex-col text-ink-2; }
+
+  .chat-nego { @apply mt-2 flex max-w-full flex-col items-start gap-2; }
   .chat-nego-result:empty { display: none; }
   .chat-nego-result { @apply w-full; }
+  .chat-nego-result .ai-drafts { border: var(--rule-bar) solid var(--color-accent-2); background: var(--color-paper-2); }
+  .chat-nego-result .ai-draft { background: var(--color-paper); }
+  /* 좁은 폭: 제목이 두 줄로 쪼개지기보다 제시가 배지가 다음 줄로 내려가요 */
+  .chat-nego-result .ai-card-header { flex-wrap: wrap; row-gap: var(--space-xs); }
+  .chat-nego-result .ai-card-header > span { white-space: nowrap; }
   .chat-row.is-new { animation: fade-up 200ms var(--ease-out) both; }
+  /* 요청 중에만 스피너: .spinner 의 inline-block 이 .show-on-request 를 이기지 않도록 */
+  .chat-shell .btn .spinner.show-on-request { display: none; }
+  .chat-shell .btn.htmx-request .spinner.show-on-request { display: inline-block; }
+  .chat-shell .btn.htmx-request .hide-on-request { display: none; }
 
-  .chat-composer { @apply shrink-0 bg-paper-2 px-3 pt-2.5 md:px-4; border-top: var(--rule-bar) solid var(--color-rule); padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
-  .chat-form { @apply flex items-end gap-2; }
-  .chat-input { @apply min-h-[44px] flex-1 resize-none py-[8px] leading-6; }
+  /* ── 입력창: 정사각 입력 + 엠버 보내기(화면의 유일한 주 버튼) ── */
+  .chat-composer { @apply shrink-0 bg-paper-2 px-3 pt-3 md:px-4; border-top: var(--rule-bar) solid var(--color-rule); padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom)); }
+  .chat-form { @apply flex items-end gap-2.5; }
+  .chat-input { @apply min-h-[44px] flex-1 resize-none bg-paper py-[8px] leading-6; }
   .chat-send { @apply h-11 w-11 shrink-0; }
   .chat-send > svg { @apply h-5 w-5; }
+
+  /* ── 채팅 시작 ── */
+  .chat-start-product { @apply mt-6 flex items-center gap-4 p-4; transition: border-color var(--dur-micro) var(--ease-out), translate var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out); }
+  .chat-start-product:hover { border-color: var(--color-ink-2); translate: -2px -2px; box-shadow: 4px 4px 0 var(--color-accent-2); }
+  .chat-start-product:active { translate: 1px 1px; box-shadow: 1px 1px 0 var(--color-accent-2); }
+  .chat-start-product:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+  .chat-start-title { @apply block truncate text-base font-bold text-ink; }
+  .chat-start-meta { @apply mt-2 flex min-w-0 items-center gap-2 text-sm font-bold text-muted; }
 }
 
 body:has(.chat-shell) > footer { display: none; }
 @media (max-width: 767.98px) {
   body:has(.chat-shell) .tabbar { display: none; }
-  body:has(.chat-shell) { --poly-tabbar-h: 0px; }
-  body:has(.chat-shell) .toast-stack { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  body:has(.chat-shell) { --poly-tabbar-h: 0px; --poly-nav-h: 0px; }
+  /* 휴대폰에서는 채팅방 머리(뒤로 가기 포함)만 남기고 사이트 상단 바를 숨겨요 */
+  body:has(.chat-shell) > header.nav { display: none; }
+  body:has(.chat-shell) .toast-stack { bottom: calc(84px + env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .chat-row.is-new { animation: none; }
+  .chat-list-item, .chat-partner, .chat-partner-name, .chat-start-product { transition: none; }
+  .chat-partner:active, .chat-product-link:active, .chat-start-product:hover, .chat-start-product:active { translate: none; }
 }

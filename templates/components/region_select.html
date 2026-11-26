@@ -3,7 +3,7 @@
 - 폼: RegionChoiceField 의 위젯(RegionSelect)이 이 템플릿을 그려요 → {% include "components/form_field.html" with field=form.region %}
 - 목록 필터: apps.accounts.regions.build_select_context(mode="filter") 결과를 넘겨요
   {% include "components/region_select.html" with region_select=region_select %}
-파라미터: region_select(dict) — levels[RegionLevel] · mode("form"|"filter") · options_url · attrs_html · extra_class
+파라미터: region_select(dict): levels[RegionLevel] · mode("form"|"filter") · options_url · attrs_html · extra_class
 동작: 위 단계를 바꾸면 아래 단계가 비워지고 잠겨요(static/js/app.js). form 모드는 HTMX 로 다음 단계 옵션을
 불러오고(accounts:region_options, 불러오는 중·실패 표시와 '다시 불러오기'도 app.js), filter 모드는 고르면
 폼이 제출돼 서버가 다음 단계를 그려요(키보드 화살표로 훑을 땐 Enter·포커스 이동 때 제출, product_list.html).

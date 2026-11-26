@@ -15,10 +15,10 @@
 {% else %}
   {% if q %}
     {% querystring q='' page='' as clear_q_url %}
-    {% include "components/empty_state.html" with title="검색 결과가 없어요" description="검색어를 바꾸거나 필터를 줄여서 다시 찾아보세요." cta_url=clear_q_url cta_label="검색어 지우기" %}
+    {% include "components/empty_state.html" with title="검색 결과가 없어요" description="검색어를 바꾸거나 필터를 줄여서 다시 찾아보세요." cta_url=clear_q_url cta_label="검색어 지우기" icon="search" %}
   {% elif region_value != "all" %}
     {% querystring region='all' sido='' sigungu='' page='' as all_region_url %}
-    {% include "components/empty_state.html" with title="이 동네에는 아직 상품이 없어요" description="전체 지역으로 넓혀서 찾아보세요." cta_url=all_region_url cta_label="전체 지역 보기" %}
+    {% include "components/empty_state.html" with title="이 동네에는 아직 상품이 없어요" description="전체 지역으로 넓혀서 찾아보세요." cta_url=all_region_url cta_label="전체 지역 보기" icon="map-pin" %}
   {% else %}
     {% url 'products:create' as create_url %}
     {% include "components/empty_state.html" with title="조건에 맞는 상품이 없어요" description="다른 카테고리를 보거나 직접 물건을 올려 보세요." cta_url=create_url cta_label="내 물건 팔기" %}

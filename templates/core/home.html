@@ -2,100 +2,135 @@
 {% load static poly_tags %}
 {% comment %}
 홈 (apps.products.views.home)
-컨텍스트: categories · my_region · local_products · popular_products · recent_products · suggested_keywords
+컨텍스트: categories, my_region, local_products, popular_products, recent_products, suggested_keywords
+구성: Stage 히어로(검색 + 인기 상품 점수판) / 카테고리 메뉴판 / 최근 본 상품 레일 / 내 동네 최신 상품 / 인기 상품 TOP / 판매 유도 엠버 밴드
 {% endcomment %}
 {% block title %}우리 동네 중고거래{% endblock %}
 
 {% block content %}
-{# ───────── 검색 히어로 ───────── #}
-<section class="products-hero">
-  <div class="container-page py-10 md:py-14">
-    <div class="max-w-2xl">
-      {% if my_region %}
-        <a href="{% url 'products:list' %}?region=me" class="chip mb-4 bg-white">
-          {% include "components/icon.html" with name="map-pin" %}{{ my_region.dong }}
-        </a>
-      {% endif %}
-      <h1 class="text-display text-neutral-900 md:text-[40px] md:leading-[52px]">
-        {% if my_region %}{{ my_region.dong }} 이웃과<br class="sm:hidden"> 믿고 거래해요{% else %}우리 동네 이웃과<br class="sm:hidden"> 믿고 거래해요{% endif %}
+{# ───────── 검색 히어로 (Stage: 왼쪽 검색, 오른쪽 인기 상품 점수판) ───────── #}
+<section class="home-hero crt" aria-labelledby="home-title">
+  <div class="container-page home-hero-inner{% if popular_products %} home-hero-staged{% endif %}">
+    <div class="home-hero-text">
+      <h1 id="home-title" class="display home-hero-title">
+        {% if my_region %}{{ my_region.dong }} 이웃과<br> 믿고 거래해요{% else %}우리 동네 이웃과<br> 믿고 거래해요{% endif %}
       </h1>
-      <p class="mt-3 text-body-lg text-neutral-600">필요 없는 물건은 팔고, 필요한 물건은 가까이에서 찾아보세요.</p>
+      <p class="home-hero-lede">필요 없는 물건은 팔고, 필요한 물건은 가까이에서 찾아보세요.</p>
 
-      <form action="{% url 'products:list' %}" method="get" role="search" class="products-hero-search mt-6">
-        {% include "components/icon.html" with name="search" %}
-        <input type="search" name="q" class="products-hero-input" placeholder="어떤 물건을 찾고 있나요?" aria-label="상품 검색" autocomplete="off" enterkeyhint="search">
-        <button type="submit" class="btn btn-primary absolute right-1.5 top-1/2 -translate-y-1/2">검색</button>
+      <form action="{% url 'products:list' %}" method="get" role="search" class="home-search">
+        <div class="home-search-field">
+          {% include "components/icon.html" with name="search" %}
+          <input type="search" name="q" class="home-search-input" placeholder="어떤 물건을 찾고 있나요?" aria-label="상품 검색" autocomplete="off" enterkeyhint="search">
+        </div>
+        <button type="submit" class="btn btn-primary home-search-btn">검색</button>
       </form>
 
-      <div class="mt-4 flex flex-wrap items-center gap-2">
-        <span class="text-[13px] font-medium text-neutral-500">많이 찾는 검색어</span>
+      <div class="home-keys">
+        <span class="home-keys-label">많이 찾는 검색어</span>
         {% for keyword in suggested_keywords %}
-          <a href="{% url 'products:list' %}?q={{ keyword|urlencode }}" class="chip h-8 bg-white px-3 text-[13px]">{{ keyword }}</a>
+          <a href="{% url 'products:list' %}?q={{ keyword|urlencode }}" class="chip">{{ keyword }}</a>
         {% endfor %}
+        {% if my_region %}
+          <a href="{% url 'products:list' %}?region=me" class="chip home-region-chip whitespace-nowrap">
+            {% include "components/icon.html" with name="map-pin" %}{{ my_region.dong }}
+          </a>
+        {% endif %}
       </div>
     </div>
+
+    {% if popular_products %}
+      {% with board=popular_products|slice:":5" %}
+      <figure class="home-board">
+        <figcaption class="home-board-head">
+          <span id="home-board-title" class="home-board-title">인기 상품 TOP {{ board|length }}</span>
+          <a href="{% url 'products:list' %}?region=all&amp;sort=popular" class="link text-sm">더보기</a>
+        </figcaption>
+        <ol class="home-board-list" aria-labelledby="home-board-title">
+          {% for p in board %}
+            <li>
+              <a href="{% url 'products:detail' p.pk %}" class="home-board-row{% if forloop.first %} home-board-row-lit{% endif %}">
+                <span class="home-board-rank" aria-hidden="true">{{ forloop.counter }}</span>
+                {% if p.thumbnail_url %}
+                  <img src="{{ p.thumbnail_url }}" alt="" class="thumb home-board-thumb" decoding="async">
+                {% else %}
+                  <img src="{% static 'img/placeholder.svg' %}" alt="" class="thumb home-board-thumb">
+                {% endif %}
+                <span class="home-board-name">
+                  <span class="home-board-item">{{ p.title }}</span>
+                  {% if p.status != p.Status.SELLING %}
+                    <span class="badge {{ p.status|status_class }}">{{ p.get_status_display }}</span>
+                  {% endif %}
+                </span>
+                <span class="home-board-price">{{ p.price|price }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ol>
+      </figure>
+      {% endwith %}
+    {% endif %}
   </div>
 </section>
 
-<div class="container-page space-y-12 py-8 md:space-y-16 md:py-12">
-
-  {# ───────── 카테고리 ───────── #}
-  <section aria-labelledby="home-categories">
-    <div class="mb-4 flex items-end justify-between">
-      <h2 id="home-categories" class="section-title">카테고리</h2>
-      <a href="{% url 'products:list' %}?region=all" class="link text-sm">전체 보기</a>
+  {# ───────── 카테고리 (이름만 쓰는 메뉴판) ───────── #}
+  <section aria-labelledby="home-categories" class="home-section home-section-first">
+    <div class="container-page">
+    <div class="home-head">
+      <h2 id="home-categories" class="home-section-title break-words">카테고리</h2>
+      <a href="{% url 'products:list' %}?region=all" class="link shrink-0 text-base">전체 보기</a>
     </div>
-    <ul class="products-category-grid">
+    <ul class="home-cat-grid">
       {% for c in categories %}
         <li>
-          <a href="{% url 'products:list' %}?category={{ c.slug }}" class="products-category-item">
-            <span class="products-category-icon" aria-hidden="true">{{ c.icon }}</span>
-            <span class="products-category-name">{{ c.name }}</span>
-          </a>
+          <a href="{% url 'products:list' %}?category={{ c.slug }}" class="home-cat-item">{{ c.name }}</a>
         </li>
       {% endfor %}
     </ul>
+    </div>
   </section>
 
   {# ───────── 최근 본 상품 (로그인) ───────── #}
   {% if recent_products %}
-  <section aria-labelledby="home-recent">
-    <div class="mb-4 flex items-end justify-between">
-      <h2 id="home-recent" class="section-title">최근 본 상품</h2>
-      <a href="{% url 'accounts:mypage' %}?tab=recent" class="link text-sm">전체 보기</a>
+  <section aria-labelledby="home-recent" class="home-section">
+    <div class="container-page">
+    <div class="home-head">
+      <h2 id="home-recent" class="home-section-title break-words">최근 본 상품</h2>
+      <a href="{% url 'accounts:mypage' %}?tab=recent" class="link shrink-0 text-base">전체 보기</a>
     </div>
-    <ul class="products-rail">
+    <ul class="home-rail">
       {% for p in recent_products %}
         <li>
-          <a href="{% url 'products:detail' p.pk %}" class="products-rail-item">
+          <a href="{% url 'products:detail' p.pk %}" class="home-rail-item">
             {% if p.thumbnail_url %}
               <img src="{{ p.thumbnail_url }}" alt="" class="thumb w-full" loading="lazy" decoding="async">
             {% else %}
               <img src="{% static 'img/placeholder.svg' %}" alt="" class="thumb w-full">
             {% endif %}
-            <span class="mt-1.5 block truncate text-[13px] text-neutral-700">{{ p.title }}</span>
-            <span class="block text-[13px] font-bold text-neutral-900">{{ p.price|price }}</span>
+            <span class="home-rail-title">{{ p.title }}</span>
+            <span class="home-rail-price">{{ p.price|price }}</span>
           </a>
         </li>
       {% endfor %}
     </ul>
+    </div>
   </section>
   {% endif %}
 
   {# ───────── 내 동네 최신 상품 ───────── #}
-  <section aria-labelledby="home-local">
-    <div class="mb-4 flex items-end justify-between gap-4">
-      <div>
-        <h2 id="home-local" class="section-title">{% if my_region %}{{ my_region.dong }} 최신 상품{% else %}방금 올라온 상품{% endif %}</h2>
+  <section aria-labelledby="home-local" class="home-section home-section-ruled">
+    <div class="container-page">
+    <div class="home-head">
+      <div class="min-w-0">
+        <h2 id="home-local" class="home-section-title break-words">{% if my_region %}{{ my_region.dong }} 최신 상품{% else %}방금 올라온 상품{% endif %}</h2>
         {% if my_region %}
-          <p class="mt-1 text-sm text-neutral-500">{{ my_region.name }}에서 올라온 물건이에요</p>
+          <p class="home-head-line">{{ my_region.name }}에서 올라온 물건이에요</p>
         {% elif user.is_authenticated %}
-          <p class="mt-1 text-sm text-neutral-500"><a href="{% url 'accounts:profile_edit' %}" class="link">내 동네를 설정</a>하면 가까운 상품부터 보여드려요</p>
+          <p class="home-head-line"><a href="{% url 'accounts:profile_edit' %}" class="link">내 동네를 설정</a>하면 가까운 상품부터 보여드려요</p>
         {% else %}
-          <p class="mt-1 text-sm text-neutral-500"><a href="{% url 'accounts:login' %}" class="link">로그인</a>하면 내 동네 상품을 먼저 보여드려요</p>
+          <p class="home-head-line"><a href="{% url 'accounts:login' %}" class="link">로그인</a>하면 내 동네 상품을 먼저 보여드려요</p>
         {% endif %}
       </div>
-      <a href="{% url 'products:list' %}{% if my_region %}?region=me{% else %}?region=all{% endif %}" class="link shrink-0 text-sm">더보기</a>
+      <a href="{% url 'products:list' %}{% if my_region %}?region=me{% else %}?region=all{% endif %}" class="link shrink-0 text-base">더보기</a>
     </div>
     {% if local_products %}
       <div class="product-grid">
@@ -109,36 +144,44 @@
         {% include "components/empty_state.html" with title="아직 올라온 상품이 없어요" description="첫 번째로 물건을 올려 보세요." cta_url=create_url cta_label="내 물건 팔기" compact=True %}
       {% endif %}
     {% endif %}
+    </div>
   </section>
 
-  {# ───────── 인기 상품 TOP ───────── #}
-  {% if popular_products %}
-  <section aria-labelledby="home-popular">
-    <div class="mb-4 flex items-end justify-between gap-4">
-      <div>
-        <h2 id="home-popular" class="section-title">인기 상품 TOP {{ popular_products|length }}</h2>
-        <p class="mt-1 text-sm text-neutral-500">찜과 채팅이 많은 상품이에요</p>
+  {# ───────── 인기 상품 TOP (점수판이 1~5위, 여기는 6위부터 이어서) ───────── #}
+  {% with rest=popular_products|slice:"5:" %}
+  {% if rest %}
+  <section aria-labelledby="home-popular" class="home-section home-section-wide">
+    <div class="container-page">
+    <div class="home-head">
+      <div class="min-w-0">
+        {% with total=popular_products|length %}<h2 id="home-popular" class="home-section-title break-words">인기 상품 TOP {{ total }}</h2>{% endwith %}
+        <p class="home-head-line">찜과 채팅이 많은 상품이에요</p>
       </div>
-      <a href="{% url 'products:list' %}?region=all&amp;sort=popular" class="link shrink-0 text-sm">더보기</a>
+      <a href="{% url 'products:list' %}?region=all&amp;sort=popular" class="link shrink-0 text-base">더보기</a>
     </div>
-    <ol class="product-grid">
-      {% for product in popular_products %}
+    <ol class="product-grid" start="6">
+      {% for product in rest %}
+        {% with rank=forloop.counter|add:5 %}
         <li class="relative">
           {% include "components/product_card.html" %}
-          <span class="products-rank{% if forloop.counter <= 3 %} products-rank-top{% endif %}" aria-label="{{ forloop.counter }}위">{{ forloop.counter }}</span>
+          <span class="home-rank{% if rank <= 3 %} home-rank-top{% endif %}" aria-label="{{ rank }}위">{{ rank }}</span>
         </li>
+        {% endwith %}
       {% endfor %}
     </ol>
+    </div>
   </section>
   {% endif %}
+  {% endwith %}
 
-  {# ───────── 판매 유도 배너 ───────── #}
-  <section class="card flex flex-col items-start gap-4 bg-neutral-50 p-6 sm:flex-row sm:items-center sm:justify-between md:p-8">
-    <div>
-      <p class="text-h3 text-neutral-900">안 쓰는 물건, 이웃에게 팔아 보세요</p>
-      <p class="mt-1 text-sm text-neutral-600">사진만 올리면 AI가 제목과 설명 초안을 만들어 드려요.</p>
+{# ───────── 판매 유도 (페이지의 단 하나뿐인 엠버 밴드) ───────── #}
+<section class="home-sell" aria-labelledby="home-sell-title">
+  <div class="container-page home-sell-inner">
+    <div class="min-w-0">
+      <h2 id="home-sell-title" class="home-sell-title break-words">안 쓰는 물건, 이웃에게 팔아 보세요</h2>
+      <p class="home-sell-line">사진만 올리면 AI가 제목과 설명 초안을 만들어 드려요.</p>
     </div>
-    <a href="{% url 'products:create' %}" class="btn btn-primary shrink-0">{% include "components/icon.html" with name="plus" %}내 물건 팔기</a>
-  </section>
-</div>
+    <a href="{% url 'products:create' %}" class="btn btn-lg home-sell-btn whitespace-nowrap">{% include "components/icon.html" with name="plus" %}내 물건 팔기</a>
+  </div>
+</section>
 {% endblock %}

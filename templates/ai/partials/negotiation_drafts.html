@@ -1,7 +1,7 @@
 {% load static poly_tags %}{% comment %}
-ai:negotiate 결과 — 판매자가 고를 수 있는 답장 초안 3개 (chat 메시지 아래 .chat-nego-result 안에 들어가요)
+ai:negotiate 결과: 판매자가 고를 수 있는 답장 초안 3개 (chat 메시지 아래 .chat-nego-result 안에 들어가요)
 컨텍스트: message · drafts [{tone, text, price}] · offered_price · cached
-초안을 누르면 채팅 입력창(#chat-input)에 들어가요 — 보내기는 판매자가 직접 (static/js/ai.js).
+초안을 누르면 채팅 입력창(#chat-input)에 들어가요. 보내기는 판매자가 직접 (static/js/ai.js).
 {% endcomment %}
 <div class="ai-result ai-drafts" data-ai-drafts>
   <div class="ai-card-header">
@@ -20,7 +20,7 @@ ai:negotiate 결과 — 판매자가 고를 수 있는 답장 초안 3개 (chat 
     {% endfor %}
   </ul>
   <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
-    <p class="text-[13px] text-neutral-500">누르면 입력창에 들어가요. 보내기 전에 다듬어 주세요.</p>
+    <p class="text-xs text-muted">누르면 입력창에 들어가요. 보내기 전에 다듬어 주세요.</p>
     <button type="button" class="btn btn-ghost btn-sm" hx-post="{% url 'ai:negotiate' message.pk %}" hx-vals='{"regenerate": "1"}'
             hx-target="closest .chat-nego-result" hx-swap="innerHTML" hx-disabled-elt="this">
       <span class="hide-on-request">{% include "components/icon.html" with name="refresh" class="h-4 w-4" %}</span>

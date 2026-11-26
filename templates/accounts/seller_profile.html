@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 {% load poly_tags %}
 {% comment "usage" %}
-판매자(공개) 프로필 (accounts:seller_profile) — 매너온도, 판매 상품, 받은 후기, 신고/차단
+판매자(공개) 프로필 (accounts:seller_profile): 매너온도, 판매 상품, 받은 후기, 신고/차단
 컨텍스트: seller · profile(없을 수 있음) · is_me · i_blocked · blocked · tabs · tab · page_obj · counts · summary
 {% endcomment %}
 {% block title %}{{ seller|display_name }}님의 프로필{% endblock %}
 
 {% block content %}
 <div class="container-page py-6 md:py-10">
-  {# ── 프로필 헤더 ── #}
-  <section class="card card-body md:p-6" aria-labelledby="seller-name">
-    <div class="flex items-start gap-4">
+  {# ── 프로필 헤더: 이름 줄 + 점수판(판매, 거래, 별점, 매너온도) ── #}
+  <section class="card acc-seller" aria-labelledby="seller-name">
+    <div class="acc-seller-top">
       {% include "components/avatar.html" with user=seller size="lg" %}
-      <div class="min-w-0 flex-1 pt-1">
-        <h1 id="seller-name" class="truncate text-h1 text-neutral-900">{{ seller|display_name }}</h1>
-        <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-neutral-500 sm:gap-x-1.5">
-          {% if profile.region %}<span class="inline-flex items-center gap-1">{% include "components/icon.html" with name="map-pin" class="h-3.5 w-3.5" %}{{ profile.region.name }}</span><span class="hidden sm:inline" aria-hidden="true">·</span>{% endif %}
-          <span>{{ seller.date_joined|date:"Y년 n월" }} 가입</span>
-        </p>
+      <div class="min-w-0 flex-1">
+        <h1 id="seller-name" class="page-title acc-name min-w-0 break-words">{{ seller|display_name }}</h1>
+        <ul class="acc-seller-meta">
+          {% if profile.region %}<li class="inline-flex items-center gap-1.5">{% include "components/icon.html" with name="map-pin" class="h-4 w-4 shrink-0 text-muted" %}<span>{{ profile.region.name }}</span></li>{% endif %}
+          <li>{{ seller.date_joined|date:"Y년 n월" }} 가입</li>
+        </ul>
       </div>
 
       {% if is_me %}
@@ -42,34 +42,34 @@
       {% endif %}
     </div>
 
-    {% if profile.bio %}<p class="mt-4 whitespace-pre-line break-words text-[15px] leading-6 text-neutral-700">{{ profile.bio }}</p>{% endif %}
+    {% if profile.bio %}<p class="acc-seller-bio">{{ profile.bio }}</p>{% endif %}
 
-    <div class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-stretch">
-      <dl class="grid grid-cols-3 gap-2">
-        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
-          <dt class="text-xs text-neutral-500">판매 상품</dt>
-          <dd class="mt-1 text-lg font-bold text-neutral-900 tabular">{{ counts.selling }}<span class="ml-0.5 text-[13px] font-medium text-neutral-500">개</span></dd>
+    <div class="acc-scoreline">
+      <dl class="acc-scoreline-stats">
+        <div class="acc-score">
+          <dt>판매 상품</dt>
+          <dd><span class="acc-score-num">{{ counts.selling }}</span><span class="acc-score-unit">개</span></dd>
         </div>
-        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
-          <dt class="text-xs text-neutral-500">거래완료</dt>
-          <dd class="mt-1 text-lg font-bold text-neutral-900 tabular">{{ counts.sold }}<span class="ml-0.5 text-[13px] font-medium text-neutral-500">회</span></dd>
+        <div class="acc-score">
+          <dt>거래완료</dt>
+          <dd><span class="acc-score-num">{{ counts.sold }}</span><span class="acc-score-unit">회</span></dd>
         </div>
-        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
-          <dt class="text-xs text-neutral-500">평균 별점</dt>
-          <dd class="mt-1 inline-flex items-center gap-0.5 text-lg font-bold text-neutral-900 tabular">
-            {% if summary.avg is not None %}{% include "components/icon.html" with name="star-fill" class="h-4 w-4 text-amber-400" %}{{ summary.avg|floatformat:1 }}{% else %}<span class="text-neutral-500">-</span>{% endif %}
+        <div class="acc-score">
+          <dt>평균 별점</dt>
+          <dd>
+            {% if summary.avg is not None %}{% include "components/icon.html" with name="star-fill" class="h-5 w-5 self-center text-accent-2" %}{% with v=summary.avg|floatformat:1 %}<span class="acc-score-num">{{ v|slice:":-2" }}<span class="figure-dot">.</span>{{ v|slice:"-1:" }}</span>{% endwith %}{% else %}<span class="acc-score-empty">-</span>{% endif %}
           </dd>
         </div>
       </dl>
-      <div class="flex items-center justify-between gap-4 rounded-md bg-neutral-50 px-4 py-3 sm:justify-center sm:px-5">
-        <p class="whitespace-nowrap text-xs text-neutral-500 sm:hidden">첫 온도 36.5°C</p>
-        {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
+      <div class="acc-scoreline-manner">
+        {% include "components/manner_temp.html" with temperature=profile.manner_temperature big=True %}
+        <p class="acc-manner-base">첫 온도 36.5°C</p>
       </div>
     </div>
 
     {% if summary.tags and not blocked and tab != "reviews" %}
-      <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="많이 받은 매너 평가">
-        {% for tag, n in summary.tags %}<li class="badge badge-neutral font-medium">{{ tag }} <span class="text-brand-700">{{ n }}</span></li>{% endfor %}
+      <ul class="acc-seller-tags" aria-label="많이 받은 매너 평가">
+        {% for tag, n in summary.tags %}<li class="badge badge-neutral">{{ tag }} <span class="text-accent-2 tabular">{{ n }}</span></li>{% endfor %}
       </ul>
     {% endif %}
   </section>

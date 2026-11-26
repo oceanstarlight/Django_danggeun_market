@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% comment "usage" %}
-알림 목록 (notifications:list) — 전체/안 읽음 탭 · 모두 읽음 · 페이지네이션
+알림 목록 (notifications:list): 전체/안 읽음 탭 · 모두 읽음 · 페이지네이션
 컨텍스트: page_obj(Notification 페이지) · counts({all, unread}) · current_filter("all" | "unread")
 {% endcomment %}
 {% block title %}알림{% endblock %}
@@ -8,10 +8,10 @@
 {% block content %}
 <div class="container-page py-6 md:py-10">
   <div class="mx-auto w-full max-w-2xl">
-    <div class="flex items-end justify-between gap-3">
-      <div>
+    <div class="flex flex-wrap items-end justify-between gap-x-3 gap-y-4">
+      <div class="min-w-0">
         <h1 class="page-title">알림</h1>
-        <p class="muted mt-1 text-[15px]">{% if counts.unread %}안 읽은 알림이 {{ counts.unread }}개 있어요.{% else %}새 알림을 모두 확인했어요.{% endif %}</p>
+        <p class="page-lede">{% if counts.unread %}안 읽은 알림이 {{ counts.unread }}개 있어요.{% else %}새 알림을 모두 확인했어요.{% endif %}</p>
       </div>
       {% if counts.unread %}
         <form method="post" action="{% url 'notifications:read_all' %}" class="shrink-0">
@@ -28,7 +28,7 @@
     </nav>
 
     {% if page_obj.object_list %}
-      <ul class="card mt-4 divide-y divide-neutral-200 overflow-hidden">
+      <ul class="notif-list mt-5">
         {% for n in page_obj %}<li>{% include "notifications/partials/item.html" with n=n %}</li>{% endfor %}
       </ul>
       {% include "components/pagination.html" with page_obj=page_obj %}

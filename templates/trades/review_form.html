@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load poly_tags %}
 {% comment "usage" %}
-거래 후기 작성 (trades:review_create) — 별점 + 매너 태그 + 내용
+거래 후기 작성 (trades:review_create): 별점 + 매너 태그 + 내용
 컨텍스트: product · form(ReviewForm) · reviewee(후기를 받는 사람) · reviewee_is_seller
 {% endcomment %}
 {% block title %}거래 후기 남기기{% endblock %}
@@ -10,7 +10,7 @@
 {% with name=reviewee|display_name %}
 <div class="container-page py-6 md:py-10">
   <div class="mx-auto w-full max-w-xl">
-    <a href="{% url 'products:detail' product.pk %}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900">
+    <a href="{% url 'products:detail' product.pk %}" class="page-back">
       {% include "components/icon.html" with name="chevron-left" class="h-4 w-4" %}상품으로 돌아가기
     </a>
 
@@ -18,7 +18,7 @@
       {% include "components/avatar.html" with user=reviewee size="lg" %}
       <div class="min-w-0">
         <h1 class="page-title">{{ name }}님과의 거래는 어땠나요?</h1>
-        <p class="muted mt-1 text-[15px]">{% if reviewee_is_seller %}판매자{% else %}구매자{% endif %}로 만난 이웃이에요. 솔직한 후기가 믿을 수 있는 동네를 만들어요.</p>
+        <p class="page-lede">{% if reviewee_is_seller %}판매자{% else %}구매자{% endif %}로 만난 이웃이에요. 솔직한 후기가 믿을 수 있는 동네를 만들어요.</p>
       </div>
     </div>
 
@@ -34,25 +34,25 @@
       {# 별점: DOM 은 5→1, CSS row-reverse 로 1→5 로 보여요 (선택한 별 왼쪽까지 채워짐) #}
       <fieldset class="card card-body text-center{% if form.rating.errors %} field-has-error{% endif %}">
         <legend class="sr-only">별점</legend>
-        <p class="text-h3 text-neutral-900" aria-hidden="true">별점을 남겨 주세요</p>
+        <p class="text-xl font-black text-ink" aria-hidden="true">별점을 남겨 주세요</p>
         <div class="trades-stars mt-3" data-rating-stars>
           {% for opt in form.rating_options %}
             <input type="radio" name="{{ form.rating.html_name }}" value="{{ opt.value }}" id="{{ opt.id }}" class="trades-star-input" data-caption="{{ opt.caption }}"{% if opt.checked %} checked{% endif %}>
             <label for="{{ opt.id }}" class="trades-star" title="{{ opt.label }}">
               {% include "components/icon.html" with name="star-fill" class="h-10 w-10" %}
-              <span class="sr-only">{{ opt.value }}점 · {{ opt.label }}</span>
+              <span class="sr-only">{{ opt.value }}점, {{ opt.label }}</span>
             </label>
           {% endfor %}
         </div>
-        <p class="mt-2 min-h-[20px] text-sm font-medium text-neutral-600" data-rating-caption aria-live="polite">별을 눌러 선택해 주세요</p>
+        <p class="trades-rating-caption" data-rating-caption aria-live="polite">별을 눌러 선택해 주세요</p>
         {% for error in form.rating.errors %}<p class="field-error justify-center" role="alert">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>{{ error }}</span></p>{% endfor %}
       </fieldset>
 
       {# 매너 태그 (여러 개 선택) #}
-      <div class="card card-body space-y-5">
+      <div class="card card-body">
         {% for field in form %}{% if field.name == "good_tags" or field.name == "bad_tags" %}
-          <fieldset class="{% if field.name == 'bad_tags' %}trades-tags-bad{% endif %}{% if field.errors %} field-has-error{% endif %}">
-            <legend class="label">{{ field.label }} <span class="font-normal text-neutral-500">(여러 개 선택할 수 있어요)</span></legend>
+          <fieldset class="trades-tag-group{% if field.name == 'bad_tags' %} trades-tags-bad{% endif %}{% if field.errors %} field-has-error{% endif %}">
+            <legend class="mb-3 text-base font-black text-ink">{{ field.label }} <span class="text-sm font-bold text-muted">(여러 개 선택할 수 있어요)</span></legend>
             <div class="flex flex-wrap gap-2">
               {% for choice in field %}
                 <label for="{{ choice.id_for_label }}" class="trades-tag">
@@ -90,7 +90,14 @@
     if (!box || !caption) return;
     function sync() {
       var checked = box.querySelector("input:checked");
-      if (checked) caption.textContent = checked.dataset.caption;
+      if (!checked) return;
+      // "최고예요 · 매너온도 +0.5°C" 를 가운뎃점 없이 두 조각으로 나눠 보여요
+      caption.textContent = "";
+      checked.dataset.caption.split(" · ").forEach(function (part) {
+        var span = document.createElement("span");
+        span.textContent = part;
+        caption.appendChild(span);
+      });
     }
     box.addEventListener("change", sync);
     sync();

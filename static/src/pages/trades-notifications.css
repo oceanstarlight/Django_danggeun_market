@@ -1,15 +1,59 @@
 /* === trades_notifications === */
 @layer components {
+  /* ── 거래완료: 구매자 고르기 (선택한 행은 엠버 커서 행) ── */
+  .trades-pick {
+    @apply overflow-hidden rounded-card bg-paper;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
+  .trades-pick > li + li { border-top: var(--rule-hair) solid var(--color-rule); }
+  .trades-buyer {
+    @apply flex cursor-pointer items-center gap-3 px-4 py-3.5 md:px-5;
+    transition: background-color var(--dur-micro) steps(1), color var(--dur-micro) steps(1);
+  }
+  .trades-buyer:hover { background: var(--color-paper-3); }
+  .trades-buyer:active { translate: 1px 0; }
+  .trades-buyer:has(:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+  .trades-buyer-name { @apply truncate text-base font-bold text-ink; }
+  .trades-buyer-meta { @apply mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted; }
+  .trades-buyer-quote { @apply mt-1 block truncate text-sm text-ink-2; }
+  .trades-buyer-mark { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-paper-3 text-muted; }
+  /* 커서 행: 엠버 채움 + 바닥색 글자, 안의 잉크도 모두 바닥색으로 */
+  .trades-buyer:has(:checked),
+  .trades-buyer:has(:checked):hover { background: var(--color-accent); color: var(--color-accent-ink); }
+  .trades-buyer:has(:checked) .trades-buyer-name,
+  .trades-buyer:has(:checked) .trades-buyer-meta,
+  .trades-buyer:has(:checked) .trades-buyer-quote,
+  .trades-buyer:has(:checked) .manner-value { color: var(--color-accent-ink); }
+  .trades-buyer:has(:checked) .trades-buyer-mark { background: var(--color-accent-ink); color: var(--color-accent); }
+  .trades-buyer:has(:checked) .radio { color: var(--color-accent-ink); border-color: var(--color-accent-ink); }
+
+  /* 채팅한 이웃 수: 알림 탭 숫자와 같은 대접 (ink-2, 굵게, 본문 크기) */
+  .trades-count { @apply text-base font-bold text-ink-2; font-variant-numeric: tabular-nums; }
+  /* 채팅한 이웃이 없을 때: 빈 상태를 낮게 눌러 '채팅 밖에서 거래했어요' 줄이 위로 오게 */
+  .trades-empty .empty-state { @apply px-4 py-5; }
+  .trades-empty .empty-state-mark { @apply mb-3 h-12 w-12; }
+  .trades-empty .empty-state-mark > .empty-state-art { @apply h-7 w-7; }
+  .trades-empty .empty-state-title { @apply text-base; }
+  .trades-empty .empty-state-desc { @apply mt-1 max-w-sm text-sm; }
+
+
+  /* 상품 요약 줄 */
+  .trades-summary-title { @apply truncate text-base font-bold text-ink-2; }
+  .trades-summary-price { @apply mt-1 block text-lg font-black text-ink; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+  /* ── 후기: 별점(애시드) · 매너 태그 칩 ── */
   /* 별점: DOM 순서 5→1 + row-reverse */
   .trades-stars { @apply inline-flex flex-row-reverse justify-center gap-1; }
   .trades-star-input { @apply sr-only; }
-  .trades-star { @apply inline-flex cursor-pointer rounded-sm p-0.5 text-rule; transition: color var(--dur-micro) steps(1); }
+  .trades-star { @apply inline-flex cursor-pointer rounded-sm p-0.5 text-muted; transition: color var(--dur-micro) steps(1); }
   .trades-star:active { translate: 1px 1px; }
   .trades-star-input:checked ~ .trades-star { color: var(--color-accent-2); }
-  .trades-stars:hover .trades-star { color: var(--color-rule); }
+  .trades-stars:hover .trades-star { color: var(--color-muted); }
   .trades-stars:hover .trades-star:hover,
   .trades-stars:hover .trades-star:hover ~ .trades-star { color: var(--color-accent-2); }
   .trades-star-input:focus-visible + .trades-star { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .trades-rating-caption { @apply mt-3 flex min-h-[26px] flex-wrap items-center justify-center gap-x-3 gap-y-1 text-base font-bold text-ink-2; }
+  .trades-rating-caption > span + span { @apply text-accent-2; }
 
   .trades-tag { @apply inline-flex; }
   .trades-tag-input { @apply sr-only; }
@@ -19,29 +63,52 @@
   .trades-tag-input:checked + .chip .trades-tag-check { @apply inline-block; }
   .trades-tags-bad .trades-tag-input:checked + .chip { background: var(--color-error); border-color: var(--color-ink); color: var(--color-accent-ink); }
   .trades-tag-input:focus-visible + .chip { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .trades-tag-input:disabled + .chip { opacity: 0.55; cursor: not-allowed; }
+  .trades-tag-group + .trades-tag-group { @apply mt-7; }
 
-  /* 알림 항목 (목록 페이지 · nav 드롭다운 공용) */
-  .notif-item { @apply relative flex items-start gap-3 px-4 py-4 md:px-5; transition: background-color var(--dur-micro) steps(1); }
-  .notif-item:hover { background: var(--color-paper-3); }
+  /* ── 알림 목록 (목록 페이지 · nav 드롭다운 공용) ── */
+  .notif-list {
+    @apply overflow-hidden rounded-card bg-paper;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
+  .notif-list > li + li { border-top: var(--rule-hair) solid var(--color-rule); }
+
+  .notif-item { @apply relative flex items-start gap-3 px-4 py-3.5 md:px-5; transition: background-color var(--dur-micro) steps(1); }
+  .notif-item:hover { background: var(--color-paper-2); }
   .notif-item:active { translate: 1px 0; }
   .notif-item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
-  .notif-item-unread { background: var(--color-paper-2); }
-  .notif-icon { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-paper-3 text-ink-2; }
+  /* 안 읽음: 바닥을 한 단계 더 올리고(paper-3), 읽은 줄은 글자를 한 톤 낮춰 둘이 갈리게 */
+  .notif-item-unread { background: var(--color-paper-3); }
+  .notif-item-unread:hover { background: color-mix(in oklab, var(--color-ink) 7%, var(--color-paper-3)); }
+  .notif-icon { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-paper-2 text-ink-2; }
+  .notif-item-unread .notif-icon { background: var(--color-paper); }
   .notif-icon > svg { @apply h-5 w-5; }
   .notif-icon-PRICE_CHANGE { color: var(--color-accent); }
   .notif-icon-NEW_MESSAGE { color: var(--color-accent-2); }
   .notif-icon-REVIEW { color: var(--color-accent-2); }
   .notif-icon-STATUS_CHANGE { color: var(--color-success); }
-  .notif-message { @apply line-clamp-2 text-base text-ink-2; }
+  .notif-message { @apply line-clamp-2 text-base font-normal text-ink-2; }
   .notif-item-unread .notif-message { @apply font-bold text-ink; }
-  .notif-meta { @apply mt-0.5 text-xs text-muted; }
-  .notif-unread-dot { @apply mt-2 h-2.5 w-2.5 shrink-0 rounded-sm; background: var(--color-accent); }
+  .notif-meta { @apply mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted; }
+  .notif-meta > :first-child { @apply font-bold; }
+  .notif-item-unread .notif-meta { @apply text-ink-2; }
+  /* 안 읽음 표시: 엠버 정사각(상태 표시, 장식 아님) */
+  .notif-unread-mark { @apply mt-2 h-2.5 w-2.5 shrink-0; background: var(--color-accent); }
 
   .notif-panel-header { @apply flex items-center justify-between gap-2 px-4 py-3; border-bottom: var(--rule-hair) solid var(--color-rule); }
+  .notif-panel-title { @apply flex items-center gap-2 text-base font-black text-ink; }
+  .notif-panel-count { @apply text-accent-2; font-variant-numeric: tabular-nums; }
   .notif-panel-list { @apply max-h-[min(26rem,60dvh)] overflow-y-auto overscroll-contain; }
   .notif-panel-list > * + * { border-top: var(--rule-hair) solid var(--color-rule); }
   .notif-panel-list .notif-item { @apply px-4 py-3; }
+  .notif-panel-empty { @apply flex flex-col items-center px-6 py-10 text-center; }
   .notif-panel-footer { @apply block px-4 py-3 text-center text-base font-bold text-accent-2; border-top: var(--rule-hair) solid var(--color-rule); transition: background-color var(--dur-micro) steps(1); }
   .notif-panel-footer:hover { background: var(--color-paper-3); }
+  .notif-panel-footer:active { translate: 0 1px; }
   .notif-panel-footer:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trades-buyer, .trades-star, .notif-item, .notif-panel-footer { transition: none; }
+  .trades-buyer:active, .trades-star:active, .notif-item:active, .notif-panel-footer:active { translate: none; }
 }

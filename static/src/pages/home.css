@@ -1,4 +1,232 @@
+/* Hallmark · page: / (home), under the system stamp on line 1 of static/src/input.css · genre: playful · theme: Arcade (ember/grille) · posture: full-palette · hero: Stage (/) · job: buy · redesign: full · signature: the five most wanted listings as a lit high-score board */
 /* === home === */
-/* 홈(/) 전용 보조 클래스 */
+/* 홈(/) 전용 보조 클래스. Stage 히어로(CRT 밴드 위 검색 + 인기 상품 점수판), 카테고리 메뉴판, 섹션 리듬, 엠버 밴드 하나 */
 @layer components {
+  /* ── 히어로: paper-2 CRT 밴드, 데스크톱에선 내비 아래 한 화면을 채운다 ── */
+  .home-hero {
+    @apply bg-paper-2;
+    border-bottom: var(--rule-bar) solid var(--color-rule);
+  }
+  .home-hero-inner {
+    display: grid;
+    align-content: center;
+    align-items: center;
+    row-gap: var(--space-xl);
+    padding-block: var(--space-xl) 56px;
+  }
+  @media (min-width: 1024px) {
+    .home-hero-inner {
+      min-height: min(100svh - var(--poly-nav-h), 680px);
+      padding-block: var(--space-xl);
+    }
+    .home-hero-staged {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+      column-gap: var(--space-2xl);
+    }
+    /* 두 열이 반반이면 검색창이 왼쪽 열을 끝까지 채워 점수판과 맞닿는 선을 만든다 */
+    .home-hero-staged :is(.home-search, .home-keys) { max-width: none; }
+  }
+  .home-hero-text { min-width: 0; }
+  .home-hero-title {
+    color: var(--color-ink);
+    font-size: clamp(2.25rem, 4.6vw + 0.5rem, 5.5rem);
+    line-height: 1.06;
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
+  .home-hero-lede {
+    @apply mt-5 text-lg text-ink-2;
+    line-height: 1.55;
+  }
+
+  /* 검색: 히어로의 주 동작. 입력창 + 엠버 누름면 */
+  .home-search { @apply mt-8 flex max-w-xl items-stretch gap-3; }
+  .home-search-field { @apply relative min-w-0 flex-1; }
+  .home-search-field > svg { @apply pointer-events-none absolute left-3.5 sm:left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted; }
+  .home-search-input {
+    appearance: none;
+    @apply h-[52px] w-full rounded-card bg-paper pl-11 pr-3 text-base text-ink shadow-none sm:pl-12 sm:pr-4 sm:text-lg;
+    border: var(--rule-bar) solid var(--color-ink-2);
+    transition: border-color var(--dur-micro) var(--ease-out);
+  }
+  .home-search-input:hover { border-color: var(--color-ink); }
+  .home-search-input:focus,
+  .home-search-input:focus-visible { border-color: var(--color-ink); outline: 2px solid var(--color-focus); outline-offset: 2px; box-shadow: none; }
+  .home-search-btn { @apply h-[52px] shrink-0 px-5 text-lg sm:px-6; }
+
+  .home-keys { @apply mt-6 flex max-w-xl flex-wrap items-center gap-2; }
+  .home-keys-label { @apply mr-1 text-sm font-bold text-muted; }
+  .home-region-chip { @apply ml-1; }
+
+  /* 점수판: 어두운 화면 우물, 행은 머리선으로, 첫 행은 엠버 커서 행 */
+  .home-board {
+    @apply min-w-0 rounded-card bg-paper;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
+  .home-board-head {
+    @apply flex items-center justify-between gap-4 px-5 py-4 md:px-6;
+    border-bottom: var(--rule-bar) solid var(--color-rule);
+  }
+  .home-board-title { @apply text-xl font-black text-ink; letter-spacing: -0.02em; }
+  .home-board-list > li + li { border-top: var(--rule-hair) solid var(--color-rule); }
+  .home-board-row {
+    @apply grid items-center gap-x-4 px-5 py-3 text-ink md:gap-x-5 md:px-6;
+    grid-template-columns: 2.25rem 3.5rem minmax(0, 1fr);
+    grid-template-areas: "rank thumb name" "rank thumb price";
+    row-gap: var(--space-3xs);
+    transition: background-color var(--dur-micro) steps(1), color var(--dur-micro) steps(1);
+  }
+  @media (min-width: 640px) {
+    .home-board-row { grid-template-columns: 2.25rem 3.5rem minmax(0, 1fr) auto; grid-template-areas: "rank thumb name price"; }
+  }
+  @media (min-width: 1024px) {
+    .home-board-row { grid-template-columns: 2.75rem 4rem minmax(0, 1fr) auto; min-height: 92px; }
+  }
+  .home-board-rank { grid-area: rank; }
+  .home-board-thumb { grid-area: thumb; }
+  .home-board-name { grid-area: name; }
+  .home-board-price { grid-area: price; }
+  .home-board-rank {
+    font-family: var(--font-outlier);
+    font-weight: 700;
+    font-size: 2.5rem;
+    line-height: 1;
+    color: var(--color-accent-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .home-board-thumb { @apply h-14 w-14 lg:h-16 lg:w-16; }
+  .home-board-name { @apply flex min-w-0 flex-col items-start gap-1.5; }
+  .home-board-item { @apply line-clamp-2 text-base font-bold leading-6 text-ink lg:text-lg; }
+  .home-board-price { @apply whitespace-nowrap text-lg font-black text-ink lg:text-2xl; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+  .home-board-row-lit,
+  .home-board-row:hover,
+  .home-board-row:focus-visible { background: var(--color-accent); }
+  .home-board-row-lit :is(.home-board-rank, .home-board-item, .home-board-price),
+  .home-board-row:hover :is(.home-board-rank, .home-board-item, .home-board-price),
+  .home-board-row:focus-visible :is(.home-board-rank, .home-board-item, .home-board-price) { color: var(--color-accent-ink); }
+  /* 커서는 하나: 다른 행을 가리키면 첫 행의 불이 꺼진다 */
+  .home-board-list:is(:hover, :focus-within) .home-board-row-lit:not(:hover):not(:focus-visible) { background: transparent; }
+  .home-board-list:is(:hover, :focus-within) .home-board-row-lit:not(:hover):not(:focus-visible) .home-board-rank { color: var(--color-accent-2); }
+  .home-board-list:is(:hover, :focus-within) .home-board-row-lit:not(:hover):not(:focus-visible) :is(.home-board-item, .home-board-price) { color: var(--color-ink); }
+  .home-board-row:focus-visible { outline: 2px solid var(--color-accent-2); outline-offset: -4px; }
+  .home-board-row:active { translate: 1px 1px; }
+
+  /* ── 섹션 리듬: 여백, 우물, 머리선, 밴드를 번갈아 ── */
+  /* 간격은 줄이고(상품이 빨리 오도록), 구분은 크기 대신 종류로: 우물, 레일, 머리선, 밴드 */
+  .home-section { padding-top: clamp(72px, 7.8vw, 112px); }
+  .home-section-first { padding-top: clamp(var(--space-2xl), 6.7vw, var(--space-3xl)); }
+  .home-section-ruled {
+    margin-top: clamp(var(--space-xl), 3.9vw, calc(var(--space-xl) + var(--space-md)));
+    padding-top: clamp(var(--space-xl), 3.9vw, calc(var(--space-xl) + var(--space-md)));
+    border-top: var(--rule-hair) solid var(--color-rule);
+  }
+  .home-section-wide { padding-top: clamp(80px, 8.9vw, 128px); }
+  .home-head { @apply mb-8 flex items-end justify-between gap-4 md:mb-10; }
+  .home-section-title {
+    @apply text-ink;
+    font-family: var(--font-body);
+    font-weight: 900;
+    font-size: clamp(1.75rem, 2vw + 0.875rem, 2.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    overflow-wrap: break-word;
+    min-width: 0;
+    text-wrap: balance;
+  }
+  .home-head-line { @apply mt-3 text-base text-ink-2; }
+
+  /* ── 카테고리: 이름만 쓰는 메뉴판. 칸 사이는 머리선, 가리키면 커서 행 ── */
+  .home-cat-grid {
+    @apply grid grid-cols-2 overflow-hidden rounded-card bg-paper-2 sm:grid-cols-3 lg:grid-cols-5;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
+  /* 2열에서 15칸이면 마지막 칸이 반쪽으로 남는다: 두 칸을 차지시킨다 */
+  @media (max-width: 639px) {
+    .home-cat-grid > li:last-child:nth-child(odd) { grid-column: span 2; }
+  }
+  .home-cat-grid > li {
+    min-width: 0;
+    box-shadow: var(--rule-hair) 0 0 0 var(--color-rule), 0 var(--rule-hair) 0 0 var(--color-rule);
+  }
+  .home-cat-item {
+    @apply flex h-16 items-center px-4 text-base font-bold text-ink md:h-[72px] md:px-6 md:text-lg;
+    word-break: keep-all;
+    transition: background-color var(--dur-micro) steps(1), color var(--dur-micro) steps(1);
+  }
+  .home-cat-item:hover { background: var(--color-accent); color: var(--color-accent-ink); }
+  .home-cat-item:active { translate: 1px 1px; }
+  .home-cat-item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -4px; }
+
+  /* ── 최근 본 상품 레일: 컨테이너 가장자리 너머로, 터치·키보드 스크롤 ── */
+  .home-rail { @apply -mx-4 flex scroll-px-4 gap-4 overflow-x-auto px-4 pb-3 md:mx-0 md:scroll-px-0 md:px-0; scroll-snap-type: x proximity; scrollbar-width: thin; }
+  .home-rail > li { @apply w-36 shrink-0 md:w-44; scroll-snap-align: start; }
+  .home-rail-item { @apply block rounded-card; }
+  .home-rail-item > img { transition: border-color var(--dur-micro) var(--ease-out); }
+  .home-rail-item:hover > img { border-color: var(--color-ink-2); }
+  .home-rail-item:active { translate: 1px 1px; }
+  .home-rail-item:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+  .home-rail-title { @apply mt-2 block truncate text-sm font-bold text-ink-2; }
+  .home-rail-item:hover .home-rail-title { @apply text-ink; }
+  .home-rail-price { @apply mt-0.5 block text-base font-black text-ink; font-variant-numeric: tabular-nums; }
+
+  /* ── 인기 순위 배지: 오른쪽 위(왼쪽 위는 상태 배지 자리), 사진과 함께 움직인다 ── */
+  /* 점수판의 순위 숫자가 그대로 이어진다: Silkscreen 40px, 종이 바탕에 2px 잉크 테. 1~3위 엠버, 그 아래는 애시드 */
+  .home-rank {
+    @apply pointer-events-none absolute right-2 top-2 inline-flex items-center justify-center rounded-sm;
+    min-width: 3.5rem;
+    height: 3.5rem;
+    padding-inline: var(--space-xs);
+    background: var(--color-paper);
+    color: var(--color-accent-2);
+    border: var(--rule-bar) solid var(--color-ink);
+    font-family: var(--font-outlier);
+    font-weight: 700;
+    font-size: 2.5rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: translate var(--dur-micro) var(--ease-out);
+  }
+  .home-rank-top { color: var(--color-accent); }
+  li:has(> .product-card:hover) > .home-rank { translate: -2px -2px; }
+  li:has(> .product-card:active) > .home-rank { translate: 1px 1px; }
+
+  /* ── 판매 유도: 페이지의 엠버 밴드 하나. RGB 분리 없음, 버튼은 엠버 위 보조 누름면 ── */
+  .home-sell {
+    margin-top: clamp(72px, 7.8vw, 112px);
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+    border-top: var(--rule-bar) solid var(--color-accent-ink);
+  }
+  /* 엠버 밴드가 페이지를 닫는다: 푸터의 윗여백을 지워 밴드가 푸터 머리선 위에 바로 앉게 */
+  main:has(> .home-sell:last-child) + .site-footer { margin-top: 0; }
+  .home-sell-inner { @apply flex flex-col items-start gap-8 py-16 md:flex-row md:items-center md:justify-between md:py-20; }
+  .home-sell-title {
+    color: var(--color-accent-ink);
+    font-family: var(--font-body);
+    font-weight: 900;
+    font-size: clamp(1.75rem, 2vw + 0.875rem, 2.75rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    overflow-wrap: break-word;
+    min-width: 0;
+    text-wrap: balance;
+  }
+  .home-sell-line { @apply mt-3 text-lg font-bold; color: var(--color-accent-ink); }
+  .home-sell-btn {
+    @apply shrink-0;
+    background: transparent;
+    color: var(--color-accent-ink);
+    border-color: var(--color-accent-ink);
+    box-shadow: 4px 4px 0 var(--color-accent-ink);
+  }
+  .home-sell-btn:hover { background: var(--color-accent-ink); color: var(--color-accent); translate: -1px -1px; box-shadow: 5px 5px 0 var(--color-accent-ink); }
+  .home-sell-btn:active { translate: 3px 3px; box-shadow: 1px 1px 0 var(--color-accent-ink); }
+  .home-sell-btn:focus-visible { outline: 2px solid var(--color-accent-ink); outline-offset: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-board-row, .home-cat-item, .home-rail-item > img, .home-rank, .home-search-input { transition: none; }
+  .home-board-row:active, .home-cat-item:active, .home-rail-item:active, .home-sell-btn:hover, .home-sell-btn:active,
+  li:has(> .product-card:hover) > .home-rank, li:has(> .product-card:active) > .home-rank { translate: none; }
 }

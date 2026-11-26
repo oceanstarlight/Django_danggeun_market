@@ -15,8 +15,11 @@
     </div>
     {% if e.fraud_warnings %}
       <div class="chat-warning" role="note">
-        {% include "components/icon.html" with name="alert" class="mt-0.5 h-3.5 w-3.5 shrink-0" %}
-        <p><strong class="font-semibold">사기 의심 신호가 있어요.</strong> {{ e.fraud_warnings|join:" · " }}</p>
+        {% include "components/icon.html" with name="alert" class="mt-0.5 h-4 w-4 shrink-0" %}
+        <div class="min-w-0">
+          <p><strong class="font-bold">사기 의심 신호가 있어요.</strong></p>
+          <ul class="chat-warning-list" role="list">{% for w in e.fraud_warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+        </div>
       </div>
     {% endif %}
     {% if e.show_negotiation %}

@@ -63,7 +63,7 @@
         </button>
 
         {% if user.is_authenticated %}
-          <a href="{% url 'products:create' %}" class="btn btn-primary btn-sm mr-1 hidden md:inline-flex">
+          <a href="{% url 'products:create' %}" class="btn btn-secondary btn-sm mr-1 hidden md:inline-flex">
             {% include "components/icon.html" with name="plus" %}글쓰기
           </a>
 
@@ -115,7 +115,7 @@
           </div>
         {% else %}
           <a href="{% url 'accounts:login' %}" class="btn btn-ghost btn-sm">로그인</a>
-          <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm">회원가입</a>
+          <a href="{% url 'accounts:signup' %}" class="btn btn-secondary btn-sm">회원가입</a>
         {% endif %}
       </div>
     </div>

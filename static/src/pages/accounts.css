@@ -1,4 +1,159 @@
+/* Hallmark · page: /accounts/ (login, signup, me, me/edit) and /users/<name>/, under the system stamp on line 1 of static/src/input.css · genre: playful · theme: Arcade (ember/grille) · scope: app · redesign: full · signature: the manner temperature as an acid Silkscreen score behind a 2px rule, one ember submit per auth well */
 /* === accounts === */
-/* 회원·마이페이지·판매자 프로필 전용 보조 클래스 */
+/* 회원(로그인, 가입), 마이페이지, 프로필 수정, 판매자 프로필 전용 보조 클래스. 토큰만 쓴다 */
 @layer components {
+  /* ── 로그인·가입: 우물 하나, 위는 CRT 머리띠, 아래는 폼 ── */
+  .acc-auth-well { @apply overflow-hidden; }
+  .acc-auth-head {
+    @apply px-5 pb-6 pt-6 md:px-8 md:pt-8;
+    border-bottom: var(--rule-bar) solid var(--color-rule);
+  }
+  .acc-auth-head .page-title { @apply mt-4; overflow-wrap: break-word; word-break: keep-all; text-wrap: balance; min-width: 0; }
+  .acc-auth-body { @apply px-5 py-6 md:px-8 md:py-8; }
+  .acc-mark { @apply inline-flex; }
+  .acc-mark > svg { @apply h-11 w-11; }
+
+  .acc-fieldset + .acc-fieldset { @apply mt-8 pt-8; border-top: var(--rule-hair) solid var(--color-rule); }
+  /* 떠 있는 legend 는 flex 항목이 되어 form-stack 의 간격을 그대로 받는다 */
+  .acc-legend { @apply text-lg font-black text-ink; letter-spacing: -0.02em; float: left; width: 100%; }
+
+  /* 입력칸 바닥: paper-2 우물 안에서는 한 단 어두운 paper 로 */
+  :is(.acc-auth-body, .acc-edit) :is(.input, .textarea, .select) { background-color: var(--color-paper); color: var(--color-ink); }
+  :is(.acc-auth-body, .acc-edit) .select:disabled { background-color: var(--color-paper-3); color: var(--color-muted); }
+  :is(.acc-auth-body, .acc-edit) :is(.checkbox, .radio) { background-color: var(--color-paper); color: var(--color-accent); }
+  :is(.acc-auth-body, .acc-edit) :is(.checkbox, .radio):checked { background-color: var(--color-accent); }
+
+  /* 중복 확인: 사용 가능 */
+  .acc-check-ok { @apply mt-2 flex items-start gap-1.5 text-sm font-bold text-success; }
+
+  /* ── 공통: 이름(화면의 한 줄 디스플레이) ── */
+  .acc-name { overflow-wrap: break-word; word-break: keep-all; min-width: 0; }
+
+  /* ── 마이페이지 프로필 우물 ── */
+  .acc-profile { @apply p-5 md:p-6; }
+  .acc-profile-head { @apply flex items-center gap-4; }
+  .acc-profile-bio { @apply mt-4 whitespace-pre-line break-words text-base text-ink-2; }
+
+  /* 매너온도: 점수판 숫자 + 막대 */
+  .acc-manner {
+    @apply mt-5 border-y py-4;
+    border-color: var(--color-rule);
+  }
+  .acc-manner-base { @apply mt-2 text-xs font-bold text-muted; }
+  .manner-big { @apply flex w-full min-w-0 items-stretch gap-2.5; }
+  .manner-big .manner-label { @apply self-start; }
+  .manner-figure { @apply inline-flex items-baseline gap-1.5; }
+  .manner-figure .figure { @apply text-5xl; }
+  .manner-figure .figure-unit { @apply text-xl; }
+  .manner-big .manner-track { background-color: var(--color-rule); }
+  /* 점수판 숫자의 소수점: Silkscreen 의 낮은 점 대신 본문 글꼴 700, 옆 여백 없이 */
+  .figure-dot { font-family: var(--font-body); font-weight: 700; letter-spacing: 0; margin-inline: -0.04em; }
+
+  /* 이 화면들의 글자 아바타: 정체성이지 행동이 아니므로 엠버 대신 paper-3 바탕 + 잉크 글자 */
+  :is(.acc-profile, .acc-seller, .acc-edit, .acc-review) .avatar { background: var(--color-paper-3); color: var(--color-ink); border-color: var(--color-rule); }
+
+  .acc-stats { @apply mt-4 grid grid-cols-3; }
+  .acc-stat { @apply min-w-0 px-2 text-center; }
+  .acc-stat + .acc-stat { border-left: var(--rule-hair) solid var(--color-rule); }
+  .acc-stat > dt { @apply text-sm font-bold text-muted; }
+  .acc-stat > dd { @apply mt-1 inline-flex items-baseline gap-1 text-2xl font-black text-ink; font-variant-numeric: tabular-nums; }
+  .acc-stat-sub { @apply inline-flex items-center gap-0.5 text-sm font-bold text-ink-2; }
+  .acc-profile-actions { @apply mt-5 grid grid-cols-2 gap-2; }
+
+  /* ── 판매자 프로필: 이름 줄 + 점수판 ── */
+  .acc-seller { @apply p-5 md:p-7; }
+  .acc-seller-top { @apply flex items-start gap-4 md:items-center md:gap-5; }
+  .acc-seller-meta { @apply mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold text-ink-2; }
+  .acc-seller-bio { @apply mt-5 max-w-[68ch] whitespace-pre-line break-words text-base text-ink-2; }
+
+  .acc-scoreline {
+    @apply mt-6 grid gap-0 sm:grid-cols-[minmax(0,1fr)_minmax(220px,300px)];
+    border-top: var(--rule-bar) solid var(--color-rule);
+  }
+  .acc-scoreline-stats { @apply grid; grid-template-columns: repeat(3, minmax(0, 11rem)); justify-content: start; }
+  .acc-score { @apply min-w-0 py-4 pr-3 sm:pr-5; }
+  .acc-score + .acc-score { @apply pl-3 sm:pl-5; border-left: var(--rule-hair) solid var(--color-rule); }
+  .acc-score > dt { @apply text-sm font-bold text-muted; }
+  .acc-score > dd { @apply mt-3 flex items-baseline gap-1.5 text-ink; }
+  /* 모바일은 본문 글꼴 굵게(30px), sm 부터 점수판 숫자(Silkscreen 40px, 잉크) */
+  .acc-score-num { @apply text-3xl font-black leading-none; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  @media (min-width: 640px) {
+    .acc-score-num { font-family: var(--font-outlier); font-weight: 700; font-size: 40px; letter-spacing: 0; }
+  }
+  .acc-score-unit { @apply text-sm font-bold text-ink-2; }
+  /* 값이 없을 때(별점 없음): 점수판 숫자 대신 본문 글꼴 */
+  .acc-score-empty { @apply text-lg font-bold leading-none text-muted; }
+  .acc-scoreline-manner {
+    @apply min-w-0 py-4 sm:pl-6;
+    border-top: var(--rule-hair) solid var(--color-rule);
+  }
+  @media (min-width: 640px) {
+    .acc-scoreline-manner { border-top: 0; border-left: var(--rule-bar) solid var(--color-rule); }
+  }
+  .acc-seller-tags { @apply mt-2 flex flex-wrap gap-1.5 pt-4; border-top: var(--rule-hair) solid var(--color-rule); }
+
+  /* ── 프로필 수정 ── */
+  .acc-back {
+    @apply -ml-1 inline-flex min-h-[44px] items-center gap-1 rounded-sm px-1 text-sm font-bold text-ink-2;
+    transition: color var(--dur-micro) var(--ease-out);
+  }
+  .acc-back:hover { color: var(--color-ink); }
+  .acc-back:active { color: var(--color-accent-2); }
+  .acc-back:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+  .acc-edit { @apply mt-6 p-5 md:p-7; }
+  .acc-avatar-field { @apply flex items-center gap-5; }
+  .acc-avatar-xl { @apply h-20 w-20 text-2xl; }
+  .acc-avatar-cam {
+    @apply absolute -bottom-2 -right-2 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-card bg-paper-3 text-ink;
+    border: var(--rule-bar) solid var(--color-ink);
+    box-shadow: 2px 2px 0 var(--color-accent-2);
+    transition: translate var(--dur-micro) var(--ease-out), box-shadow var(--dur-micro) var(--ease-out);
+  }
+  .acc-avatar-cam:hover { translate: -1px -1px; box-shadow: 3px 3px 0 var(--color-accent-2); }
+  .acc-avatar-cam:active { translate: 1px 1px; box-shadow: 1px 1px 0 var(--color-accent-2); }
+  /* 숨은 파일 입력에 키보드 포커스가 오면 '사진 선택' 라벨에 포커스 링 */
+  .acc-avatar-field:has([data-avatar-input]:focus-visible) .acc-avatar-pick { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+
+  .acc-account { @apply grid grid-cols-[88px_minmax(0,1fr)] gap-y-2.5 text-base; }
+  .acc-account > dt { @apply text-sm font-bold leading-[26px] text-muted; }
+  .acc-account > dd { @apply text-ink-2; }
+
+  /* ── 받은 후기 ── */
+  .acc-review-summary { @apply grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-6 p-5 md:p-6; }
+  .acc-review-score { @apply min-w-0; }
+  .acc-review-avg { @apply flex h-12 items-end; }
+  .acc-review-avg .figure { @apply text-5xl; }
+  .acc-review-count { @apply min-w-0 pl-6; border-left: var(--rule-hair) solid var(--color-rule); }
+  .acc-review-tags { @apply col-span-2 mt-5 pt-5; border-top: var(--rule-hair) solid var(--color-rule); }
+
+  .acc-review { @apply flex gap-3.5 py-5; }
+  .acc-review:first-child { @apply pt-1; }
+  .acc-review-avatar { @apply shrink-0 self-start rounded-card; }
+  .acc-review-avatar:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .acc-review-avatar .avatar { transition: border-color var(--dur-micro) var(--ease-out); }
+  .acc-review-avatar:hover .avatar { border-color: var(--color-accent-2); }
+  .acc-review-name {
+    @apply rounded-sm text-base font-black text-ink;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    transition: text-decoration-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+  }
+  .acc-review-name:hover { text-decoration-color: var(--color-accent-2); }
+  .acc-review-name:active { color: var(--color-accent-2); }
+  .acc-review-name:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .acc-review-product {
+    @apply mt-2.5 inline-flex min-h-[32px] max-w-full items-center gap-1.5 rounded-sm text-sm font-bold text-muted;
+    transition: color var(--dur-micro) var(--ease-out);
+  }
+  .acc-review-product:hover { color: var(--color-ink); }
+  .acc-review-product:active { color: var(--color-accent-2); }
+  .acc-review-product:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .acc-back, .acc-avatar-cam, .acc-review-avatar .avatar, .acc-review-name, .acc-review-product { transition: none; }
+    .acc-avatar-cam:hover, .acc-avatar-cam:active { translate: none; }
+  }
 }

@@ -41,10 +41,26 @@
   }
   .products-rank-top { background: var(--color-accent); color: var(--color-accent-ink); border-color: var(--color-accent-ink); }
 
-  /* 목록 필터 바 */
-  .products-filter { @apply flex flex-wrap items-center gap-2 pb-5; border-bottom: var(--rule-bar) solid var(--color-rule); }
+  /* 목록 머리: 제목 왼쪽, 지금 보는 동네·개수는 오른쪽(모바일은 아래) */
+  .products-list-head { @apply mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between md:gap-6; }
+  .products-list-head > .page-title { overflow-wrap: break-word; }
+  .products-list-scope { @apply flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-sm font-bold text-ink-2 md:justify-end; }
+  .products-list-region { @apply flex min-w-0 items-center gap-1.5; }
+  .products-list-region > svg { color: var(--color-accent-2); }
+  .products-list-mine { @apply shrink-0 rounded-sm px-1.5 py-0.5 text-xs font-bold; background: var(--color-paper-3); color: var(--color-ink); border: var(--rule-hair) solid var(--color-rule); }
+  .products-list-count { @apply shrink-0 text-muted; }
+  .products-list-count > strong { @apply font-black text-ink tabular-nums; }
+  @media (min-width: 768px) { .products-list-count { padding-left: var(--space-md); border-left: var(--rule-hair) solid var(--color-rule); } }
+
+  /* 목록 필터 바: 우물 한 단, 아래는 굵은 룰 */
+  .products-filter {
+    @apply flex flex-wrap items-center gap-2 rounded-card bg-paper-2 p-3;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
   .products-filter-select { @apply h-10 w-auto min-w-0 flex-1 text-sm sm:min-w-[140px] sm:flex-none; }
   .products-filter-chip { @apply h-10 max-w-full; }
+  .products-filter-check { @apply inline-flex h-10 cursor-pointer items-center gap-2 px-1 text-sm font-bold text-ink-2; }
+  .products-filter-check:hover { color: var(--color-ink); }
 
   /* 상세 갤러리: 모바일 스크롤 스냅 + 점, 데스크톱 화살표 + 썸네일 */
   .products-gallery { @apply relative overflow-hidden bg-paper-3 md:rounded-card; }
@@ -96,4 +112,112 @@
   .products-remove-overlay { @apply absolute inset-0 hidden items-center justify-center text-sm font-bold text-ink; background: var(--color-veil); }
   .peer:checked ~ .products-remove-overlay { @apply flex; }
   .peer:checked ~ .products-remove-btn { @apply hidden; }
+
+  /* 상품 카드 메타: 동네와 시간은 따로, 사이에 머리카락 룰 */
+  .product-card-where { @apply flex min-w-0 items-center gap-2; }
+  .product-card-where > time { @apply shrink-0; }
+  .product-card-where > span + time { padding-left: var(--space-xs); border-left: var(--rule-hair) solid var(--color-rule); }
+
+  /* 빈 상태: 아이콘 한 개를 우물 칸 안에 */
+  .empty-state-mark {
+    @apply mb-5 inline-flex h-20 w-20 items-center justify-center rounded-card bg-paper-2;
+    border: var(--rule-bar) solid var(--color-rule);
+  }
+  .empty-state-mark > .empty-state-art { @apply m-0 h-12 w-12; }
+
+  /* ── 상세 ── */
+  .products-crumbs { @apply mb-4 hidden items-center gap-1.5 text-sm font-bold text-muted md:flex; }
+  .products-crumbs > a { @apply rounded-sm; transition: color var(--dur-micro) var(--ease-out); }
+  .products-crumbs > a:hover { color: var(--color-ink); }
+  .products-crumbs > a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+  .products-buy-head { @apply flex flex-col gap-3 pb-6; border-bottom: var(--rule-bar) solid var(--color-rule); }
+  /* 상품 제목은 판매자가 쓴 글: 디스플레이 서체·대문자·RGB 분리 없이, 쓴 그대로 Chivo/Noto 900 */
+  .products-detail-title {
+    @apply text-[26px] leading-[1.12] text-ink md:text-[32px];
+    font-family: var(--font-body);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    text-transform: none;
+    text-shadow: none;
+    overflow-wrap: break-word;
+    min-width: 0;
+    word-break: keep-all;
+  }
+  .products-detail-title-long { @apply text-[22px] leading-[1.18] md:text-[26px]; }
+
+  /* 가로로 늘어놓는 메타: 점 대신 머리카락 룰 */
+  .products-meta { @apply flex flex-wrap items-center gap-y-1 text-sm font-bold text-muted; }
+  .products-meta > li { @apply whitespace-nowrap; }
+  .products-meta > li + li { margin-left: var(--space-sm); padding-left: var(--space-sm); border-left: var(--rule-hair) solid var(--color-rule); }
+  /* 줄바꿈되는 메타: 모든 항목 앞에 룰을 두고 바깥에서 잘라, 줄머리 룰이 허공을 가리키지 않게 */
+  .products-meta-clip { @apply min-w-0 overflow-hidden; }
+  .products-meta-clip > .products-meta { @apply gap-x-3; margin-left: calc(-1 * (var(--rule-hair) + var(--space-sm))); }
+  .products-meta-clip > .products-meta > li,
+  .products-meta-clip > .products-meta > li + li { margin-left: 0; padding-left: var(--space-sm); border-left: var(--rule-hair) solid var(--color-rule); }
+
+  /* 점수판 가격: Silkscreen 숫자(애시드) + 원 */
+  .products-price { @apply mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1; min-width: 0; }
+  .products-price-figure { font-size: 40px; line-height: 1; letter-spacing: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  /* 거래완료: 점수판 모양은 두고 애시드를 거둔다 */
+  .products-price-sold .products-price-figure,
+  .products-price-sold .products-price-free { color: var(--color-muted); text-decoration: line-through; text-decoration-thickness: 2px; }
+  .products-price-sold .products-price-unit { color: var(--color-muted); }
+  .products-price-unit { @apply text-2xl; }
+  .products-price-free {
+    font-family: var(--font-display);
+    font-size: 44px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-accent-2);
+  }
+  @media (min-width: 768px) {
+    .products-price-figure { font-size: 52px; }
+    .products-price-free { font-size: 56px; }
+    .products-price-unit { @apply text-3xl; }
+  }
+
+  .products-seller { @apply flex items-center gap-3 p-4; }
+  .products-seller:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+  .products-seller:active { translate: 1px 1px; box-shadow: none; }
+
+  .products-body { @apply pt-1; }
+  .products-stats { @apply mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-muted; }
+  .products-stats > li { @apply inline-flex items-center gap-1.5; }
+
+  .products-safety {
+    @apply flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-5 text-sm text-muted;
+    border-top: var(--rule-hair) solid var(--color-rule);
+  }
+  .products-report {
+    @apply inline-flex h-9 items-center gap-1.5 rounded-sm px-1 font-bold text-muted;
+    transition: color var(--dur-micro) var(--ease-out);
+  }
+  .products-report:hover { color: var(--color-error); }
+  .products-report:active { translate: 1px 1px; }
+  .products-report:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+
+  /* 판매자 관리의 삭제: 조용한 보조 버튼, 위험색은 손이 닿을 때만 */
+  .products-delete-btn:hover, .products-delete-btn:focus-visible { color: var(--color-error); border-color: var(--color-error); }
+
+  .products-related { @apply mt-14 pt-8; border-top: var(--rule-bar) solid var(--color-rule); }
+
+  /* ── 등록 폼 ── */
+  .products-form-head { @apply mb-8 flex items-start gap-2 pb-6; border-bottom: var(--rule-bar) solid var(--color-rule); }
+  .products-form-actions { @apply hidden items-center justify-end gap-3 pt-6 md:flex; border-top: var(--rule-bar) solid var(--color-rule); }
+
+  /* 검색어는 사람이 친 그대로: Bungee 는 대문자뿐이라 본문 서체로 */
+  .products-query { font-family: var(--font-body); font-weight: 900; letter-spacing: -0.02em; text-transform: none; text-shadow: none; }
+
+  /* ── 삭제 확인 ── */
+  .products-delete-item {
+    @apply my-6 flex items-center gap-3 py-4;
+    border-top: var(--rule-hair) solid var(--color-rule);
+    border-bottom: var(--rule-hair) solid var(--color-rule);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .products-crumbs > a, .products-report, .products-upload-tile, .products-gallery-nav, .products-gallery-thumb, .products-category-item { transition: none; }
+  .products-seller:active, .products-report:active, .products-category-item:active { translate: none; }
 }

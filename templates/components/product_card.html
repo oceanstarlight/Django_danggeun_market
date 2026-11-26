@@ -22,7 +22,7 @@
     <h3 class="product-card-title">{{ product.title }}</h3>
     <p class="product-card-price">{{ product.price|price }}</p>
     <div class="product-card-meta">
-      <span class="truncate">{% if product.region %}{{ product.region.dong }} · {% endif %}<time datetime="{{ product.created_at|date:'c' }}">{{ product.created_at|timeago }}</time></span>
+      <span class="product-card-where">{% if product.region %}<span class="truncate">{{ product.region.dong }}</span>{% endif %}<time datetime="{{ product.created_at|date:'c' }}">{{ product.created_at|timeago }}</time></span>
       {% with wishes=product.wish_count chats=product.chat_count %}
         {% if wishes or chats %}
           <span class="product-card-stats">

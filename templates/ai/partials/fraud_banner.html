@@ -5,7 +5,7 @@
 - 판매자/스태프에게는 '다시 분석하기' 버튼이 보여요 (ai:fraud_refresh, HTMX 없으면 일반 POST).
 {% endcomment %}<div id="fraud-banner">
 {% if analysis and analysis.is_warning %}
-  <div class="alert {% if analysis.risk_level == 'HIGH' %}alert-danger{% else %}alert-warning{% endif %} alert-accent" role="alert">
+  <div class="alert {% if analysis.risk_level == 'HIGH' %}alert-danger{% else %}alert-warning{% endif %}" role="alert">
     {% include "components/icon.html" with name="alert" %}
     <div class="min-w-0 flex-1">
       <p class="alert-title">
@@ -24,13 +24,23 @@
         {% if analysis.reasons %}
           <ul class="ai-reasons">{% for reason in analysis.reasons %}<li>{{ reason }}</li>{% endfor %}</ul>
         {% endif %}
-        {% if analysis.rule_hits %}
-          <p class="mt-2 text-[13px]"><span class="font-semibold">규칙 검사</span> · {{ analysis.rule_hits|join:" · " }}</p>
-        {% endif %}
-        <p class="mt-2 text-[12px] opacity-80">
-          위험 점수 {{ analysis.risk_score }}점 · {{ analysis.get_source_display }} 판단 · {{ analysis.analyzed_at|timeago }}
-          — 자동 판단이라 틀릴 수 있어요.
-        </p>
+        <dl class="ai-risk">
+          {% if analysis.rule_hits %}
+            <div class="ai-risk-row">
+              <dt>규칙 검사</dt>
+              <dd><ul class="ai-risk-hits">{% for hit in analysis.rule_hits %}{% if hit not in analysis.reasons %}<li>{{ hit }}</li>{% endif %}{% endfor %}</ul></dd>
+            </div>
+          {% endif %}
+          <div class="ai-risk-row">
+            <dt>위험 점수</dt>
+            <dd class="tabular">{{ analysis.risk_score }}점</dd>
+          </div>
+          <div class="ai-risk-row">
+            <dt>판단</dt>
+            <dd><span>{{ analysis.get_source_display }} 판단</span><time datetime="{{ analysis.analyzed_at|date:'c' }}" class="ml-2 text-ink-2">{{ analysis.analyzed_at|timeago }}</time></dd>
+          </div>
+        </dl>
+        <p class="ai-risk-note">자동 판단이라 틀릴 수 있어요.</p>
       </details>
 
       {% if request.user.is_staff or request.user.is_authenticated and request.user.pk == product.seller_id %}

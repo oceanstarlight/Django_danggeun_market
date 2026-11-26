@@ -15,6 +15,6 @@ JS: Poly.openModal("m1") / Poly.closeModal("m1")
       <h2 id="{{ id }}-title" class="modal-title">{{ title }}</h2>
       <button type="button" class="btn btn-ghost btn-icon btn-sm -mr-2" data-modal-close aria-label="닫기">{% include "components/icon.html" with name="x" %}</button>
     </div>
-    <div id="{{ id }}-body" class="modal-body">{% if body_template %}{% include body_template %}{% elif body %}<p class="text-[15px] leading-6 text-neutral-700">{{ body }}</p>{% endif %}</div>
+    <div id="{{ id }}-body" class="modal-body">{% if body_template %}{% include body_template %}{% elif body %}<p class="text-base text-ink-2">{{ body }}</p>{% endif %}</div>
   </div>
 </div>
