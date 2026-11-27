@@ -10,7 +10,7 @@
       {% include "components/status_badge.html" with status=product.status label=product.get_status_display %}
       <span class="truncate text-[15px] font-medium text-neutral-800">{{ product.title }}</span>
     </span>
-    <span class="mt-1 block text-base font-bold text-neutral-900 tabular">{{ product.price|price }}</span>
+    <span class="mt-1 block text-[15px] font-bold leading-5 text-neutral-900 tabular">{{ product.price|price }}</span>
   </span>
   {% include "components/icon.html" with name="chevron-right" class="h-5 w-5 shrink-0 text-neutral-400" %}
 </a>

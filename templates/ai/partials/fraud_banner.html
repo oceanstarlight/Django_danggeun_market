@@ -20,14 +20,14 @@
       {% endif %}
 
       <details class="ai-details">
-        <summary>왜 그렇게 판단했나요?</summary>
+        <summary>왜 그렇게 판단했나요?<svg class="ai-details-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"/></svg></summary>
         {% if analysis.reasons %}
           <ul class="ai-reasons">{% for reason in analysis.reasons %}<li>{{ reason }}</li>{% endfor %}</ul>
         {% endif %}
         {% if analysis.rule_hits %}
-          <p class="mt-2 text-[13px]"><span class="font-semibold">규칙 검사</span> · {{ analysis.rule_hits|join:" · " }}</p>
+          <p class="mt-2 text-[13px] leading-5"><span class="font-semibold">규칙 검사</span> · {{ analysis.rule_hits|join:" · " }}</p>
         {% endif %}
-        <p class="mt-2 text-[12px] opacity-80">
+        <p class="mt-2 text-[13px] leading-5">
           위험 점수 {{ analysis.risk_score }}점 · {{ analysis.get_source_display }} 판단 · {{ analysis.analyzed_at|timeago }}
           — 자동 판단이라 틀릴 수 있어요.
         </p>

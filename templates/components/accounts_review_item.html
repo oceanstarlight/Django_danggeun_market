@@ -4,12 +4,12 @@
 파라미터: review(Review; select_related("reviewer__profile", "product") 권장)
 {% endcomment %}{% load poly_tags %}
 <article class="flex gap-3 py-5 first:pt-1">
-  <a href="{% url 'accounts:seller_profile' review.reviewer.username %}" class="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500" aria-label="{{ review.reviewer|display_name }} 프로필">
+  <a href="{% url 'accounts:seller_profile' review.reviewer.username %}" class="shrink-0 rounded-full" aria-label="{{ review.reviewer|display_name }} 프로필">
     {% include "components/avatar.html" with user=review.reviewer size="md" %}
   </a>
   <div class="min-w-0 flex-1">
     <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-      <a href="{% url 'accounts:seller_profile' review.reviewer.username %}" class="text-[15px] font-semibold text-neutral-900 hover:underline">{{ review.reviewer|display_name }}</a>
+      <a href="{% url 'accounts:seller_profile' review.reviewer.username %}" class="rounded-xs text-[15px] font-semibold text-neutral-900 underline-offset-2 hover:underline">{{ review.reviewer|display_name }}</a>
       <span class="text-[13px] text-neutral-500"><time datetime="{{ review.created_at|date:'c' }}">{{ review.created_at|timeago }}</time></span>
     </div>
     <div class="mt-1 flex items-center gap-0.5" role="img" aria-label="별점 5점 만점에 {{ review.rating }}점">
@@ -21,7 +21,7 @@
       </ul>
     {% endif %}
     {% if review.content %}<p class="mt-2 whitespace-pre-line break-words text-[15px] leading-6 text-neutral-800">{{ review.content }}</p>{% endif %}
-    <a href="{% url 'products:detail' review.product_id %}" class="mt-2 inline-flex max-w-full items-center gap-1 text-[13px] text-neutral-500 hover:text-neutral-800">
+    <a href="{% url 'products:detail' review.product_id %}" class="mt-1 inline-flex min-h-8 max-w-full items-center gap-1 rounded-xs text-[13px] text-neutral-500 hover:text-neutral-800 coarse:min-h-11">
       {% include "components/icon.html" with name="tag" class="h-3.5 w-3.5 shrink-0" %}<span class="truncate">{{ review.product.title }}</span>
     </a>
   </div>

@@ -2,9 +2,10 @@
 차단/차단 해제 버튼 (HTMX: 자기 자신을 교체, JS 없으면 일반 POST 후 next 로 이동)
   {% include "moderation/partials/block_button.html" with target=other_user is_blocked=False next=request.get_full_path %}
 파라미터: target(User) · is_blocked(내가 차단 중인지) · next(선택) · class(버튼 추가 클래스, 선택)
+        · plain(True면 hx-* 없이 일반 POST 후 next 로 이동 — 차단 목록처럼 페이지를 새로 그려야 하는 곳)
 {% endcomment %}{% load poly_tags %}
-<form method="post" action="{% url 'moderation:block_toggle' target.username %}" class="inline-flex"
-      hx-post="{% url 'moderation:block_toggle' target.username %}" hx-target="this" hx-swap="outerHTML"{% if not is_blocked %} hx-confirm="{{ target|display_name }}님을 차단할까요? 서로의 상품과 채팅이 보이지 않게 돼요."{% endif %}>
+<form method="post" action="{% url 'moderation:block_toggle' target.username %}" class="inline-flex"{% if not plain %}
+      hx-post="{% url 'moderation:block_toggle' target.username %}" hx-target="this" hx-swap="outerHTML"{% endif %}{% if not is_blocked %} hx-confirm="{{ target|display_name }}님을 차단할까요? 서로의 상품과 채팅이 보이지 않게 돼요."{% endif %}>
   {% csrf_token %}
   {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
   {% if is_blocked %}

@@ -1,5 +1,6 @@
 /** 폴리마켓 Tailwind 설정 — 디자인 토큰은 design_brief 기준 */
 const defaultTheme = require("tailwindcss/defaultTheme");
+const plugin = require("tailwindcss/plugin");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -44,6 +45,8 @@ module.exports = {
           200: "#E7E5E4",
           300: "#D6D3D1",
           400: "#A8A29E",
+          // 입력창 · 셀렉트 · 체크박스 테두리 (흰 바탕 3.27:1, #FAFAF9 3.13:1 — WCAG 1.4.11)
+          450: "#948D87",
           500: "#78716C",
           600: "#57534E",
           700: "#44403C",
@@ -77,9 +80,11 @@ module.exports = {
         h1: ["24px", { lineHeight: "32px", letterSpacing: "-0.015em", fontWeight: "700" }],
         display: ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
       },
+      // xs 배지 · sm 입력창/작은 버튼/썸네일 · md 버튼/카드 이미지/알림 · lg 카드/모달
       borderRadius: {
-        sm: "6px",
-        md: "10px",
+        xs: "6px",
+        sm: "8px",
+        md: "12px",
         lg: "16px",
       },
       boxShadow: {
@@ -120,5 +125,9 @@ module.exports = {
       },
     },
   },
-  plugins: [require("@tailwindcss/forms")({ strategy: "class" })],
+  plugins: [
+    require("@tailwindcss/forms")({ strategy: "class" }),
+    // 터치 기기(손가락)에서만 44px 터치 영역: coarse:min-h-11 처럼 써요 (Tailwind 3.4에는 pointer 변형이 없어요)
+    plugin(({ addVariant }) => addVariant("coarse", "@media (pointer: coarse)")),
+  ],
 };

@@ -7,7 +7,7 @@
 
 {% block content %}
 <div class="container-page py-6 md:py-10">
-  <div class="mx-auto w-full max-w-2xl">
+  <div class="mx-auto w-full max-w-[720px]">
     <div class="flex items-end justify-between gap-3">
       <div>
         <h1 class="page-title">알림</h1>
@@ -17,7 +17,7 @@
         <form method="post" action="{% url 'notifications:read_all' %}" class="shrink-0">
           {% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
-          <button type="submit" class="btn btn-secondary btn-sm">{% include "components/icon.html" with name="check-double" %}모두 읽음</button>
+          <button type="submit" class="btn btn-ghost btn-sm -mr-2">{% include "components/icon.html" with name="check-double" %}모두 읽음</button>
         </form>
       {% endif %}
     </div>

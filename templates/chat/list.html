@@ -4,9 +4,9 @@
 
 {% block content %}
 <div class="container-page max-w-3xl py-6 md:py-8">
-  <div class="flex items-end justify-between gap-3">
+  <div class="flex items-baseline justify-between gap-3">
     <h1 class="page-title">채팅</h1>
-    {% if counts.unread %}<p class="text-sm text-neutral-500">안 읽은 대화 <strong class="font-semibold text-neutral-900 tabular-nums">{{ counts.unread }}</strong>개</p>{% endif %}
+    {% if counts.unread %}<p class="shrink-0 text-sm text-neutral-500">안 읽은 대화 <strong class="font-semibold text-neutral-900 tabular-nums">{{ counts.unread }}</strong>개</p>{% endif %}
   </div>
 
   <nav class="tab-list mt-4" aria-label="채팅 필터">

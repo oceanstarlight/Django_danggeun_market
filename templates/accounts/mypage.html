@@ -26,17 +26,18 @@
 
         {% if profile.bio %}<p class="mt-4 whitespace-pre-line break-words text-sm leading-6 text-neutral-700">{{ profile.bio }}</p>{% endif %}
 
-        <div class="mt-4 flex items-center justify-between gap-3 rounded-md bg-neutral-50 px-4 py-3">
-          <p class="whitespace-nowrap text-xs text-neutral-500">첫 온도 36.5°C</p>
-          {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
+        {# 매너온도 상자: 게이지는 어디서나 같은 크기(120/148px)로 왼쪽 정렬, 아래에 계산 규칙 설명 #}
+        <div class="mt-4 rounded-md bg-neutral-50 px-4 pb-1 pt-3.5 [&_.manner]:items-start [&_.manner_>span:first-child]:justify-start">
+          {% include "components/manner_temp.html" with temperature=profile.manner_temperature show_baseline=True %}
+          {% include "accounts/partials/manner_help.html" %}
         </div>
 
         <dl class="mt-4 grid grid-cols-3 divide-x divide-neutral-200 text-center">
-          <div><dt class="text-xs text-neutral-500">판매중</dt><dd class="mt-0.5 text-base font-bold text-neutral-900 tabular">{{ counts.selling }}</dd></div>
-          <div><dt class="text-xs text-neutral-500">거래완료</dt><dd class="mt-0.5 text-base font-bold text-neutral-900 tabular">{{ counts.sold }}</dd></div>
+          <div><dt class="text-xs text-neutral-500">판매중</dt><dd class="mt-0.5 text-[17px] font-bold leading-6 text-neutral-900 tabular">{{ counts.selling }}</dd></div>
+          <div><dt class="text-xs text-neutral-500">거래완료</dt><dd class="mt-0.5 text-[17px] font-bold leading-6 text-neutral-900 tabular">{{ counts.sold }}</dd></div>
           <div>
             <dt class="text-xs text-neutral-500">받은 후기</dt>
-            <dd class="mt-0.5 inline-flex items-center gap-0.5 text-base font-bold text-neutral-900 tabular">{{ counts.reviews }}{% if summary.avg is not None %}<span class="ml-1 inline-flex items-center text-xs font-semibold text-neutral-500">{% include "components/icon.html" with name="star-fill" class="h-3.5 w-3.5 text-amber-400" %}{{ summary.avg|floatformat:1 }}</span>{% endif %}</dd>
+            <dd class="mt-0.5 inline-flex items-center gap-0.5 text-[17px] font-bold leading-6 text-neutral-900 tabular">{{ counts.reviews }}{% if summary.avg is not None %}<span class="ml-1 inline-flex items-center text-xs font-semibold text-neutral-500">{% include "components/icon.html" with name="star-fill" class="h-3.5 w-3.5 text-amber-400" %}{{ summary.avg|floatformat:1 }}</span>{% endif %}</dd>
           </div>
         </dl>
 
@@ -48,14 +49,14 @@
 
       {# 바로가기 (모바일은 상단 프로필 메뉴에 같은 항목이 있어 숨김) #}
       <nav class="card hidden p-1.5 lg:block" aria-label="바로가기">
-        <a href="{% url 'products:create' %}" class="dropdown-item">{% include "components/icon.html" with name="plus" %}내 물건 팔기</a>
-        <a href="{% url 'chat:list' %}" class="dropdown-item">{% include "components/icon.html" with name="chat" %}채팅</a>
-        <a href="{% url 'notifications:list' %}" class="dropdown-item">{% include "components/icon.html" with name="bell" %}알림</a>
-        <a href="{% url 'moderation:block_list' %}" class="dropdown-item">{% include "components/icon.html" with name="ban" %}차단 목록</a>
+        <a href="{% url 'products:create' %}" class="dropdown-item h-11">{% include "components/icon.html" with name="plus" %}내 물건 팔기</a>
+        <a href="{% url 'chat:list' %}" class="dropdown-item h-11">{% include "components/icon.html" with name="chat" %}채팅</a>
+        <a href="{% url 'notifications:list' %}" class="dropdown-item h-11">{% include "components/icon.html" with name="bell" %}알림</a>
+        <a href="{% url 'moderation:block_list' %}" class="dropdown-item h-11">{% include "components/icon.html" with name="ban" %}차단 목록</a>
         <div class="dropdown-divider"></div>
         <form method="post" action="{% url 'accounts:logout' %}">
           {% csrf_token %}
-          <button type="submit" class="dropdown-item dropdown-item-danger">{% include "components/icon.html" with name="logout" %}로그아웃</button>
+          <button type="submit" class="dropdown-item dropdown-item-danger h-11">{% include "components/icon.html" with name="logout" %}로그아웃</button>
         </form>
       </nav>
     </aside>

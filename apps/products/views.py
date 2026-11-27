@@ -175,6 +175,9 @@ def product_list(request):
             ),
             "reset_url": reverse("products:list") + (f"?{urlencode(region_params)}" if region_params else ""),
             "has_filters": bool(params["q"] or category or params["status"] != "all" or params["sort"] != "latest"),
+            # 모바일 '필터' 패널(동네 3단 · 정렬)을 펼친 채로 그릴지: 기본값이 아닌 값이 들어 있으면 열어 둬요
+            # (시/도를 고르면 새로고침 뒤 바로 다음 단계를 고를 수 있게)
+            "filters_open": region_filter.value not in ("me", "all") or params["sort"] != "latest",
         }
     )
     return render(request, "products/product_list.html", context)

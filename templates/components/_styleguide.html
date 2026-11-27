@@ -47,6 +47,18 @@
       <span class="rounded-sm bg-info-soft px-2 py-1 text-info">info</span>
       <span class="rounded-sm bg-violet-50 px-2 py-1 text-violet-700">AI violet</span>
     </div>
+    <div class="grid gap-3 text-[13px] text-neutral-600 sm:grid-cols-3">
+      <div class="flex h-11 items-center rounded-sm border border-neutral-200 px-3">구분선 · 카드 #E7E5E4</div>
+      <div class="flex h-11 items-center rounded-sm border border-neutral-300 px-3">칩 · 보조 버튼 #D6D3D1</div>
+      <div class="flex h-11 items-center rounded-sm border border-neutral-450 px-3">입력칸 #948D87 (3.27:1)</div>
+    </div>
+    <div class="flex flex-wrap items-end gap-3 text-[12px] text-neutral-500">
+      <div class="text-center"><div class="h-12 w-12 rounded-xs bg-neutral-100 ring-1 ring-inset ring-black/5"></div><p class="mt-1">xs 6</p></div>
+      <div class="text-center"><div class="h-12 w-12 rounded-sm bg-neutral-100 ring-1 ring-inset ring-black/5"></div><p class="mt-1">sm 8</p></div>
+      <div class="text-center"><div class="h-12 w-12 rounded-md bg-neutral-100 ring-1 ring-inset ring-black/5"></div><p class="mt-1">md 12</p></div>
+      <div class="text-center"><div class="h-12 w-12 rounded-lg bg-neutral-100 ring-1 ring-inset ring-black/5"></div><p class="mt-1">lg 16</p></div>
+      <div class="text-center"><div class="h-12 w-12 rounded-full bg-neutral-100 ring-1 ring-inset ring-black/5"></div><p class="mt-1">full</p></div>
+    </div>
   </section>
 
   {# ───── 타이포 ───── #}
@@ -134,10 +146,11 @@
       {% include "components/status_badge.html" with status="RESERVED" label="예약중 (include)" %}
     </div>
     <div class="chip-row">
-      <a href="#" class="chip chip-active">전체</a>
+      <a href="#" class="chip" aria-current="true">전체</a>
       <a href="#" class="chip"><span aria-hidden="true">📱</span>디지털기기</a>
       <a href="#" class="chip"><span aria-hidden="true">🛋️</span>가구/인테리어</a>
       <a href="#" class="chip"><span aria-hidden="true">📚</span>도서</a>
+      <button type="button" class="chip" aria-pressed="true">{% include "components/icon.html" with name="check" %}거래 가능만</button>
       <button class="chip">{% include "components/icon.html" with name="filter" %}필터</button>
     </div>
     <div class="tab-list">
@@ -192,13 +205,64 @@
     </div>
   </section>
 
+  {# ───── 매너온도 (기준 36.5° 눈금 · 단계는 글자로) ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">매너온도</h2>
+    <div class="card card-body flex flex-wrap items-start gap-x-8 gap-y-6">
+      {% include "components/manner_temp.html" with temperature=20 %}
+      {% include "components/manner_temp.html" with temperature=36.5 %}
+      {% include "components/manner_temp.html" with temperature=41.2 %}
+      {% include "components/manner_temp.html" with temperature=50 %}
+      {% include "components/manner_temp.html" with temperature=70 show_baseline=True %}
+    </div>
+  </section>
+
+  {# ───── 고르는 줄 · 별점 · 매너 태그 (거래 · 신고) ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">고르는 줄 · 별점 · 매너 태그</h2>
+    <div class="grid gap-6 md:grid-cols-2">
+      <div class="grid gap-2">
+          <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-md border border-neutral-300 bg-white px-4 py-3 transition-colors duration-150 hover:border-neutral-400 hover:bg-neutral-50 has-[:checked]:border-brand-700 has-[:checked]:bg-brand-50 motion-reduce:transition-none">
+            <input type="radio" name="sg-row" class="radio" checked>
+            <span class="text-[15px] font-semibold text-neutral-900">사기 의심</span>
+          </label>
+          <label class="flex min-h-14 cursor-pointer items-center gap-3 rounded-md border border-neutral-300 bg-white px-4 py-3 transition-colors duration-150 hover:border-neutral-400 hover:bg-neutral-50 has-[:checked]:border-brand-700 has-[:checked]:bg-brand-50 motion-reduce:transition-none">
+            <input type="radio" name="sg-row" class="radio">
+            <span class="text-[15px] font-semibold text-neutral-900">채팅 밖에서 거래했어요</span>
+          </label>
+      </div>
+      <div class="card card-body text-center">
+        <div class="trades-stars">
+          {% for v in "54321" %}
+            <input type="radio" name="sg-star" value="{{ v }}" id="sg-star-{{ v }}" class="trades-star-input"{% if v == "4" %} checked{% endif %}>
+            <label for="sg-star-{{ v }}" class="trades-star">{% include "components/icon.html" with name="star-fill" class="h-9 w-9" %}<span class="sr-only">{{ v }}점</span></label>
+          {% endfor %}
+        </div>
+        <div class="mt-4 flex flex-wrap justify-center gap-2">
+          <label class="trades-tag"><input type="checkbox" class="trades-tag-input" checked><span class="chip">{% include "components/icon.html" with name="check" class="trades-tag-check h-4 w-4" stroke="2.25" %}시간 약속을 잘 지켜요</span></label>
+          <label class="trades-tag"><input type="checkbox" class="trades-tag-input"><span class="chip">{% include "components/icon.html" with name="check" class="trades-tag-check h-4 w-4" stroke="2.25" %}친절해요</span></label>
+          <span class="trades-tags-bad inline-flex"><label class="trades-tag"><input type="checkbox" class="trades-tag-input" checked><span class="chip">{% include "components/icon.html" with name="check" class="trades-tag-check h-4 w-4" stroke="2.25" %}약속을 안 지켰어요</span></label></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ───── 알림 목록 ───── #}
+  <section class="space-y-4">
+    <h2 class="section-title">알림 목록</h2>
+    <ul class="card max-w-[720px] divide-y divide-neutral-200 overflow-hidden">
+      <li><a href="#" class="notif-item notif-item-unread"><span class="notif-icon notif-icon-NEW_MESSAGE">{% include "components/icon.html" with name="chat" class="h-5 w-5" %}</span><span class="min-w-0 flex-1"><span class="notif-message">준호아빠님: 혹시 44만원에 네고 될까요?</span><span class="notif-meta block">새 메시지 · 7시간 전</span></span><span class="notif-unread-dot" aria-hidden="true"></span><span class="sr-only">안 읽음</span></a></li>
+      <li><a href="#" class="notif-item"><span class="notif-icon notif-icon-REVIEW">{% include "components/icon.html" with name="star-fill" class="h-5 w-5" %}</span><span class="min-w-0 flex-1"><span class="notif-message">서연이네책방님이 거래 후기를 남겼어요.</span><span class="notif-meta block">거래 후기 · 5일 전</span></span></a></li>
+    </ul>
+  </section>
+
   {# ───── 알림 상자 ───── #}
   <section class="space-y-3">
     <h2 class="section-title">알림 상자</h2>
     <div class="alert alert-info">{% include "components/icon.html" with name="info" %}<div><p class="alert-title">안전하게 거래해요</p><p>직거래는 사람이 많은 곳에서 해 주세요.</p></div></div>
     <div class="alert alert-success">{% include "components/icon.html" with name="check" %}<p>상품을 등록했어요.</p></div>
     <div class="alert alert-warning">{% include "components/icon.html" with name="alert" %}<p>사진을 1장 이상 올려 주세요.</p></div>
-    <div class="alert alert-danger alert-accent">{% include "components/icon.html" with name="alert" %}<div><p class="alert-title">의심 신호가 감지됐어요</p><p>선입금 요구나 외부 메신저 유도가 있는지 확인해 주세요.</p></div></div>
+    <div id="fraud-banner"><div class="alert alert-danger alert-accent">{% include "components/icon.html" with name="alert" %}<div class="min-w-0 flex-1"><p class="alert-title">의심 신호가 감지됐어요</p><p>선입금 요구나 외부 메신저 유도가 있는지 확인해 주세요.</p><details class="ai-details"><summary>왜 그렇게 판단했나요?</summary><ul class="ai-reasons"><li>입금을 먼저 요구하는 표현이 있어요</li></ul><p class="mt-2 text-[13px] leading-5">자동 판단이라 틀릴 수 있어요.</p></details></div></div></div>
   </section>
 
   {# ───── 스켈레톤 / AI 카드 ───── #}
@@ -220,6 +284,15 @@
           <button class="btn btn-ghost btn-sm">{% include "components/icon.html" with name="refresh" %}다시 생성</button>
           <button class="btn btn-ghost btn-sm">닫기</button>
         </div>
+      </div>
+      <article class="ai-result">
+        <div class="ai-card-header">{% include "components/icon.html" with name="sparkles" %}<span>AI가 작성한 초안이에요</span></div>
+        <p class="ai-result-label">제목</p>
+        <p class="text-[17px] font-semibold leading-6 text-neutral-900">아이패드 에어 5세대 64GB 팝니다</p>
+        <p class="help">AI가 만든 문장이라 사실과 다를 수 있어요.</p>
+      </article>
+      <div class="ai-drafts p-0">
+        <button type="button" class="ai-draft" aria-pressed="true"><span class="ai-draft-tone">부드럽게<span class="ai-draft-price">430,000원</span></span><span class="ai-draft-text">43만원까지 가능해요.</span></button>
       </div>
       <div class="ai-card" aria-busy="true">
         <div class="ai-card-header"><span class="spinner"></span>AI가 작성 중이에요</div>
@@ -258,7 +331,7 @@
   </section>
 
   {# ───── 빈 상태 / 페이지네이션 / 아이콘 ───── #}
-  <section class="grid gap-6 md:grid-cols-2">
+  <section class="grid grid-cols-1 gap-6 md:grid-cols-2">
     <div class="card">
       {% include "components/empty_state.html" with title="아직 찜한 상품이 없어요" description="마음에 드는 상품의 하트를 눌러 모아 보세요." cta_url="#" cta_label="상품 둘러보기" %}
     </div>
@@ -305,7 +378,7 @@
         {% include "components/icon.html" with name="tag" class="h-6 w-6" label="tag" %}
         {% include "components/icon.html" with name="external" class="h-6 w-6" label="external" %}
       </div>
-      <nav class="pagination mt-8" aria-label="페이지네이션 예시">
+      <nav class="pagination mt-8 flex-wrap" aria-label="페이지네이션 예시">
         <span class="page-link" aria-disabled="true">{% include "components/icon.html" with name="chevron-left" %}</span>
         <span class="page-link" aria-current="page">1</span><a href="#" class="page-link">2</a><a href="#" class="page-link">3</a>
         <span class="page-link" aria-hidden="true">…</span><a href="#" class="page-link">12</a>
@@ -318,6 +391,6 @@
 
 {% block bottom_cta %}<div class="bottom-cta-inner">
   <button type="button" class="btn btn-ghost btn-icon" aria-label="찜하기">{% include "components/icon.html" with name="heart" %}</button>
-  <div class="min-w-0 flex-1 border-l border-neutral-200 pl-3"><p class="price text-lg">15,000원</p><p class="text-xs text-brand-700">가격 제안 가능</p></div>
+  <div class="min-w-0 flex-1 border-l border-neutral-200 pl-3"><p class="price text-lg">15,000원</p><p class="text-xs leading-4 text-neutral-500">가격 제안 가능</p></div>
   <button type="button" class="btn btn-primary btn-lg">채팅하기</button>
 </div>{% endblock %}

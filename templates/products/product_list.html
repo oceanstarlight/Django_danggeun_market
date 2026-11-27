@@ -15,7 +15,7 @@
       <p class="text-[13px] font-medium text-neutral-500" id="products-region-label">
         <span class="sr-only">동네: </span>{% if region_value == "me" %}내 동네 · {% endif %}{{ region_filter.label }}
       </p>
-      <h1 class="page-title mt-0.5 truncate">
+      <h1 class="page-title mt-0.5 truncate md:text-[28px] md:leading-9">
         {% if q %}‘{{ q }}’ 검색 결과{% elif current_category %}<span aria-hidden="true">{{ current_category.icon }}</span> {{ current_category.name }}{% else %}중고거래{% endif %}
       </h1>
     </div>
@@ -44,30 +44,52 @@
       <input type="search" name="q" value="{{ q }}" class="input pl-10" placeholder="검색어를 입력해 주세요" aria-label="검색어" enterkeyhint="search" data-no-autosubmit>
     </div>
 
-    {# 동네: '내 동네' 바로가기 + 시/도 → 시/군/구 → 읍/면/동 (어느 단계에서 멈춰도 그 범위 전체로 걸러요) #}
+    {# 동네: '내 동네' 바로가기 (3단 선택은 아래 '필터' 패널 안에 있어요). sm 미만은 한 줄에 맞게 동 이름만 보여요 (핀 아이콘 · 선택 상태가 '내 동네'를 대신) #}
     {% if my_region %}
       {% querystring region="me" sido="" sigungu="" page="" as my_region_url %}
       <a href="{{ my_region_url }}" class="chip products-filter-chip{% if region_value == 'me' %} chip-active{% endif %}"{% if region_value == 'me' %} aria-current="true"{% endif %}>
-        {% include "components/icon.html" with name="map-pin" %}<span class="truncate">내 동네 · {{ my_region.dong }}</span>
+        {% include "components/icon.html" with name="map-pin" %}<span class="truncate sm:hidden"><span class="sr-only">내 동네 </span>{{ my_region.dong }}</span><span class="hidden truncate sm:inline">내 동네 · {{ my_region.dong }}</span>
       </a>
     {% endif %}
-    {% include "components/region_select.html" with region_select=region_select %}
 
-    <label class="sr-only" for="filter-sort">정렬</label>
-    <select id="filter-sort" name="sort" class="select products-filter-select">
-      {% for value, label in sort_choices %}
-        <option value="{{ value }}"{% if sort_value == value %} selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-
-    <label class="inline-flex h-10 cursor-pointer items-center gap-2 text-sm font-medium text-neutral-700">
-      <input type="checkbox" name="status" value="selling" class="checkbox"{% if status_value == "selling" %} checked{% endif %}>
-      거래 가능만 보기
+    {# 거래 가능만: 같은 체크박스(name=status value=selling)를 칩 모양 라벨로. 체크하면 칩이 선택 상태 + 체크 표시 #}
+    <label class="chip products-filter-chip">
+      <input type="checkbox" name="status" value="selling" class="sr-only"{% if status_value == "selling" %} checked{% endif %}>
+      {% include "components/icon.html" with name="check" class="hidden h-4 w-4" stroke="2.25" %}거래 가능만<span class="hidden sm:inline"> 보기</span>
     </label>
+
+    {# 모바일 전용 '필터' 토글: 동네 3단 · 정렬을 접었다 펼쳐요 (md 이상은 항상 펼침). 숫자 = 기본값이 아닌 접힌 조건 수 #}
+    <button type="button" class="chip products-filter-chip" data-toggle="#products-filter-more" aria-controls="products-filter-more" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}"
+            aria-label="필터{% if region_value != 'me' and region_value != 'all' %}, {{ region_filter.label }} 적용됨{% endif %}{% if sort_value != 'latest' %}{% for value, label in sort_choices %}{% if value == sort_value %}, {{ label }} 적용됨{% endif %}{% endfor %}{% endif %}">
+      {% include "components/icon.html" with name="filter" %}필터
+      {% if region_value != "me" and region_value != "all" %}
+        <span class="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-100 px-1 text-xs font-bold leading-none text-brand-800 tabular-nums" aria-hidden="true">{% if sort_value != "latest" %}2{% else %}1{% endif %}</span>
+      {% elif sort_value != "latest" %}
+        <span class="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-100 px-1 text-xs font-bold leading-none text-brand-800 tabular-nums" aria-hidden="true">1</span>
+      {% endif %}
+    </button>
+
+    {# 모바일 '초기화': 같은 줄에 아이콘만 (md 이상은 아래 글자 버튼) #}
+    {% if has_filters %}
+      <a href="{{ reset_url }}" class="chip products-filter-chip products-filter-reset md:hidden" aria-label="필터 초기화" title="필터 초기화">{% include "components/icon.html" with name="refresh" %}</a>
+    {% endif %}
+
+    {# 접히는 패널: 동네 3단 선택 + 정렬 (숨겨져도 값은 함께 전송돼요) #}
+    <div id="products-filter-more" class="flex w-full flex-wrap items-center gap-2 md:w-auto"{% if not filters_open %} hidden{% endif %}>
+      {% include "components/region_select.html" with region_select=region_select %}
+
+      <label class="sr-only" for="filter-sort">정렬</label>
+      <select id="filter-sort" name="sort" class="select products-filter-select">
+        {% for value, label in sort_choices %}
+          <option value="{{ value }}"{% if sort_value == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <noscript><style>#products-filter-more[hidden] { display: flex !important; } [data-toggle="#products-filter-more"] { display: none !important; }</style></noscript>
 
     <noscript><button type="submit" class="btn btn-secondary btn-sm">적용</button></noscript>
     {% if has_filters %}
-      <a href="{{ reset_url }}" class="btn btn-ghost btn-sm ml-auto">{% include "components/icon.html" with name="refresh" %}초기화</a>
+      <a href="{{ reset_url }}" class="btn btn-ghost btn-sm ml-auto hidden md:inline-flex">{% include "components/icon.html" with name="refresh" %}초기화</a>
     {% endif %}
   </form>
 
@@ -141,10 +163,27 @@
     var focusId = null;
     try { focusId = sessionStorage.getItem(FOCUS_KEY); sessionStorage.removeItem(FOCUS_KEY); } catch (err) { focusId = null; }
     var target = focusId && document.getElementById(focusId);
-    if (target && !target.disabled) target.focus();
+    if (target && !target.disabled) {
+      // 접힌 '필터' 패널 안이면 먼저 펼쳐요 (모바일)
+      var morePanel = target.closest("#products-filter-more[hidden]");
+      if (morePanel) {
+        morePanel.hidden = false;
+        var moreToggle = document.querySelector('[data-toggle="#products-filter-more"]');
+        if (moreToggle) moreToggle.setAttribute("aria-expanded", "true");
+      }
+      target.focus();
+    }
 
     // 뒤로/앞으로 가기: bfcache 로 살아난 페이지는 떠날 때의 select 상태(아래 단계가 비워진 채 등)를 들고 있어서,
     // 처음 서버가 그린 select 와 폼 값으로 되돌린다
+    // '필터' 패널은 토글로 펼칠 때만 150ms 페이드 (서버가 펼친 채 그린 새로고침에선 깜박이지 않게)
+    var moreToggleBtn = document.querySelector('[data-toggle="#products-filter-more"]');
+    var morePanelEl = document.getElementById("products-filter-more");
+    if (moreToggleBtn && morePanelEl) {
+      moreToggleBtn.addEventListener("click", function () { morePanelEl.classList.add("is-opening"); });
+      morePanelEl.addEventListener("animationend", function () { morePanelEl.classList.remove("is-opening"); });
+    }
+
     var filterForm = document.querySelector("form[data-products-autosubmit]");
     var regionRoot = filterForm && filterForm.querySelector("[data-region-select]");
     var initialRegionHtml = regionRoot ? regionRoot.innerHTML : null;

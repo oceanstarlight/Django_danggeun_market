@@ -7,7 +7,7 @@
 {% endcomment %}{% if field.is_hidden %}{{ field }}{% else %}{% with wt=field.widget_type %}
 <div class="field{% if field.errors %} field-has-error{% endif %}{% if class %} {{ class }}{% endif %}">
   {% if wt == "checkbox" %}
-    <label for="{{ field.id_for_label }}" class="inline-flex cursor-pointer items-center gap-2.5 text-[15px] font-medium text-neutral-800">
+    <label for="{{ field.id_for_label }}" class="inline-flex min-h-11 cursor-pointer items-center gap-2.5 text-[15px] font-medium text-neutral-800">
       {{ field }}<span>{{ field.label }}</span>
     </label>
   {% elif wt == "regionselect" %}

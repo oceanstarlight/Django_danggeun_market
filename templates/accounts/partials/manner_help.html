@@ -1,0 +1,11 @@
+{% comment "usage" %}
+매너온도 설명 (마이페이지 · 판매자 프로필의 매너온도 상자 안, 게이지 아래)
+  {% include "accounts/partials/manner_help.html" %}
+문구는 apps/trades/services.py 의 RATING_DELTA(5:+0.5 · 4:+0.2 · 3:0 · 2:-0.3 · 1:-0.6)와 0~99 범위에 맞춰요. 규칙이 바뀌면 같이 고쳐 주세요.
+{% endcomment %}<details class="group mt-3 border-t border-neutral-200">
+  <summary class="-mx-1 flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-sm px-1 text-[13px] font-medium leading-[18px] text-brand-700 hover:text-brand-800 hover:underline underline-offset-2 [&::-webkit-details-marker]:hidden">
+    <span>매너온도는 어떻게 정해지나요?</span>
+    {% include "components/icon.html" with name="chevron-right" class="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-90" %}
+  </summary>
+  <p class="pb-2 pt-0.5 text-[13px] leading-5 text-neutral-600">모든 이웃은 36.5°C에서 시작해요. 거래를 마친 상대가 남긴 별점이 4~5점이면 오르고, 1~2점이면 내려가요. 3점이면 그대로예요.</p>
+</details>

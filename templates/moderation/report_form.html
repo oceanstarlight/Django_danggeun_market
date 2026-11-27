@@ -8,7 +8,7 @@
 {% block content %}
 <div class="container-page py-6 md:py-10">
   <div class="mx-auto w-full max-w-lg">
-    <a href="{{ back_url }}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900">
+    <a href="{{ back_url }}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900 coarse:min-h-11">
       {% include "components/icon.html" with name="chevron-left" class="h-4 w-4" %}돌아가기
     </a>
     <h1 class="page-title mt-2">{% if product %}상품 신고하기{% else %}사용자 신고하기{% endif %}</h1>

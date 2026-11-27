@@ -18,7 +18,7 @@
   {# ───── 상단: 상대 정보 + 메뉴 ───── #}
   <header class="chat-header">
     <a href="{% url 'chat:list' %}" class="btn btn-ghost btn-icon shrink-0" aria-label="채팅 목록으로">{% include "components/icon.html" with name="arrow-left" %}</a>
-    <a href="{% url 'accounts:seller_profile' partner.username %}" class="flex min-w-0 flex-1 items-center gap-2.5 rounded-md">
+    <a href="{% url 'accounts:seller_profile' partner.username %}" class="flex min-w-0 flex-1 items-center gap-2.5 rounded-md coarse:min-h-11">
       {% include "components/avatar.html" with user=partner size="sm" %}
       <span class="min-w-0">
         <span class="flex items-center gap-1.5">

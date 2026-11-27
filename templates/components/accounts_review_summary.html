@@ -20,7 +20,7 @@
     <div class="mt-4 border-t border-neutral-200 pt-4">
       <p class="mb-2 text-[13px] font-semibold text-neutral-700">많이 받은 매너 평가</p>
       <ul class="flex flex-wrap gap-1.5">
-        {% for tag, n in summary.tags %}<li class="badge bg-white font-medium text-neutral-700 ring-1 ring-inset ring-neutral-200">{{ tag }} <span class="text-brand-700">{{ n }}</span></li>{% endfor %}
+        {% for tag, n in summary.tags %}<li class="badge bg-white font-medium text-neutral-700 ring-1 ring-inset ring-neutral-200">{{ tag }} <span class="text-neutral-900 tabular">{{ n }}</span></li>{% endfor %}
       </ul>
     </div>
   {% endif %}
