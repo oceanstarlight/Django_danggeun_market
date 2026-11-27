@@ -468,7 +468,7 @@
   .empty-state { @apply flex flex-col items-center px-6 py-14 text-center; }
   .empty-state-art { @apply mb-5 h-24 w-24; }
   .empty-state-title { @apply text-h3 text-neutral-900; }
-  .empty-state-desc { @apply mt-1.5 max-w-xs text-sm leading-[22px] text-neutral-500; }
+  .empty-state-desc { @apply mt-1.5 max-w-xs text-sm leading-[22px] text-neutral-500; text-wrap: balance; }
 
   /* ── 매너온도 (기준 36.5° 눈금이 있는 게이지; 색은 틸 하나, 단계는 글자로) ── */
   .manner { @apply inline-flex w-[120px] shrink-0 flex-col items-end gap-1.5 sm:w-[148px]; }
@@ -491,7 +491,7 @@
   .bubble-me { @apply rounded-[18px] rounded-br-[4px] bg-brand-700 text-white; }
   /* 상대 말풍선: #FAFAF9 대화창 위에서 묻히지 않게 흰 바탕 + 1px 테두리 */
   .bubble-other { @apply rounded-[18px] rounded-bl-[4px] bg-white text-neutral-900 ring-1 ring-inset ring-neutral-200; }
-  .bubble-meta { @apply shrink-0 text-[11px] leading-4 text-neutral-500; }
+  .bubble-meta { @apply shrink-0 text-xs leading-4 text-neutral-500; }
 
   /* 썸네일 (보조) */
   .thumb { @apply aspect-square shrink-0 rounded-sm bg-neutral-100 object-cover ring-1 ring-inset ring-black/5; }
@@ -511,7 +511,7 @@
   .preview-grid { @apply grid grid-cols-4 gap-2 sm:grid-cols-5; }
   .preview-item { @apply relative overflow-hidden rounded-sm; }
   .preview-item > img { @apply thumb w-full; }
-  .preview-item-badge { @apply absolute bottom-1 left-1 rounded-xs bg-neutral-900/75 px-1.5 py-0.5 text-[11px] font-semibold text-white; }
+  .preview-item-badge { @apply absolute bottom-1 left-1 rounded-xs bg-neutral-900/75 px-1.5 py-0.5 text-xs leading-4 font-semibold text-white; }
 }
 
 /* ───────────────────────── 유틸리티 보강 ───────────────────────── */
@@ -571,83 +571,138 @@
   .products-hero { @apply border-b border-neutral-200 bg-gradient-to-b from-brand-50 to-white; }
   .products-hero-search { @apply relative max-w-xl; }
   .products-hero-search > svg { @apply pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-500; }
+  /* 56px 검색창: 다른 입력칸과 같은 3:1 테두리(#948D87) · #78716C placeholder */
   .products-hero-input {
-    @apply h-14 w-full rounded-full border border-neutral-300 bg-white pl-12 pr-24 text-base text-neutral-900 shadow-sm placeholder:text-neutral-400;
+    @apply h-14 w-full rounded-full border border-neutral-450 bg-white pl-12 pr-24 text-base text-neutral-900 shadow-sm placeholder:text-neutral-500 hover:border-neutral-600;
+    transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
   }
-  .products-hero-input:focus { @apply border-brand-600 outline-none ring-[3px] ring-brand-500/20; }
+  /* 포커스: 틸 테두리 + 2px outline(offset 0, forced-colors 대응) + 옅은 3px 링(장식) */
+  .products-hero-input:focus {
+    @apply border-brand-700 ring-[3px] ring-brand-700/[.18] ring-offset-0;
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 0;
+  }
   .products-hero-search .btn { @apply rounded-full; }
 
-  /* 카테고리 그리드 */
-  .products-category-grid { @apply grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-5 md:grid-cols-8; }
+  /* 카테고리: 모바일(sm 미만)은 한 줄 가로 스크롤 (72px 칸 · 8px 간격 → 375px 에서 4.5칸, 반쯤 보이는 칸이 스크롤 신호),
+     sm 5열 · md 8열 그리드 */
+  .products-category-grid {
+    @apply -mx-4 -my-1.5 grid auto-cols-[72px] grid-flow-col gap-2 overflow-x-auto scroll-px-4 px-4 py-1.5
+           sm:mx-0 sm:my-0 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-5 sm:gap-x-2 sm:gap-y-4 sm:overflow-visible sm:px-0 sm:py-0 md:grid-cols-8;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+  .products-category-grid::-webkit-scrollbar { display: none; }
+  .products-category-grid > li { scroll-snap-align: start; }
+  @media (min-width: 640px) { .products-category-grid { scroll-snap-type: none; } }
   .products-category-item {
-    @apply flex flex-col items-center gap-2 rounded-md px-1 py-2 text-center transition-colors duration-150 hover:bg-neutral-50 motion-reduce:transition-none;
+    @apply flex flex-col items-center gap-2 rounded-md px-1 py-2 text-center max-sm:-outline-offset-2;
   }
-  .products-category-item:focus-visible { @apply outline-none ring-2 ring-brand-500; }
+  /* 타일: 56px · 16px 모서리. hover 는 틸 없이 #FAFAF9 바탕 + #D6D3D1 테두리 */
   .products-category-icon {
-    @apply flex h-14 w-14 items-center justify-center rounded-lg border border-neutral-200 bg-white text-[26px] transition-transform duration-150 motion-reduce:transition-none;
+    @apply flex h-14 w-14 items-center justify-center rounded-lg border border-neutral-200 bg-white text-[26px] motion-reduce:transition-none;
+    transition: transform 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
   }
-  .products-category-item:hover .products-category-icon { @apply border-brand-200 bg-brand-50; transform: translateY(-2px); }
-  /* 4열 모바일에서 긴 이름(취미/게임/음반)도 두 줄 높이를 미리 잡아 줄 높이를 맞춘다 */
+  .products-category-item:hover .products-category-icon { @apply border-neutral-300 bg-neutral-50; transform: translateY(-2px); }
+  .products-category-item:active .products-category-icon { @apply bg-neutral-100; }
+  /* 긴 이름(취미/게임/음반)도 두 줄 높이를 미리 잡아 줄 높이를 맞춘다 */
   .products-category-name { @apply line-clamp-2 min-h-8 text-[12px] font-medium leading-4 text-neutral-700 sm:min-h-[36px] sm:text-[13px] sm:leading-[18px]; word-break: keep-all; }
 
-  /* 가로 스크롤 레일 (최근 본 상품) */
-  .products-rail { @apply -mx-4 flex scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:scroll-px-0 md:px-0; scrollbar-width: none; scroll-snap-type: x proximity; }
+  /* 가로 스크롤 레일 (최근 본 상품): 위아래 여백으로 outline 이 잘리지 않게, 375px 에서 4번째 칸이 일부 보이게 */
+  .products-rail { @apply -mx-4 -my-1.5 flex scroll-px-4 gap-3 overflow-x-auto px-4 py-1.5 md:mx-0 md:scroll-px-0 md:px-0; scrollbar-width: none; scroll-snap-type: x proximity; }
   .products-rail::-webkit-scrollbar { display: none; }
-  .products-rail > li { @apply w-28 shrink-0 md:w-32; scroll-snap-align: start; }
-  .products-rail-item { @apply block rounded-md; }
-  .products-rail-item:focus-visible { @apply outline-none ring-2 ring-brand-500 ring-offset-2; }
+  .products-rail > li { @apply w-24 shrink-0 md:w-32; scroll-snap-align: start; }
+  .products-rail-item { @apply block rounded-md -outline-offset-2; }
 
-  /* 인기 순위 배지 */
+  /* 인기 TOP: 순위 목록 (모바일 1열 · md 2열, 위에서 아래로 읽는 순서 = DOM 순서) */
+  .products-rank-list { @apply md:columns-2 md:gap-8; }
+  .products-rank-list > li { @apply break-inside-avoid border-b border-neutral-200; }
+  .products-rank-item {
+    @apply -mx-2 flex min-h-[88px] items-center gap-4 rounded-md px-2 py-2 -outline-offset-2 hover:bg-neutral-50 active:bg-neutral-100;
+    transition: background-color 150ms ease-out;
+  }
+  /* 순위 숫자: 24px 굵게, 1~3위만 틸 */
   .products-rank {
-    @apply pointer-events-none absolute left-2 top-2 inline-flex h-6 min-w-6 items-center justify-center rounded-sm bg-neutral-900/75 px-1.5 text-xs font-bold text-white;
+    @apply w-8 shrink-0 text-center text-2xl font-bold leading-8 text-neutral-600;
     font-variant-numeric: tabular-nums;
   }
-  .products-rank-top { @apply bg-brand-700; }
+  .products-rank-top { @apply text-brand-700; }
 
-  /* 목록 필터 바 */
-  .products-filter { @apply flex flex-wrap items-center gap-2 border-b border-neutral-200 pb-4; }
-  .products-filter-select { @apply h-10 w-auto min-w-0 flex-1 text-sm sm:flex-none sm:min-w-[140px]; }
-  .products-filter-chip { @apply h-10 max-w-full; }
+  /* 목록 필터 바: 모바일은 검색창 · 내 동네 · 거래 가능만 · '필터'(동네 3단 + 정렬 접힘) 순서 */
+  .products-filter { @apply flex flex-wrap items-center gap-x-1.5 gap-y-2 border-b border-neutral-200 pb-4 sm:gap-x-2; }
+  .products-filter-select { @apply h-10 w-auto min-w-0 flex-1 text-sm coarse:h-11 sm:flex-none sm:min-w-[140px]; }
+  /* 375px 에서 동네 · 거래 가능만(체크 포함) · 필터 · 초기화 아이콘이 한 줄에 들어가게 좌우 10px · 칩 사이 6px (sm 부터 14px · 8px) */
+  .products-filter-chip { @apply h-10 max-w-full px-2.5 coarse:h-11 sm:px-3.5; }
+  /* '거래 가능만' 칩 라벨: 숨긴 체크박스가 체크되면 선택 칩 모양 + 체크 표시 (색만으로 구분하지 않게) */
+  /* 굵기는 그대로 두어 체크해도 칩 폭이 거의 안 바뀌게 (체크 표시만 늘어남) */
+  .products-filter label.chip:has(:checked) { @apply border-brand-700 bg-brand-100 text-brand-800; }
+  .products-filter label.chip:has(:checked) > svg { @apply block; }
+  .products-filter label.chip:has(:focus-visible) {
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 2px;
+  }
+  /* 모바일 '초기화' 아이콘 칩: 40px 원 (터치 44px) */
+  .products-filter-reset { @apply w-10 justify-center px-0 coarse:w-11 sm:px-0; }
+  /* 펼친 필터 패널은 토글로 열 때만(.is-opening, 목록 스크립트가 붙임) 150ms 페이드 */
+  .products-filter #products-filter-more.is-opening:not([hidden]) { animation: fade-in 150ms ease-out; }
 
-  /* 상세 갤러리: 모바일 스크롤 스냅 + 점, 데스크톱 화살표 + 썸네일 */
+  /* 상세 갤러리: 모바일 스크롤 스냅, 데스크톱 화살표, 썸네일은 모든 화면 (선택 썸네일만 틸 링) */
   .products-gallery { @apply relative overflow-hidden bg-neutral-100 md:rounded-lg md:ring-1 md:ring-inset md:ring-black/5; }
   .products-gallery-track {
     @apply flex aspect-square w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain;
     scrollbar-width: none;
   }
   .products-gallery-track::-webkit-scrollbar { display: none; }
-  .products-gallery-track:focus-visible { @apply outline-none ring-2 ring-inset ring-brand-500; }
+  /* 갤러리는 overflow-hidden 이라 안쪽 outline */
+  .products-gallery-track:focus-visible { outline-offset: -2px; }
   .products-gallery-slide { @apply h-full w-full shrink-0 snap-center; scroll-snap-stop: always; }
   .products-gallery-img { @apply h-full w-full object-cover; }
   .products-gallery-nav {
-    @apply absolute top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition-colors duration-150 hover:bg-white lg:inline-flex;
+    @apply absolute top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-800 shadow-md transition-colors duration-150 hover:bg-white lg:inline-flex;
   }
-  .products-gallery-nav:focus-visible { @apply outline-none ring-2 ring-brand-500; }
+  .products-gallery-nav:active { @apply bg-neutral-100; }
   .products-gallery-counter {
-    @apply absolute bottom-3 right-3 rounded-full bg-neutral-900/60 px-2.5 py-1 text-xs font-semibold text-white;
+    @apply absolute bottom-3 right-3 rounded-full bg-neutral-900/60 px-2.5 py-1 text-xs font-semibold leading-4 text-white;
     font-variant-numeric: tabular-nums;
   }
+  /* 점은 더 이상 그리지 않아요 (썸네일로 대체). 이름만 남겨 둠 */
   .products-gallery-dots { @apply absolute inset-x-0 bottom-3 flex justify-center gap-1.5 lg:hidden; }
   .products-gallery-dot { @apply h-1.5 w-1.5 rounded-full bg-white/60 transition-all duration-150 motion-reduce:transition-none; }
   .products-gallery-dot[data-active] { @apply w-4 bg-white; }
-  .products-gallery-thumbs { @apply mt-3 hidden grid-cols-8 gap-2 lg:grid; }
-  .products-gallery-thumb { @apply overflow-hidden rounded-md opacity-60 ring-1 ring-inset ring-black/5 transition-opacity duration-150 hover:opacity-100; }
-  .products-gallery-thumb > img { @apply aspect-square w-full object-cover; }
-  .products-gallery-thumb[aria-selected="true"] { @apply opacity-100 ring-2 ring-brand-600; }
-  .products-gallery-thumb:focus-visible { @apply outline-none ring-2 ring-brand-500; }
+  /* 모바일 · 태블릿: 56px 썸네일 한 줄 가로 스크롤 / lg: 8열 격자 */
+  .products-gallery-thumbs {
+    @apply -mb-1.5 mt-1.5 flex gap-2 overflow-x-auto px-4 py-1.5 md:-mx-1 md:px-1 lg:mx-0 lg:grid lg:grid-cols-8 lg:overflow-visible lg:px-0;
+    scrollbar-width: none;
+  }
+  .products-gallery-thumbs::-webkit-scrollbar { display: none; }
+  .products-gallery-thumb { @apply relative h-14 w-14 shrink-0 overflow-hidden rounded-sm opacity-60 transition-opacity duration-150 hover:opacity-100 lg:h-auto lg:w-auto lg:rounded-md; }
+  /* 링은 사진 위에 그려야 보여요 (inset box-shadow 는 img 아래에 깔림) */
+  .products-gallery-thumb::after { @apply pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-black/5; content: ""; }
+  .products-gallery-thumb > img { @apply aspect-square h-full w-full object-cover; }
+  .products-gallery-thumb[aria-selected="true"] { @apply opacity-100; }
+  .products-gallery-thumb[aria-selected="true"]::after { @apply ring-2 ring-brand-700; }
 
   /* 상세 하단 '다른 상품' (6개 기준) */
   .products-related-grid { @apply grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-6 lg:gap-x-4; }
 
-  /* 등록 폼: 사진 업로드 타일 + 기존 사진 삭제 토글 */
+  /* 등록 폼: 사진 업로드 타일(1:1 · 12px · 장식용 점선 #A8A29E) + 기존 사진 삭제 토글 */
   .products-upload-tile {
-    @apply flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-neutral-300 bg-neutral-50 text-[13px] font-medium text-neutral-500 transition-colors duration-150 hover:border-brand-600 hover:bg-brand-50 hover:text-brand-800;
+    @apply flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-neutral-400 bg-neutral-50 text-[13px] font-medium text-neutral-500 transition-colors duration-150 hover:border-neutral-500 hover:bg-neutral-100 hover:text-neutral-700;
   }
-  .peer:focus-visible ~ .products-upload-tile { @apply ring-2 ring-brand-500 ring-offset-2; }
-  .products-existing:focus-within { @apply ring-2 ring-brand-500 ring-offset-2; }
+  .products-upload-tile:active { @apply bg-neutral-200; }
+  .peer:focus-visible ~ .products-upload-tile {
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 2px;
+  }
+  .products-existing:has(:focus-visible) {
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 2px;
+  }
+  /* 32px 로 보이고 ::after 로 44px 누르는 영역 */
   .products-remove-btn {
-    @apply absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900/70 text-white;
+    @apply absolute right-1 top-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900/70 text-white;
   }
+  .products-remove-btn::after { @apply absolute -inset-1.5; content: ""; }
   .products-remove-overlay {
     @apply absolute inset-0 hidden items-center justify-center bg-neutral-900/60 text-[13px] font-semibold text-white;
   }
@@ -655,15 +710,26 @@
   .peer:checked ~ .products-remove-btn { @apply hidden; }
 }
 
+/* 목록 '필터' 패널: md 이상은 늘 펼치고 토글은 숨겨요 (#id[hidden] 이 base 의 [hidden] 보다 구체적) */
+@media (min-width: 768px) {
+  #products-filter-more[hidden] { display: flex !important; }
+  .products-filter [data-toggle="#products-filter-more"] { display: none; }
+}
+
 /* === chat === */
 /* 채팅 목록 · 채팅방 전용 보조 클래스 (chat 담당) */
 @layer components {
-  /* 목록 */
+  /* 목록: 한 줄 최소 76px · 구분선 #E7E5E4 · 안 읽은 줄도 배경색 없이 글자 굵기로만 */
   .chat-list { @apply divide-y divide-neutral-200; }
   .chat-list-item {
-    @apply relative -mx-4 flex items-center gap-3 px-4 py-4 transition-colors duration-150 hover:bg-neutral-50 motion-reduce:transition-none md:mx-0 md:rounded-md md:px-3;
+    @apply relative -mx-4 flex min-h-[76px] items-center gap-3 p-4 transition-colors duration-150 hover:bg-neutral-50 motion-reduce:transition-none md:mx-0 md:rounded-md;
   }
-  .chat-list-item:focus-visible { @apply outline-none ring-2 ring-inset ring-brand-500; }
+  /* 목록 칸 안쪽 outline (구분선·화면 끝에 잘리지 않게) */
+  .chat-list-item:focus-visible { outline-offset: -2px; }
+  .chat-list-preview { @apply mt-0.5 truncate text-[15px] leading-[22px] text-neutral-700; }
+  /* 안 읽음: 색만 #1C1917 + 500 (이름 15/600 이 먼저 읽히게) */
+  .chat-list-preview-unread { @apply font-medium text-neutral-900; }
+  .chat-list-product { @apply mt-1 flex items-center gap-1.5 text-[13px] leading-[18px] text-neutral-500; }
   .chat-unread {
     @apply inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-none text-white;
     font-variant-numeric: tabular-nums;
@@ -671,35 +737,49 @@
 
   /* 채팅방: 화면 높이를 채우는 앱형 레이아웃 (메시지 영역만 스크롤) */
   .chat-shell {
-    @apply mx-auto flex w-full max-w-3xl flex-col bg-white md:my-6 md:overflow-hidden md:rounded-lg md:border md:border-neutral-200;
+    /* 768~1023px 에서도 양옆 16px 여백 (테두리·모서리가 화면 끝에 붙지 않게) */
+    @apply mx-auto flex w-full max-w-3xl flex-col bg-white md:my-6 md:w-[calc(100%-2rem)] md:overflow-hidden md:rounded-lg md:border md:border-neutral-200 lg:w-full;
     height: calc(100vh - var(--poly-nav-h));
     height: calc(100dvh - var(--poly-nav-h));
   }
   @media (min-width: 768px) {
     .chat-shell { height: calc(100dvh - var(--poly-nav-h) - 48px); min-height: 520px; }
   }
-  .chat-header { @apply flex h-14 shrink-0 items-center gap-1.5 border-b border-neutral-200 px-2 md:gap-2 md:px-3; }
+  .chat-header { @apply flex h-14 shrink-0 items-center gap-1 border-b border-neutral-200 px-1.5 sm:gap-1.5 md:gap-2 md:px-3; }
   .chat-conn { @apply hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium text-neutral-500; }
   .chat-conn::before { content: ""; @apply h-1.5 w-1.5 rounded-full bg-neutral-400; }
   .chat-conn[data-state="connecting"],
   .chat-conn[data-state="offline"] { @apply inline-flex; }
   .chat-conn[data-state="offline"] { @apply bg-amber-50 text-amber-800; }
   .chat-conn[data-state="offline"]::before { @apply bg-amber-500; }
+  /* 좁은 화면: '연결 중'은 점만 보이고 글자는 화면 낭독기용 (상대 이름이 잘리지 않게). 오프라인은 글자 그대로 */
+  @media (max-width: 639.98px) {
+    .chat-conn[data-state="connecting"] { font-size: 0; gap: 0; padding-inline: 6px; }
+  }
 
-  /* 상단 상품 요약 바 */
-  .chat-product-bar { @apply flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2.5 border-b border-neutral-200 bg-white px-4 py-3; }
+  /* 상단 상품 요약 바: 썸네일 48 · 제목 14/20 · 상태 배지 + 가격 15/20 굵게 */
+  .chat-product-bar { @apply flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-neutral-200 bg-white px-4 py-2.5; }
   .chat-product-link { @apply flex min-w-0 flex-1 basis-56 items-center gap-3 rounded-md; }
-  .chat-product-link:focus-visible { @apply outline-none ring-2 ring-brand-500 ring-offset-2; }
+  .chat-product-title { @apply block truncate text-sm leading-5 text-neutral-800; }
+  .chat-product-meta { @apply mt-1 flex min-w-0 items-center gap-1.5; }
+  .chat-product-price { @apply shrink-0 text-[15px] font-bold leading-5 text-neutral-900; font-variant-numeric: tabular-nums; }
   .chat-product-actions { @apply flex w-full items-center gap-2 sm:w-auto; }
+  /* 판매 상태 셀렉트는 btn-sm 과 같은 36px (터치 기기 44px). 글자는 16px 그대로 (iOS 확대 방지) */
+  .chat-product-actions .select { @apply h-9 coarse:h-11; }
 
-  /* 메시지 영역 */
-  .chat-scroll { @apply flex-1 overflow-y-auto overscroll-contain bg-neutral-50 px-3 pb-3 pt-4 md:px-5; }
-  .chat-scroll:focus-visible { @apply outline-none ring-2 ring-inset ring-brand-500; }
-  .chat-safety { @apply mx-auto mb-2 flex max-w-md items-start gap-2 rounded-md bg-white px-3 py-2.5 text-xs leading-[18px] text-neutral-600 ring-1 ring-inset ring-neutral-200; }
-  .chat-safety > svg { @apply mt-px text-brand-700; }
+  /* 메시지 영역 (#FAFAF9 위에 흰 상대 말풍선) */
+  .chat-scroll {
+    @apply flex-1 overflow-y-auto overscroll-contain bg-neutral-50 px-3 pb-3 pt-4 md:px-5;
+    /* 키보드로 이동한 버튼이 위·아래 끝에 붙지 않게 (입력창은 스크롤 영역 밖이라 겹치지 않아요) */
+    scroll-padding-block: 12px;
+  }
+  /* 셸 가장자리에 잘리지 않게 안쪽 outline */
+  .chat-scroll:focus-visible { outline-offset: -2px; }
+  .chat-safety { @apply mx-auto mb-2 flex max-w-md items-start gap-2 rounded-md bg-white px-3 py-2.5 text-[13px] leading-5 text-neutral-600 ring-1 ring-inset ring-neutral-200; }
+  .chat-safety > svg { @apply mt-0.5 text-brand-700; }
   .chat-older { @apply flex justify-center py-2; }
   .chat-date-sep { @apply my-4 flex justify-center; }
-  .chat-date-sep > span { @apply rounded-full bg-neutral-200/70 px-3 py-1 text-xs font-medium text-neutral-600; }
+  .chat-date-sep > span { @apply rounded-full bg-neutral-200 px-3 py-1 text-xs font-medium leading-4 text-neutral-600; }
   .chat-row { @apply mt-1 flex items-start gap-2; }
   .chat-row-first { @apply mt-3; }
   .chat-row-me { @apply flex-row-reverse; }
@@ -711,17 +791,24 @@
   .chat-line > .bubble { @apply min-w-0 max-w-none; }
   .chat-meta { @apply flex shrink-0 flex-col items-start gap-0.5 pb-0.5; }
   .chat-row-me .chat-meta { @apply items-end; }
-  .chat-read { @apply text-[11px] font-semibold leading-4 text-brand-700; }
-  .chat-warning { @apply mt-1.5 flex max-w-full items-start gap-1.5 rounded-sm bg-red-50 px-2.5 py-1.5 text-xs leading-[18px] text-red-800 ring-1 ring-inset ring-red-200; }
+  /* 시간('오전 1:04')·'읽음' 모두 한글이 들어가서 12px */
+  .chat-meta .bubble-meta { @apply text-xs leading-4; font-variant-numeric: tabular-nums; }
+  .chat-read { @apply text-xs font-semibold leading-4 text-brand-700; }
+  .chat-warning { @apply mt-1.5 flex max-w-full items-start gap-1.5 rounded-sm bg-red-50 px-2.5 py-1.5 text-[13px] leading-5 text-red-800 ring-1 ring-inset ring-red-200; }
+  .chat-warning > svg { margin-top: 3px; }
   .chat-nego { @apply mt-1.5 flex max-w-full flex-col items-start gap-2; }
   .chat-nego-result:empty { display: none; }
   .chat-nego-result { @apply w-full; }
   .chat-row.is-new { animation: fade-up 200ms var(--poly-ease) both; }
 
-  /* 입력창 */
-  .chat-composer { @apply shrink-0 border-t border-neutral-200 bg-white px-3 pt-2.5 md:px-4; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+  /* 입력창: 하단 고정 바 그림자 · 알약 입력칸(#948D87 테두리, 16px) · 44px 원형 보내기 */
+  .chat-composer {
+    @apply relative shrink-0 bg-white px-3 pt-2.5 md:px-4;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 -1px 0 theme("colors.neutral.200"), 0 -6px 16px -8px rgb(28 25 23 / 0.10);
+  }
   .chat-form { @apply flex items-end gap-2; }
-  .chat-input { @apply min-h-[44px] flex-1 resize-none rounded-[22px] py-[9px] leading-6; }
+  .chat-input { @apply min-h-[44px] flex-1 resize-none rounded-[22px] px-4 py-[9px] leading-6; }
   .chat-send { @apply h-11 w-11 shrink-0 rounded-full; }
   .chat-send > svg { @apply h-5 w-5; }
 }
@@ -742,35 +829,48 @@ body:has(.chat-shell) > footer { display: none; }
 /* 거래 후기(별점 · 매너 태그) · 알림 목록/드롭다운 전용 보조 클래스 (trades_notifications 담당) */
 @layer components {
   /* 별점: DOM 순서 5→1 + row-reverse → 고른 별과 그 왼쪽 별이 채워져요 */
-  .trades-stars { @apply inline-flex flex-row-reverse justify-center gap-1; }
+  /* 별 36px + 4px 여백 = 44px 누르는 칸. 빈 별 #D6D3D1, 채운 별 amber-400 (뜻은 아래 문구가 전해요) */
+  .trades-stars { @apply inline-flex flex-row-reverse justify-center gap-0.5; }
   .trades-star-input { @apply sr-only; }
   .trades-star {
-    @apply inline-flex cursor-pointer rounded-md p-0.5 text-neutral-200 motion-reduce:transition-none;
+    @apply inline-flex cursor-pointer rounded-md p-1 text-neutral-300 motion-reduce:transition-none;
     transition: color 150ms ease-out, transform 150ms ease-out;
   }
+  .trades-star > svg { @apply h-9 w-9; }
   .trades-star:active { transform: scale(0.92); }
   .trades-star-input:checked ~ .trades-star { @apply text-amber-400; }
-  .trades-stars:hover .trades-star { @apply text-neutral-200; }
+  .trades-stars:hover .trades-star { @apply text-neutral-300; }
   .trades-stars:hover .trades-star:hover,
   .trades-stars:hover .trades-star:hover ~ .trades-star { @apply text-amber-300; }
-  .trades-star-input:focus-visible + .trades-star { @apply outline-none ring-2 ring-brand-500 ring-offset-2; }
+  /* 숨긴 radio 대신 별 칸에 공통 틸 outline */
+  .trades-star-input:focus-visible + .trades-star {
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 0;
+  }
 
-  /* 매너 태그 칩 (체크박스) */
+  /* 매너 태그 칩 (체크박스): 40px, 터치 44px */
   .trades-tag { @apply inline-flex; }
   .trades-tag-input { @apply sr-only; }
-  .trades-tag .chip { @apply h-10 px-4; }
+  .trades-tag .chip { @apply h-10 px-4 coarse:h-11; }
   .trades-tag-check { @apply hidden; }
-  .trades-tag-input:checked + .chip { @apply border-brand-600 bg-brand-100 text-brand-800; }
+  .trades-tag-input:checked + .chip { @apply border-brand-700 bg-brand-100 font-semibold text-brand-800; }
   .trades-tag-input:checked + .chip .trades-tag-check { @apply inline-block; }
-  .trades-tags-bad .trades-tag-input:checked + .chip { @apply border-red-600 bg-red-50 text-red-800; }
-  .trades-tag-input:focus-visible + .chip { @apply ring-2 ring-brand-500 ring-offset-1; }
+  .trades-tags-bad .trades-tag-input:checked + .chip { @apply border-red-700 bg-red-50 text-red-800; }
+  .trades-tag-input:focus-visible + .chip {
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 2px;
+  }
 
-  /* 알림 항목 (목록 페이지 · nav 드롭다운 공용) */
+  /* 후기 내용 입력칸 120px */
+  #review-form .textarea { @apply min-h-[120px]; }
+
+  /* 알림 항목 (목록 페이지 · nav 드롭다운 공용): 64px 이상, 14 × 16px */
   .notif-item {
-    @apply relative flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 motion-reduce:transition-none md:px-5;
+    @apply relative flex min-h-16 items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 motion-reduce:transition-none;
     transition: background-color 150ms ease-out;
   }
-  .notif-item:focus-visible { @apply bg-neutral-50 outline-none ring-2 ring-inset ring-brand-500; }
+  /* 카드 · 패널이 overflow-hidden 이라 안쪽 outline */
+  .notif-item:focus-visible { @apply bg-neutral-50; outline-offset: -2px; }
   .notif-item-unread { @apply bg-brand-50/60 hover:bg-brand-50; }
   .notif-icon { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600; }
   .notif-icon > svg { @apply h-5 w-5; }
@@ -781,13 +881,17 @@ body:has(.chat-shell) > footer { display: none; }
   .notif-message { @apply line-clamp-2 text-[15px] leading-[22px] text-neutral-800; }
   .notif-item-unread .notif-message { @apply font-semibold text-neutral-900; }
   .notif-meta { @apply mt-0.5 text-[13px] leading-[18px] text-neutral-500; }
-  .notif-unread-dot { @apply mt-2 h-2 w-2 shrink-0 rounded-full bg-brand-600; }
+  .notif-unread-dot { @apply mt-2 h-2 w-2 shrink-0 rounded-full bg-brand-700; }
 
-  /* nav 드롭다운 패널 */
-  .notif-panel-header { @apply flex items-center justify-between gap-2 border-b border-neutral-200 px-4 py-3; }
+  /* nav 드롭다운 패널 (352px, 높이 min(26rem, 60vh)) */
+  .notif-panel-header { @apply flex min-h-14 items-center justify-between gap-2 border-b border-neutral-200 px-4 py-2; }
   .notif-panel-list { @apply max-h-[min(26rem,60vh)] divide-y divide-neutral-100 overflow-y-auto overscroll-contain; }
-  .notif-panel-list .notif-item { @apply px-4 py-3; }
-  .notif-panel-footer { @apply block border-t border-neutral-200 px-4 py-3 text-center text-sm font-semibold text-brand-700 hover:bg-neutral-50 hover:text-brand-800; }
+  .notif-panel-list .notif-item { @apply px-4 py-3.5; }
+  .notif-panel-footer {
+    @apply flex min-h-11 items-center justify-center border-t border-neutral-200 px-4 text-center text-sm font-semibold text-brand-700 hover:bg-neutral-50 hover:text-brand-800;
+    transition: background-color 150ms ease-out;
+  }
+  .notif-panel-footer:focus-visible { outline-offset: -2px; }
 }
 
 /* === ai === */
@@ -797,8 +901,11 @@ body:has(.chat-shell) > footer { display: none; }
   .ai-results { @apply mt-4 space-y-3 empty:mt-0; }
   .ai-result { @apply rounded-md border border-violet-100 bg-white p-4 shadow-sm; }
   .ai-result .ai-card-header { @apply mb-2; }
-  .ai-result-label { @apply mb-1 text-[12px] font-semibold uppercase tracking-wide text-violet-700; }
+  /* 항목 이름: 12px/600 violet-700 (대문자·자간 없음) */
+  .ai-result-label { @apply mb-1 text-[12px] font-semibold leading-4 tracking-normal text-violet-700; }
   .ai-result-content { @apply whitespace-pre-line text-[15px] leading-6 text-neutral-800 break-keep; }
+  /* '사실과 다를 수 있어요' 같은 안내는 13/20 */
+  .ai-result .help { @apply leading-5; }
   .ai-facts { @apply grid grid-cols-2 gap-x-4 gap-y-3 text-[15px]; }
 
   /* 확신도 막대 (<progress>) */
@@ -812,20 +919,25 @@ body:has(.chat-shell) > footer { display: none; }
   /* 협상 답장 초안 */
   .ai-drafts { @apply max-w-sm p-3; }
   .ai-draft {
-    @apply block w-full rounded-md border border-violet-200 bg-white px-3 py-2.5 text-left hover:border-violet-300 hover:bg-violet-50 motion-reduce:transition-none;
+    @apply block min-h-11 w-full rounded-md border border-violet-200 bg-white px-3 py-2.5 text-left hover:border-violet-300 hover:bg-violet-50 motion-reduce:transition-none;
     transition: background-color 150ms ease-out, border-color 150ms ease-out, transform 150ms ease-out;
   }
   .ai-draft:active { transform: scale(0.98); }
-  .ai-draft:focus-visible { @apply outline-none ring-2 ring-violet-500 ring-offset-1; }
+  /* 포커스는 공통 틸 outline (base :focus-visible) */
   .ai-draft[aria-pressed="true"] { @apply border-violet-500 bg-violet-50; }
   .ai-draft-tone { @apply flex items-center gap-1.5 text-[12px] font-semibold text-violet-700; }
-  .ai-draft-price { @apply rounded-sm bg-violet-100 px-1.5 py-px tabular-nums text-violet-800; }
+  .ai-draft-price { @apply rounded-xs bg-violet-100 px-1.5 py-px tabular-nums text-violet-800; }
   .ai-draft-text { @apply mt-0.5 block text-sm leading-[22px] text-neutral-800 break-keep; }
 
-  /* 사기 배너 '자세히' */
+  /* 사기 배너: 본문 14/22 (안전 문구 13/20 하한보다 크게) */
+  #fraud-banner .alert { @apply leading-[22px]; }
+  /* '왜 그렇게 판단했나요?' 13px/600, 터치 44px */
   .ai-details { @apply mt-2; }
-  .ai-details > summary { @apply inline-flex cursor-pointer select-none items-center gap-1 text-[13px] font-semibold underline-offset-2 hover:underline; }
-  .ai-reasons { @apply mt-2 list-disc space-y-1 pl-5 text-sm; }
+  .ai-details > summary { @apply inline-flex cursor-pointer select-none items-center gap-1 rounded-xs text-[13px] font-semibold leading-5 underline-offset-2 hover:underline coarse:min-h-11; }
+  /* 펼침 단서: 16px 셰브런, 열리면 뒤집힘 */
+  .ai-details-chevron { @apply h-4 w-4 shrink-0; transition: rotate 150ms ease-out; }
+  .ai-details[open] > summary .ai-details-chevron { rotate: 180deg; }
+  .ai-reasons { @apply mt-2 list-disc space-y-1 pl-5 text-sm leading-[22px]; }
 
   /* '적용' 직후 필드 강조 */
   .ai-applied { animation: ai-applied 1.6s ease-out; }
@@ -834,4 +946,4 @@ body:has(.chat-shell) > footer { display: none; }
   0% { box-shadow: 0 0 0 3px rgb(167 139 250 / 0.6); border-color: rgb(139 92 246); }
   100% { box-shadow: 0 0 0 0 rgb(167 139 250 / 0); }
 }
-@media (prefers-reduced-motion: reduce) { .ai-applied { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ai-applied { animation: none; } .ai-details-chevron { transition: none; } }

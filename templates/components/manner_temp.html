@@ -1,18 +1,26 @@
 {% comment "usage" %}
-매너온도 표시 (온도 숫자 + 막대). 기본값 36.5
+매너온도 게이지 (숫자 + 단계 말 + 0~99 막대 + 36.5° 기준 눈금). 값이 없으면 36.5
   {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
-파라미터: temperature(Decimal/float, 0~99) · compact(True면 숫자만 한 줄)
-구간: ~30 차가워요(회색) · ~36.5 보통 · ~45 따뜻해요 · ~60 뜨거워요 · 60~ 최고예요
-글자는 대비(4.5:1)를 위해 neutral-600/brand-700/800만 쓰고, 단계는 막대 색(틸 농도)으로만 보여 줘요. 빨강은 위험 표시 전용이라 쓰지 않아요.
-{% endcomment %}{% with t=temperature|default:36.5 %}{% if compact %}
-<span class="manner-value {% if t < 30 %}text-neutral-600{% elif t < 45 %}text-brand-700{% else %}text-brand-800{% endif %}" title="매너온도">{{ t|floatformat:1 }}°C</span>
-{% else %}
-<div class="manner" aria-label="매너온도 {{ t|floatformat:1 }}도">
-  <span class="manner-value {% if t < 30 %}text-neutral-600{% elif t < 45 %}text-brand-700{% else %}text-brand-800{% endif %}">
-    {{ t|floatformat:1 }}°C
-    <span class="text-base" aria-hidden="true">{% if t < 30 %}🌧️{% elif t < 36.5 %}🙂{% elif t < 45 %}😊{% elif t < 60 %}😄{% else %}🌟{% endif %}</span>
+  {% include "components/manner_temp.html" with temperature=profile.manner_temperature show_baseline=True %}
+  {% include "components/manner_temp.html" with temperature=partner.profile.manner_temperature compact=True %}
+파라미터: temperature(Decimal/float, 0~99) · compact(True면 숫자만 담은 작은 알약) · show_baseline(True면 게이지 아래 캡션이 '매너온도 · 첫 온도 36.5°C' 한 줄, 120px 칸에선 가운뎃점에서만 줄바꿈)
+단계 말: 30 미만 차가워요 · 36.5 미만 보통이에요 · 45 미만 따뜻해요 · 60 미만 뜨거워요 · 60 이상 최고예요
+색: 30°C 이상은 틸(채움 brand-700 · 숫자 brand-800), 30 미만은 회색(채움 neutral-500 · 숫자 neutral-600). 단계는 색이 아니라 글자로 보여 줘요.
+스크린리더: '매너온도 41.2도, 첫 온도 36.5도보다 4.7도 높아요' 한 문장 (role="img", 안쪽 표시는 aria-hidden)
+줄바꿈: 120px 칸에서 '35.9°C 보통이에요'처럼 넘칠 때만 단계 말이 다음 줄로 내려가요(넘쳐서 옆 글자를 덮지 않게).
+계산: 온도를 10배 한 정수(t10, 0.0°C 도 0 으로 남아요)로 비교하고, 끝자리 앞에 점을 찍어 '41.2' 처럼 보여 줘요.
+{% endcomment %}{% widthratio temperature 1 10 as t10_raw %}{% with t10=t10_raw|default:"365"|add:0 %}{% with ts=t10|stringformat:"02d" %}{% with ts_last=ts|slice:"-1:" %}{% with tv=ts|slice:":-1"|add:"."|add:ts_last %}{% if compact %}
+<span class="manner-value inline-flex h-[22px] items-center rounded-full bg-brand-50 px-2 text-[12px] font-bold leading-4 ring-1 ring-inset ring-brand-100 {% if t10 < 300 %}text-neutral-600{% else %}text-brand-800{% endif %}" title="매너온도"><span class="sr-only">매너온도 </span>{{ tv }}°C</span>
+{% else %}{% widthratio t10 -1 1 as neg_t10 %}
+<div class="manner" role="img" aria-label="매너온도 {{ tv }}도, {% if t10 > 365 %}{% with ds=t10|add:-365|stringformat:"02d" %}첫 온도 36.5도보다 {{ ds|slice:":-1" }}.{{ ds|slice:"-1:" }}도 높아요{% endwith %}{% elif t10 < 365 %}{% with ds=neg_t10|add:365|stringformat:"02d" %}첫 온도 36.5도보다 {{ ds|slice:":-1" }}.{{ ds|slice:"-1:" }}도 낮아요{% endwith %}{% else %}첫 온도와 같아요{% endif %}">
+  <span class="flex flex-wrap items-baseline justify-end gap-x-1.5 whitespace-nowrap" aria-hidden="true">
+    <span class="manner-value {% if t10 < 300 %}text-neutral-600{% else %}text-brand-800{% endif %}">{{ tv }}°C</span>
+    <span class="manner-tier">{% if t10 < 300 %}차가워요{% elif t10 <= 365 %}보통이에요{% elif t10 < 450 %}따뜻해요{% elif t10 < 600 %}뜨거워요{% else %}최고예요{% endif %}</span>
   </span>
-  <span class="manner-track" aria-hidden="true"><span class="manner-bar {% if t < 30 %}bg-neutral-400{% elif t < 36.5 %}bg-brand-300{% elif t < 45 %}bg-brand-500{% elif t < 60 %}bg-brand-700{% else %}bg-brand-900{% endif %}" style="width: {{ t|stringformat:'.1f' }}%"></span></span>
-  <span class="manner-label">매너온도</span>
+  <span class="manner-scale" aria-hidden="true">
+    <span class="manner-track"><span class="manner-bar {% if t10 < 300 %}bg-neutral-500{% else %}bg-brand-700{% endif %}" style="width: {{ tv }}%"></span></span>
+    <span class="manner-baseline"></span>
+  </span>
+  {% if show_baseline %}<span class="manner-label" aria-hidden="true"><span class="whitespace-nowrap">매너온도 ·</span> <span class="whitespace-nowrap">첫 온도 36.5°C</span></span>{% else %}<span class="manner-label" aria-hidden="true">매너온도</span>{% endif %}
 </div>
-{% endif %}{% endwith %}
+{% endif %}{% endwith %}{% endwith %}{% endwith %}{% endwith %}

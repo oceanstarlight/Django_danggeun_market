@@ -1,7 +1,7 @@
 {% comment %}
 찜 버튼 (HTMX 토글, 낙관적 UI 대신 서버 응답으로 교체)
   {% include "products/partials/wishlist_button.html" with variant="default" %}   ← 상세 정보 패널 (하트 + 개수)
-  {% include "products/partials/wishlist_button.html" with variant="cta" %}       ← 모바일 하단 CTA (하트만)
+  {% include "products/partials/wishlist_button.html" with variant="cta" %}       ← 모바일 하단 CTA (하트 + 아래 작은 개수)
 컨텍스트: product · is_wished · wish_count · oob(True면 hx-swap-oob) · animate
 비로그인이면 로그인 링크로 바뀌어요.
 {% endcomment %}
@@ -11,18 +11,26 @@
   {% csrf_token %}
   <input type="hidden" name="variant" value="{{ variant }}">
   {% if variant == "cta" %}
-    <button type="submit" class="btn btn-ghost btn-icon btn-lg shrink-0" aria-pressed="{% if is_wished %}true{% else %}false{% endif %}" aria-label="{% if is_wished %}찜 해제하기{% else %}찜하기{% endif %}">
+    {# 하단 CTA: 44px 하트 + 아래 찜 개수(숫자만 11px). 개수도 같은 form 안이라 HTMX 교체는 한 덩어리로 유지돼요 #}
+    <button type="submit" class="btn btn-ghost btn-icon shrink-0 flex-col gap-0.5 tabular-nums" aria-pressed="{% if is_wished %}true{% else %}false{% endif %}" aria-label="{% if is_wished %}찜 해제하기{% else %}찜하기{% endif %}, 찜 {{ wish_count }}개">
       <span class="{% if animate %}animate-pop {% endif %}inline-flex">{% if is_wished %}{% include "components/icon.html" with name="heart-fill" class="h-6 w-6 text-red-500" %}{% else %}{% include "components/icon.html" with name="heart" class="h-6 w-6 text-neutral-600" %}{% endif %}</span>
+      <span class="text-[11px] font-semibold leading-none text-neutral-600" aria-hidden="true">{{ wish_count }}</span>
     </button>
   {% else %}
-    <button type="submit" class="btn btn-secondary btn-lg shrink-0 tabular-nums" aria-pressed="{% if is_wished %}true{% else %}false{% endif %}" aria-label="{% if is_wished %}찜 해제하기{% else %}찜하기{% endif %}, 찜 {{ wish_count }}개">
+    <button type="submit" class="btn btn-secondary btn-lg min-w-[52px] shrink-0 tabular-nums" aria-pressed="{% if is_wished %}true{% else %}false{% endif %}" aria-label="{% if is_wished %}찜 해제하기{% else %}찜하기{% endif %}, 찜 {{ wish_count }}개">
       <span class="{% if animate %}animate-pop {% endif %}inline-flex">{% if is_wished %}{% include "components/icon.html" with name="heart-fill" class="h-5 w-5 text-red-500" %}{% else %}{% include "components/icon.html" with name="heart" class="h-5 w-5" %}{% endif %}</span>
       <span>{{ wish_count }}</span>
     </button>
   {% endif %}
 </form>
 {% else %}
-<a id="wish-{{ variant }}" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="btn {% if variant == 'cta' %}btn-ghost btn-icon{% else %}btn-secondary{% endif %} btn-lg shrink-0" aria-label="로그인하고 찜하기">
-  {% include "components/icon.html" with name="heart" class="h-5 w-5" %}{% if variant != "cta" %}<span>{{ wish_count }}</span>{% endif %}
+{% if variant == "cta" %}
+<a id="wish-{{ variant }}" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-ghost btn-icon shrink-0 flex-col gap-0.5 tabular-nums" aria-label="로그인하고 찜하기, 찜 {{ wish_count }}개">
+  {% include "components/icon.html" with name="heart" class="h-6 w-6 text-neutral-600" %}<span class="text-[11px] font-semibold leading-none text-neutral-600" aria-hidden="true">{{ wish_count }}</span>
 </a>
+{% else %}
+<a id="wish-{{ variant }}" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-secondary btn-lg min-w-[52px] shrink-0 tabular-nums" aria-label="로그인하고 찜하기">
+  {% include "components/icon.html" with name="heart" class="h-5 w-5" %}<span>{{ wish_count }}</span>
+</a>
+{% endif %}
 {% endif %}

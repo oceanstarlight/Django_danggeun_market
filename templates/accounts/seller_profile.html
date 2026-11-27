@@ -44,34 +44,39 @@
 
     {% if profile.bio %}<p class="mt-4 whitespace-pre-line break-words text-[15px] leading-6 text-neutral-700">{{ profile.bio }}</p>{% endif %}
 
-    <div class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-stretch">
-      <dl class="grid grid-cols-3 gap-2">
-        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
-          <dt class="text-xs text-neutral-500">판매 상품</dt>
-          <dd class="mt-1 text-lg font-bold text-neutral-900 tabular">{{ counts.selling }}<span class="ml-0.5 text-[13px] font-medium text-neutral-500">개</span></dd>
-        </div>
-        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
-          <dt class="text-xs text-neutral-500">거래완료</dt>
-          <dd class="mt-1 text-lg font-bold text-neutral-900 tabular">{{ counts.sold }}<span class="ml-0.5 text-[13px] font-medium text-neutral-500">회</span></dd>
-        </div>
-        <div class="rounded-md bg-neutral-50 px-3 py-3 text-center">
-          <dt class="text-xs text-neutral-500">평균 별점</dt>
-          <dd class="mt-1 inline-flex items-center gap-0.5 text-lg font-bold text-neutral-900 tabular">
-            {% if summary.avg is not None %}{% include "components/icon.html" with name="star-fill" class="h-4 w-4 text-amber-400" %}{{ summary.avg|floatformat:1 }}{% else %}<span class="text-neutral-500">-</span>{% endif %}
-          </dd>
-        </div>
-      </dl>
-      <div class="flex items-center justify-between gap-4 rounded-md bg-neutral-50 px-4 py-3 sm:justify-center sm:px-5">
-        <p class="whitespace-nowrap text-xs text-neutral-500 sm:hidden">첫 온도 36.5°C</p>
-        {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
+    {# 활동 · 후기 요약(왼쪽)과 매너온도(오른쪽). md 미만은 위아래로 쌓여요 #}
+    <div class="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_320px] md:items-start md:gap-4">
+      <div class="flex min-w-0 flex-col gap-3">
+        <dl class="grid grid-cols-3 gap-2">
+          <div class="flex flex-col items-center justify-center rounded-md bg-neutral-50 px-3 py-3 text-center">
+            <dt class="text-xs text-neutral-500">판매 상품</dt>
+            <dd class="mt-1 text-[17px] font-bold leading-6 text-neutral-900 tabular">{{ counts.selling }}<span class="ml-0.5 text-[13px] font-medium text-neutral-500">개</span></dd>
+          </div>
+          <div class="flex flex-col items-center justify-center rounded-md bg-neutral-50 px-3 py-3 text-center">
+            <dt class="text-xs text-neutral-500">거래완료</dt>
+            <dd class="mt-1 text-[17px] font-bold leading-6 text-neutral-900 tabular">{{ counts.sold }}<span class="ml-0.5 text-[13px] font-medium text-neutral-500">회</span></dd>
+          </div>
+          <div class="flex flex-col items-center justify-center rounded-md bg-neutral-50 px-3 py-3 text-center">
+            <dt class="text-xs text-neutral-500">평균 별점</dt>
+            <dd class="mt-1 inline-flex items-center gap-0.5 text-[17px] font-bold leading-6 text-neutral-900 tabular">
+              {% if summary.avg is not None %}{% include "components/icon.html" with name="star-fill" class="h-4 w-4 text-amber-400" %}{{ summary.avg|floatformat:1 }}{% else %}<span class="text-neutral-500">-</span>{% endif %}
+            </dd>
+          </div>
+        </dl>
+
+        {% if summary.tags and not blocked and tab != "reviews" %}
+          <ul class="flex flex-wrap gap-1.5" aria-label="많이 받은 매너 평가">
+            {% for tag, n in summary.tags %}<li class="badge badge-neutral font-medium">{{ tag }} <span class="text-neutral-900 tabular">{{ n }}</span></li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      {# 매너온도 상자: 게이지 + '첫 온도 36.5°C' + 계산 규칙 설명 #}
+      <div class="rounded-md bg-neutral-50 px-4 pb-1 pt-3.5 [&_.manner]:items-start [&_.manner_>span:first-child]:justify-start">
+        {% include "components/manner_temp.html" with temperature=profile.manner_temperature show_baseline=True %}
+        {% include "accounts/partials/manner_help.html" %}
       </div>
     </div>
-
-    {% if summary.tags and not blocked and tab != "reviews" %}
-      <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="많이 받은 매너 평가">
-        {% for tag, n in summary.tags %}<li class="badge badge-neutral font-medium">{{ tag }} <span class="text-brand-700">{{ n }}</span></li>{% endfor %}
-      </ul>
-    {% endif %}
   </section>
 
   {# ── 차단 상태 / 탭 ── #}

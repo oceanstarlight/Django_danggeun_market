@@ -10,9 +10,9 @@
 <div class="container-page py-10 md:py-16">
   <div class="mx-auto w-full max-w-[420px]">
     <div class="mb-8 text-center">
-      <img src="{% static 'img/logo-mark.svg' %}" alt="" class="mx-auto h-12 w-12" width="48" height="48">
-      <h1 class="page-title mt-4">다시 만나서 반가워요</h1>
-      <p class="muted mt-2 text-[15px]">아이디와 비밀번호로 로그인해 주세요.</p>
+      <img src="{% static 'img/logo-mark.svg' %}" alt="" class="mx-auto h-10 w-10" width="40" height="40">
+      <h1 class="mt-4 text-h1 text-neutral-900 md:text-[28px] md:leading-9">다시 만나서 반가워요</h1>
+      <p class="muted mt-2 text-sm leading-5">아이디와 비밀번호로 로그인해 주세요.</p>
     </div>
 
     <div class="sm:rounded-lg sm:border sm:border-neutral-200 sm:bg-white sm:p-8">
@@ -35,9 +35,9 @@
       </form>
     </div>
 
-    <p class="mt-6 text-center text-[15px] text-neutral-600">
+    <p class="mt-6 text-center text-sm leading-5 text-neutral-600">
       아직 회원이 아니신가요?
-      <a href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link ml-1">회원가입</a>
+      <a href="{% url 'accounts:signup' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="link ml-1 inline-flex items-center rounded-xs coarse:min-h-11">회원가입</a>
     </p>
   </div>
 </div>

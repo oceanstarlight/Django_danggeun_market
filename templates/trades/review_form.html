@@ -9,8 +9,8 @@
 {% block content %}
 {% with name=reviewee|display_name %}
 <div class="container-page py-6 md:py-10">
-  <div class="mx-auto w-full max-w-xl">
-    <a href="{% url 'products:detail' product.pk %}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900">
+  <div class="mx-auto w-full max-w-[560px]">
+    <a href="{% url 'products:detail' product.pk %}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900 coarse:min-h-11">
       {% include "components/icon.html" with name="chevron-left" class="h-4 w-4" %}상품으로 돌아가기
     </a>
 
@@ -39,12 +39,12 @@
           {% for opt in form.rating_options %}
             <input type="radio" name="{{ form.rating.html_name }}" value="{{ opt.value }}" id="{{ opt.id }}" class="trades-star-input" data-caption="{{ opt.caption }}"{% if opt.checked %} checked{% endif %}>
             <label for="{{ opt.id }}" class="trades-star" title="{{ opt.label }}">
-              {% include "components/icon.html" with name="star-fill" class="h-10 w-10" %}
+              {% include "components/icon.html" with name="star-fill" class="h-9 w-9" %}
               <span class="sr-only">{{ opt.value }}점 · {{ opt.label }}</span>
             </label>
           {% endfor %}
         </div>
-        <p class="mt-2 min-h-[20px] text-sm font-medium text-neutral-600" data-rating-caption aria-live="polite">별을 눌러 선택해 주세요</p>
+        <p class="mt-2 min-h-[20px] text-sm font-medium leading-5 text-neutral-700" data-rating-caption aria-live="polite">별을 눌러 선택해 주세요</p>
         {% for error in form.rating.errors %}<p class="field-error justify-center" role="alert">{% include "components/icon.html" with name="alert" class="h-4 w-4" %}<span>{{ error }}</span></p>{% endfor %}
       </fieldset>
 

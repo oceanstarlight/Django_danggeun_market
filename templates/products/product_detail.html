@@ -19,14 +19,14 @@
 
   {# ───────── 경로 (데스크톱) ───────── #}
   <nav aria-label="현재 위치" class="mb-4 hidden items-center gap-1 text-[13px] text-neutral-500 md:flex">
-    <a href="{% url 'core:home' %}" class="hover:text-neutral-800">홈</a>
+    <a href="{% url 'core:home' %}" class="inline-flex items-center hover:text-neutral-800 coarse:min-h-11">홈</a>
     {% include "components/icon.html" with name="chevron-right" class="h-3.5 w-3.5" %}
-    <a href="{% url 'products:list' %}?category={{ product.category.slug }}&amp;region=all" class="hover:text-neutral-800">{{ product.category.name }}</a>
+    <a href="{% url 'products:list' %}?category={{ product.category.slug }}&amp;region=all" class="inline-flex items-center hover:text-neutral-800 coarse:min-h-11">{{ product.category.name }}</a>
   </nav>
 
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-10">
 
-    {# ───────── 이미지 갤러리: 모바일 스크롤 스냅 + 점, 데스크톱 화살표 + 썸네일 ───────── #}
+    {# ───────── 이미지 갤러리: 모바일 스크롤 스냅, 데스크톱 화살표 · 썸네일은 모든 화면에서 (점 대신 썸네일이라 사진을 놓치지 않아요) ───────── #}
     <div class="-mx-4 min-w-0 md:mx-0 lg:col-span-7">
       <div class="products-gallery" data-gallery>
         <div class="products-gallery-track" data-gallery-track tabindex="0" role="region" aria-roledescription="carousel" aria-label="상품 사진 {{ images|length }}장">
@@ -47,9 +47,6 @@
           <button type="button" class="products-gallery-nav left-3" data-gallery-prev aria-label="이전 사진">{% include "components/icon.html" with name="chevron-left" %}</button>
           <button type="button" class="products-gallery-nav right-3" data-gallery-next aria-label="다음 사진">{% include "components/icon.html" with name="chevron-right" %}</button>
           <span class="products-gallery-counter" aria-hidden="true"><span data-gallery-current>1</span> / {{ images|length }}</span>
-          <div class="products-gallery-dots" aria-hidden="true">
-            {% for image in images %}<span class="products-gallery-dot"{% if forloop.first %} data-active{% endif %}></span>{% endfor %}
-          </div>
         {% endif %}
       </div>
 
@@ -68,22 +65,7 @@
     <div class="min-w-0 lg:col-span-5">
       <div class="space-y-6 lg:sticky lg:top-[calc(var(--poly-nav-h)+24px)]">
 
-        {# 판매자 카드 #}
-        <a href="{% url 'accounts:seller_profile' seller.username %}" class="card card-interactive flex items-center gap-3 p-4">
-          {% include "components/avatar.html" with user=seller %}
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-[15px] font-semibold text-neutral-900">{{ seller|display_name }}</p>
-            {# 모바일에서 거래 횟수가 잘리지 않게 줄바꿈 허용 (sm 이상은 한 줄) #}
-            <p class="text-[13px] leading-[18px] text-neutral-500 sm:truncate">
-              <span class="whitespace-nowrap">{% if product.region %}{{ product.region.dong }}{% elif profile.region %}{{ profile.region.dong }}{% else %}동네 미설정{% endif %}</span>
-              <span class="whitespace-nowrap">· 판매 {{ seller_stats.total }}</span>
-              <span class="whitespace-nowrap">· 거래완료 {{ seller_stats.sold }}</span>
-            </p>
-          </div>
-          {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
-        </a>
-
-        {# 제목 · 가격 #}
+        {# ① 제목 · 가격 #}
         <div>
           <div class="mb-2 flex flex-wrap items-center gap-1.5">
             {% include "components/status_badge.html" with status=product.status label=product.get_status_display %}
@@ -91,18 +73,34 @@
             {% if product.negotiable %}<span class="badge badge-neutral">가격 제안 가능</span>{% endif %}
           </div>
           <h1 class="page-title break-keep">{{ product.title }}</h1>
-          <p class="mt-1 text-[13px] text-neutral-500">
-            <a href="{% url 'products:list' %}?category={{ product.category.slug }}&amp;region=all" class="hover:text-neutral-800 hover:underline">{{ product.category.name }}</a>
+          <p class="mt-1 text-[13px] leading-[18px] text-neutral-500">
+            <a href="{% url 'products:list' %}?category={{ product.category.slug }}&amp;region=all" class="hover:text-neutral-800 hover:underline coarse:py-3.5">{{ product.category.name }}</a>
             · <time datetime="{{ product.created_at|date:'c' }}">{{ product.created_at|timeago }}</time>
           </p>
-          <p class="price mt-3 text-[26px] leading-8">{{ product.price|price }}</p>
+          <p class="price mt-3 text-[28px] leading-9 tracking-[-0.02em]">{{ product.price|price }}</p>
         </div>
 
-        {# AI 사기 의심 배너 (AI 담당 partial, LOW 면 partial 안에서 숨김) #}
+        {# ② 판매자 카드: 가격과 결정(채팅) 사이에 신뢰 정보 #}
+        <div>
+          <a href="{% url 'accounts:seller_profile' seller.username %}" class="card card-interactive flex items-center gap-3 p-4">
+            {% include "components/avatar.html" with user=seller %}
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-base font-semibold leading-[22px] text-neutral-900">{{ seller|display_name }}</p>
+              {# 두 줄로 고정: 모바일에서 '거래완료 N'이 홀로 줄바꿈되지 않게 #}
+              <p class="truncate text-[13px] leading-[18px] text-neutral-500">{% if product.region %}{{ product.region.dong }}{% elif profile.region %}{{ profile.region.dong }}{% else %}동네 미설정{% endif %}</p>
+              <p class="whitespace-nowrap text-[13px] leading-[18px] text-neutral-500">판매 {{ seller_stats.total }} · 거래완료 {{ seller_stats.sold }}</p>
+            </div>
+            {% include "components/manner_temp.html" with temperature=profile.manner_temperature %}
+          </a>
+          <p class="mt-2 text-xs leading-4 text-neutral-500">매너온도는 36.5°C에서 시작해 거래 후기로 바뀌어요</p>
+        </div>
+
+        {# ③ AI 사기 의심 배너 (AI 담당 partial, LOW 면 partial 안에서 숨김) #}
         {% if fraud_analysis %}
           {% include "ai/partials/fraud_banner.html" with analysis=fraud_analysis product=product %}
         {% endif %}
 
+        {# ④ 차단 안내 #}
         {% if is_blocked %}
           <div class="alert alert-warning" role="status">
             {% include "components/icon.html" with name="ban" %}
@@ -110,7 +108,7 @@
           </div>
         {% endif %}
 
-        {# 구매자 액션 (모바일은 하단 고정 CTA 사용) #}
+        {# ⑤ 구매자 액션 (모바일은 하단 고정 CTA 사용) #}
         {% if not is_owner %}
           <div class="hidden gap-2 md:flex">
             {% if not is_blocked %}{% include "products/partials/wishlist_button.html" with variant="default" %}{% endif %}
@@ -118,12 +116,12 @@
           </div>
         {% endif %}
 
-        {# 판매자 관리 #}
+        {# ⑥ 판매자 관리 #}
         {% if is_owner %}
           <div class="card card-body space-y-4">
             <div class="flex items-center justify-between gap-3">
               <p class="text-[15px] font-semibold text-neutral-900">내 상품 관리</p>
-              <a href="{% url 'chat:list' %}" class="link text-sm">채팅 {{ product.chat_count }}개</a>
+              <a href="{% url 'chat:list' %}" class="link inline-flex items-center text-sm coarse:-my-3 coarse:min-h-11">채팅 {{ product.chat_count }}개</a>
             </div>
             {% include "products/partials/status_form.html" %}
             <div class="grid grid-cols-2 gap-2">
@@ -139,6 +137,7 @@
           </div>
         {% endif %}
 
+        {# ⑦ 후기 남기기 안내 #}
         {% if review_url %}
           <div class="alert alert-info">
             {% include "components/icon.html" with name="star" %}
@@ -147,7 +146,7 @@
           </div>
         {% endif %}
 
-        {# 본문 #}
+        {# ⑧ 본문 · 조회/찜/채팅 #}
         <section aria-label="상품 설명">
           <div class="text-content break-words">{{ product.content }}</div>
           <p class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-neutral-500">
@@ -158,12 +157,13 @@
           </p>
         </section>
 
+        {# ⑨ 안전 안내 · 신고 #}
         {% if not is_owner %}
           <div class="divider my-0"></div>
-          <div class="flex items-center justify-between text-[13px]">
+          <div class="flex items-center justify-between gap-3 text-[13px] leading-[18px]">
             <p class="text-neutral-500">거래 전에 꼭 직접 만나서 확인해 주세요.</p>
             {% if user.is_authenticated %}
-              <a href="{% url 'moderation:report_product' product.pk %}" class="inline-flex items-center gap-1 font-medium text-neutral-500 hover:text-red-700">{% include "components/icon.html" with name="flag" class="h-4 w-4" %}신고하기</a>
+              <a href="{% url 'moderation:report_product' product.pk %}" class="inline-flex min-h-11 shrink-0 items-center gap-1 font-medium text-neutral-500 hover:text-red-700">{% include "components/icon.html" with name="flag" class="h-4 w-4" %}신고하기</a>
             {% endif %}
           </div>
         {% endif %}
@@ -176,7 +176,7 @@
     <section class="mt-14" aria-labelledby="seller-others">
       <div class="mb-4 flex items-end justify-between gap-4">
         <h2 id="seller-others" class="section-title">{{ seller|display_name }}님의 다른 상품</h2>
-        <a href="{% url 'accounts:seller_profile' seller.username %}" class="link shrink-0 text-sm">전체 보기</a>
+        <a href="{% url 'accounts:seller_profile' seller.username %}" class="link inline-flex shrink-0 items-center text-sm coarse:-my-3 coarse:min-h-11">전체 보기</a>
       </div>
       <div class="products-related-grid">
         {% for product in other_products %}{% include "components/product_card.html" %}{% endfor %}
@@ -189,12 +189,12 @@
 
 {% block bottom_cta %}{% if not is_owner %}
 <div class="bottom-cta-inner">
-  {% if not is_blocked %}{% include "products/partials/wishlist_button.html" with variant="cta" %}<span class="h-8 w-px bg-neutral-200" aria-hidden="true"></span>{% endif %}
-  <div class="min-w-0 flex-1">
-    <p class="truncate text-[17px] font-bold leading-6 text-neutral-900">{{ product.price|price }}</p>
-    <p class="text-xs text-neutral-500">{% if product.negotiable %}가격 제안 가능{% elif product.price == 0 %}무료 나눔{% else %}가격 제안 불가{% endif %}</p>
+  {% if not is_blocked %}{% include "products/partials/wishlist_button.html" with variant="cta" %}<span class="h-8 w-px shrink-0 bg-neutral-200" aria-hidden="true"></span>{% endif %}
+  <div class="flex shrink-0 flex-col justify-center">
+    <p class="whitespace-nowrap text-lg font-bold leading-6 text-neutral-900 tabular-nums">{{ product.price|price }}</p>
+    {% if product.price > 0 and product.status != product.Status.SOLD %}<p class="text-xs leading-4 text-neutral-500">{% if product.negotiable %}가격 제안 가능{% else %}가격 제안 불가{% endif %}</p>{% endif %}
   </div>
-  {% include "products/partials/chat_button.html" %}
+  {% include "products/partials/chat_button.html" with btn_class="h-12 px-4 text-base" block_class="min-w-0 flex-1" %}
 </div>
 {% endif %}{% endblock %}
 

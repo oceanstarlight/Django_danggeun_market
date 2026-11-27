@@ -10,7 +10,7 @@
   <form method="post" action="{{ action_url }}" class="form-stack"{% if not standalone %} hx-post="{{ action_url }}" hx-target="#report-form-root" hx-swap="outerHTML"{% endif %} novalidate>
     {% csrf_token %}
 
-    <div class="flex items-center gap-2 rounded-md bg-neutral-50 px-3.5 py-3 text-sm">
+    <div class="flex min-h-11 items-center gap-2 rounded-md bg-neutral-50 px-3.5 py-2.5 text-sm">
       {% include "components/icon.html" with name="flag" class="h-4 w-4 shrink-0 text-neutral-500" %}
       <span class="shrink-0 text-neutral-500">신고 대상</span>
       <strong class="min-w-0 truncate font-semibold text-neutral-900">{{ target_label }}</strong>
@@ -27,11 +27,11 @@
       <legend class="label">{{ form.reason.label }}</legend>
       <div class="grid gap-2">
         {% for choice in form.reason %}
-          <label for="{{ choice.id_for_label }}" class="flex cursor-pointer items-start gap-3 rounded-md border border-neutral-200 px-3.5 py-3 hover:bg-neutral-50 has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+          <label for="{{ choice.id_for_label }}" class="flex min-h-12 cursor-pointer items-start gap-3 rounded-md border border-neutral-300 bg-white px-3.5 py-3 transition-colors duration-150 hover:border-neutral-400 hover:bg-neutral-50 has-[:checked]:border-brand-700 has-[:checked]:bg-brand-50 motion-reduce:transition-none">
             <input type="radio" class="radio mt-0.5" name="{{ form.reason.html_name }}" value="{{ choice.data.value }}" id="{{ choice.id_for_label }}"{% if choice.data.selected %} checked{% endif %}>
             <span class="min-w-0">
               <span class="block text-[15px] font-medium text-neutral-900">{{ choice.choice_label }}</span>
-              <span class="mt-0.5 block text-[13px] leading-[18px] text-neutral-500">{% with v=choice.data.value %}{% if v == "FRAUD" %}선입금 요구, 가품 판매, 외부 메신저 유도 등{% elif v == "PROHIBITED" %}주류, 의약품, 개인정보 등 거래할 수 없는 물건{% elif v == "ABUSE" %}욕설, 비하, 불쾌한 언행{% elif v == "SPAM" %}같은 글 반복, 광고, 외부 링크 홍보{% else %}그 밖의 문제가 있어요{% endif %}{% endwith %}</span>
+              <span class="mt-0.5 block text-pretty text-[13px] leading-[18px] text-neutral-500">{% with v=choice.data.value %}{% if v == "FRAUD" %}선입금 요구, 가품 판매, 외부 메신저 유도 등{% elif v == "PROHIBITED" %}주류, 의약품, 개인정보 등 거래할 수 없는 물건{% elif v == "ABUSE" %}욕설, 비하, 불쾌한 언행{% elif v == "SPAM" %}같은 글 반복, 광고, 외부 링크 홍보{% else %}그 밖의 문제가 있어요{% endif %}{% endwith %}</span>
             </span>
           </label>
         {% endfor %}
@@ -49,7 +49,7 @@
       {% else %}
         <button type="button" class="btn btn-secondary flex-1" data-modal-close>취소</button>
       {% endif %}
-      <button type="submit" class="btn btn-primary flex-1">
+      <button type="submit" class="btn btn-danger flex-1">
         <span class="spinner show-on-request" aria-hidden="true"></span>신고하기
       </button>
     </div>

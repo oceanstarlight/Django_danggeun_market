@@ -13,8 +13,8 @@
   <header class="mb-6 flex items-center gap-2">
     <a href="{% if is_edit %}{% url 'products:detail' product.pk %}{% else %}{% url 'core:home' %}{% endif %}" class="btn btn-ghost btn-icon -ml-2 md:hidden" aria-label="뒤로 가기">{% include "components/icon.html" with name="chevron-left" %}</a>
     <div>
-      <h1 class="page-title">{% if is_edit %}상품 정보 수정{% else %}내 물건 팔기{% endif %}</h1>
-      {% if not is_edit %}<p class="mt-1 text-sm text-neutral-500">사진을 올리면 AI가 제목과 설명 초안을 만들어 드려요.</p>{% endif %}
+      <h1 class="page-title md:text-[28px] md:leading-9">{% if is_edit %}상품 정보 수정{% else %}내 물건 팔기{% endif %}</h1>
+      {% if not is_edit %}<p class="mt-1 text-sm leading-5 text-neutral-500">사진을 올리면 AI가 제목과 설명 초안을 만들어 드려요.</p>{% endif %}
     </div>
   </header>
 
@@ -25,14 +25,14 @@
     </div>
   {% endif %}
 
-  <form id="product-form" method="post" enctype="multipart/form-data" novalidate class="form-stack"
+  <form id="product-form" method="post" enctype="multipart/form-data" novalidate class="form-stack gap-6"
         action="{% if is_edit %}{% url 'products:update' product.pk %}{% else %}{% url 'products:create' %}{% endif %}">
     {% csrf_token %}
 
     {# ───────── 사진 ───────── #}
     <section class="field{% if form.images.errors or form.remove_images.errors %} field-has-error{% endif %}" aria-labelledby="photos-label">
-      <div class="mb-2 flex items-baseline justify-between">
-        <h2 id="photos-label" class="label mb-0">사진 <span class="font-normal text-neutral-500">(선택)</span></h2>
+      <div class="mb-3 flex items-baseline justify-between">
+        <h2 id="photos-label" class="text-h3 text-neutral-900">사진 <span class="text-[13px] font-normal text-neutral-500">(선택)</span></h2>
         <span class="text-[13px] tabular-nums text-neutral-500"><span data-photo-count>{{ existing_images|length }}</span> / {{ max_images }}</span>
       </div>
 
@@ -67,26 +67,38 @@
     {# ───────── AI 도우미 (AI 담당 partial) ───────── #}
     {% include "ai/partials/product_form_ai_panel.html" %}
 
-    {# ───────── 기본 정보 ───────── #}
-    {% include "components/form_field.html" with field=form.title %}
+    {# ───────── 기본 정보 (상자 없이 1px 구분선으로 묶어요) ───────── #}
+    <section class="flex flex-col gap-5 border-t border-neutral-200 pt-6" aria-labelledby="basic-label">
+      <h2 id="basic-label" class="text-h3 text-neutral-900">기본 정보</h2>
+      {% include "components/form_field.html" with field=form.title %}
+      <div class="grid gap-5 sm:grid-cols-2">
+        {% include "components/form_field.html" with field=form.category %}
+        {% include "components/form_field.html" with field=form.condition %}
+      </div>
+    </section>
 
-    <div class="grid gap-5 sm:grid-cols-2">
-      {% include "components/form_field.html" with field=form.category %}
-      {% include "components/form_field.html" with field=form.condition %}
-    </div>
-
-    <div class="field">
+    {# ───────── 가격 (그룹 제목이 라벨 역할 · 입력칸 라벨은 스크린리더용) ───────── #}
+    <section class="field border-t border-neutral-200 pt-6" aria-labelledby="price-label">
+      <h2 id="price-label" class="mb-3 text-h3 text-neutral-900">가격</h2>
       <div class="grid gap-x-5 gap-y-3 sm:grid-cols-2 sm:items-start">
-        {% include "components/form_field.html" with field=form.price suffix="원" %}
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 sm:pt-[30px]">
+        {% include "components/form_field.html" with field=form.price suffix="원" hide_label=True %}
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 sm:min-h-11">
           <button type="button" class="chip" data-price-free aria-pressed="{% if form.price.value == 0 or form.price.value == '0' %}true{% else %}false{% endif %}">나눔으로 올리기</button>
           {% include "components/form_field.html" with field=form.negotiable %}
         </div>
       </div>
-    </div>
+    </section>
 
-    {% include "components/form_field.html" with field=form.region %}
-    {% include "components/form_field.html" with field=form.content %}
+    {# ───────── 거래 동네 ───────── #}
+    <section class="border-t border-neutral-200 pt-6" aria-labelledby="region-label">
+      <h2 id="region-label" class="mb-3 text-h3 text-neutral-900">거래 동네</h2>
+      {% include "components/form_field.html" with field=form.region hide_label=True %}
+    </section>
+
+    {# ───────── 설명 (자기 라벨 유지) ───────── #}
+    <div class="border-t border-neutral-200 pt-6">
+      {% include "components/form_field.html" with field=form.content %}
+    </div>
 
     <div class="alert alert-info">
       {% include "components/icon.html" with name="info" %}

@@ -85,6 +85,8 @@
 
   function nearBottom() { return scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 160; }
   function scrollToBottom(smooth) {
+    // 동작 줄이기 설정이면 부드러운 스크롤 대신 바로 이동 (CSS 로는 JS 의 behavior 옵션을 못 막아요)
+    if (smooth && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) smooth = false;
     if (smooth && scroller.scrollTo) scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
     else scroller.scrollTop = scroller.scrollHeight;
   }

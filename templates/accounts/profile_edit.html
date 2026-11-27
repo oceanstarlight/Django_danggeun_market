@@ -9,10 +9,10 @@
 {% block content %}
 <div class="container-page py-6 md:py-10">
   <div class="mx-auto w-full max-w-xl">
-    <a href="{% url 'accounts:mypage' %}" class="-ml-1 inline-flex items-center gap-0.5 rounded-sm text-sm font-medium text-neutral-500 hover:text-neutral-900">
+    <a href="{% url 'accounts:mypage' %}" class="-ml-1 inline-flex min-h-11 items-center gap-0.5 rounded-sm pr-1 text-sm font-medium text-neutral-600 hover:text-neutral-900">
       {% include "components/icon.html" with name="chevron-left" class="h-4 w-4" %}마이페이지
     </a>
-    <h1 class="page-title mt-2">프로필 수정</h1>
+    <h1 class="page-title mt-1">프로필 수정</h1>
     <p class="muted mt-1 text-[15px]">이웃에게 보여지는 정보예요.</p>
 
     <form id="profile-form" method="post" enctype="multipart/form-data" action="{% url 'accounts:profile_edit' %}" class="card card-body mt-6 md:p-6" novalidate>
@@ -40,7 +40,7 @@
           <div class="flex flex-wrap items-center gap-2">
             <label for="{{ form.avatar.id_for_label }}" class="btn btn-secondary btn-sm cursor-pointer">사진 선택</label>
             {% if profile.avatar_url %}
-              <label for="{{ form.remove_avatar.id_for_label }}" class="inline-flex cursor-pointer items-center gap-2 text-[13px] text-neutral-600">
+              <label for="{{ form.remove_avatar.id_for_label }}" class="inline-flex min-h-11 cursor-pointer items-center gap-2 text-[13px] text-neutral-700">
                 {{ form.remove_avatar }}<span>{{ form.remove_avatar.label }}</span>
               </label>
             {% endif %}

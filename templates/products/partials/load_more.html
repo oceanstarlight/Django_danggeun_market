@@ -3,7 +3,7 @@
 {% endcomment %}{% if page_obj.has_next %}
 <div id="load-more" class="col-span-full flex flex-col items-center gap-3 pt-2">
   {% querystring page=page_obj.next_page_number as next_url %}
-  <a href="{{ next_url }}" class="btn btn-secondary min-w-[160px]"
+  <a href="{{ next_url }}" class="btn btn-secondary min-w-[200px]"
      hx-get="{{ next_url }}" hx-target="#load-more" hx-swap="outerHTML" hx-push-url="false">
     <span class="hide-on-request">더보기</span>
     <span class="show-on-request"><span class="spinner"></span></span>
