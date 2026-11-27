@@ -3,6 +3,7 @@
  * - 빌드: npm run build:css  →  static/css/app.css
  * - 컴포넌트 클래스 목록은 refactor_spec 6절이 계약. 이름을 바꾸지 마세요.
  * - 원칙: 사진이 주인공, UI는 물러남 · 1px 보더 · 그림자 최소 · 150ms 절제된 모션
+ * - 접근성: 컨트롤 테두리 3:1(neutral-450) · 2px 틸 outline 포커스 · 터치 44px(coarse:) · 모바일 입력 16px
  */
 @tailwind base;
 @tailwind components;
@@ -15,15 +16,16 @@
     min-width: 0;
   }
 
-  /* 디자인 토큰 (다크모드 대비 변수화) */
+  /* 디자인 토큰 (다크모드 대비 변수화, 채널 형식이라 Tailwind 투명도 수식어와 함께 써요) */
   :root {
     --poly-brand: 15 118 110;        /* brand-700 */
     --poly-brand-strong: 17 94 89;   /* brand-800 */
     --poly-surface: 255 255 255;
     --poly-surface-muted: 250 250 249;
-    --poly-border: 231 229 228;      /* neutral-200 */
+    --poly-border: 231 229 228;      /* neutral-200: 구분선 · 카드 테두리 (장식) */
+    --poly-stroke-control: 148 141 135; /* neutral-450: 입력 컨트롤 테두리 (3:1) */
     --poly-text: 28 25 23;           /* neutral-900 */
-    --poly-text-muted: 120 113 108;  /* neutral-500 */
+    --poly-text-muted: 120 113 108;  /* neutral-500: 흰 · #FAFAF9 · #F0FDFA 바탕에서만 */
     --poly-ai: 124 58 237;           /* violet-600 */
     --poly-nav-h: 56px;
     --poly-tabbar-h: 56px;
@@ -31,7 +33,8 @@
     color-scheme: light;
   }
   @media (min-width: 768px) {
-    :root { --poly-nav-h: 64px; }
+    /* 데스크톱은 탭바가 없어요 */
+    :root { --poly-nav-h: 64px; --poly-tabbar-h: 0px; }
   }
 
   html {
@@ -39,6 +42,9 @@
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
     text-rendering: optimizeLegibility;
+    /* 포커스가 고정 내비 · 탭바 · 하단 CTA 밑에 숨지 않게 (WCAG 2.4.11) */
+    scroll-padding-top: calc(var(--poly-nav-h) + 8px);
+    scroll-padding-bottom: calc(var(--poly-tabbar-h) + env(safe-area-inset-bottom) + 8px);
   }
 
   body {
@@ -49,12 +55,14 @@
   }
 
   h1, h2, h3, h4 { @apply text-neutral-900; }
+  /* 제목 줄 균형 (상품 카드 제목은 line-clamp 때문에 제외) */
+  h1 { text-wrap: balance; }
 
   ::selection { @apply bg-brand-100 text-brand-900; }
 
-  /* 키보드 포커스 링 기본값 (마우스 클릭에는 표시 안 함) */
+  /* 키보드 포커스: 2px 틸 outline (forced-colors 에서도 보여요). 마우스 클릭에는 표시 안 함 */
   :focus-visible {
-    outline: 2px solid theme("colors.brand.500");
+    outline: 2px solid theme("colors.brand.700");
     outline-offset: 2px;
   }
 
@@ -78,85 +86,95 @@
 
 /* ───────────────────────── 컴포넌트 ───────────────────────── */
 @layer components {
-  /* ── 버튼 ── */
+  /* ── 버튼 (기본 44px · sm 36px→터치 44px · lg 52px) ── */
   .btn {
-    @apply relative inline-flex h-10 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-4 text-[15px] font-semibold leading-none;
+    @apply relative inline-flex h-11 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-4 text-[15px] font-semibold leading-none;
     transition: color 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out, transform 150ms ease-out;
   }
+  /* 틸 버튼도 offset 2px 의 흰 틈이 남아요. 변형별 ring 규칙은 없애서 outline 이 겹치지 않게 */
   .btn:focus-visible {
-    @apply outline-none ring-2 ring-brand-500 ring-offset-2;
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 2px;
   }
   .btn:active:not(:disabled) { transform: scale(0.98); }
   .btn:disabled,
   .btn[aria-disabled="true"] { @apply pointer-events-none opacity-40; }
   .btn > svg { @apply h-[18px] w-[18px] shrink-0; }
 
-  .btn-primary { @apply bg-brand-700 text-white hover:bg-brand-800; }
+  .btn-primary { @apply bg-brand-700 text-white hover:bg-brand-800 active:bg-brand-900; }
   .btn-secondary { @apply border-neutral-300 bg-white text-neutral-800 hover:border-neutral-400 hover:bg-neutral-50; }
   .btn-ghost { @apply bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900; }
   .btn-danger { @apply bg-red-700 text-white hover:bg-red-800; }
-  .btn-danger:focus-visible { @apply ring-red-500; }
   /* AI 전용: violet 보조색 */
   .btn-ai {
     @apply border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300 hover:bg-violet-100 hover:text-violet-800;
   }
-  .btn-ai:focus-visible { @apply ring-violet-500; }
 
-  .btn-sm { @apply h-8 gap-1 rounded-sm px-3 text-[13px]; }
+  .btn-sm { @apply h-9 gap-1 rounded-sm px-3 text-[13px] coarse:min-h-11; }
   .btn-sm > svg { @apply h-4 w-4; }
-  .btn-lg { @apply h-12 px-5 text-base; }
+  .btn-lg { @apply h-[52px] px-5 text-base; }
   .btn-lg > svg { @apply h-5 w-5; }
   .btn-block { @apply flex w-full; }
   /* 아이콘 전용 정사각 버튼 (보조) */
-  .btn-icon { @apply w-10 px-0; }
-  .btn-icon.btn-sm { @apply w-8; }
-  .btn-icon.btn-lg { @apply w-12; }
+  .btn-icon { @apply w-11 px-0; }
+  .btn-icon.btn-sm { @apply w-9 coarse:min-w-11; }
+  .btn-icon.btn-lg { @apply w-[52px]; }
 
   /* 로딩 스피너 (버튼/인디케이터 공용) */
   .spinner {
     @apply inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-r-transparent align-[-2px];
   }
 
-  /* ── 폼 ── */
+  /* ── 폼 (테두리 neutral-450 = 3:1, 플레이스홀더 neutral-500 = 4.8:1) ── */
   .input {
-    @apply form-input block h-11 w-full rounded-sm border-neutral-300 bg-white px-3 text-base text-neutral-900 shadow-none placeholder:text-neutral-400;
+    @apply form-input block h-11 w-full rounded-sm border-neutral-450 bg-white px-3 text-base text-neutral-900 shadow-none placeholder:text-neutral-500;
     transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
   }
   .textarea {
-    @apply form-textarea block min-h-[120px] w-full resize-y rounded-sm border-neutral-300 bg-white px-3 py-2.5 text-base leading-7 text-neutral-900 shadow-none placeholder:text-neutral-400;
+    @apply form-textarea block min-h-[120px] w-full resize-y rounded-sm border-neutral-450 bg-white px-3 py-2.5 text-base leading-7 text-neutral-900 shadow-none placeholder:text-neutral-500;
     transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
   }
   .select {
-    @apply form-select block h-11 w-full rounded-sm border-neutral-300 bg-white py-0 pl-3 pr-10 text-base text-neutral-900 shadow-none;
+    @apply form-select block h-11 w-full rounded-sm border-neutral-450 bg-white py-0 pl-3 pr-10 text-base text-neutral-900 shadow-none;
     transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
   }
-  .input:hover, .textarea:hover, .select:hover { @apply border-neutral-400; }
+  .input:hover, .textarea:hover, .select:hover { @apply border-neutral-600; }
+  /* 포커스: 틸 테두리 + 2px outline(offset 0, forced-colors 대응) + 옅은 3px 링(장식) */
   .input:focus, .textarea:focus, .select:focus {
-    @apply border-brand-600 outline-none ring-[3px] ring-brand-500/20 ring-offset-0;
+    @apply border-brand-700 ring-[3px] ring-brand-700/[.18] ring-offset-0;
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 0;
   }
   .input:disabled, .textarea:disabled, .select:disabled {
     @apply cursor-not-allowed border-neutral-200 bg-neutral-100 text-neutral-500;
   }
   .input[aria-invalid="true"], .textarea[aria-invalid="true"], .select[aria-invalid="true"],
   .field-has-error .input, .field-has-error .textarea, .field-has-error .select {
-    @apply border-red-600;
+    @apply border-red-700;
   }
+  .input[aria-invalid="true"]:focus, .textarea[aria-invalid="true"]:focus, .select[aria-invalid="true"]:focus,
   .field-has-error .input:focus, .field-has-error .textarea:focus, .field-has-error .select:focus {
-    @apply ring-red-500/20;
+    @apply border-red-700 ring-red-700/[.18];
+    outline-color: theme("colors.red.700");
   }
   input[type="file"].input {
     @apply h-auto cursor-pointer px-0 py-0 text-sm text-neutral-600 file:mr-3 file:h-11 file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-neutral-300 file:bg-neutral-50 file:px-4 file:text-sm file:font-semibold file:text-neutral-800 hover:file:bg-neutral-100;
   }
 
   .checkbox {
-    @apply form-checkbox h-5 w-5 shrink-0 cursor-pointer rounded-[5px] border-neutral-300 text-brand-700;
+    @apply form-checkbox h-5 w-5 shrink-0 cursor-pointer rounded-[5px] border-neutral-450 text-brand-700;
     transition: background-color 150ms ease-out, border-color 150ms ease-out;
   }
-  .checkbox:focus { @apply ring-2 ring-brand-500/30 ring-offset-0; }
   .radio {
-    @apply form-radio h-5 w-5 shrink-0 cursor-pointer border-neutral-300 text-brand-700;
+    @apply form-radio h-5 w-5 shrink-0 cursor-pointer border-neutral-450 text-brand-700;
   }
-  .radio:focus { @apply ring-2 ring-brand-500/30 ring-offset-0; }
+  .checkbox:hover, .radio:hover { @apply border-neutral-600; }
+  /* forms 플러그인의 투명 outline · ring 대신 공통 2px outline */
+  .checkbox:focus, .radio:focus { box-shadow: none; }
+  .checkbox:focus-visible, .radio:focus-visible {
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 2px;
+  }
 
   .label { @apply mb-1.5 block text-[13px] font-semibold leading-[18px] text-neutral-800; }
   .help { @apply mt-1.5 text-[13px] leading-[18px] text-neutral-500; }
@@ -169,19 +187,19 @@
   .form-stack { @apply flex flex-col gap-5; }
   .input-affix { @apply relative; }
   .input-affix > .input { @apply pr-10; }
-  .input-suffix { @apply pointer-events-none absolute inset-y-0 right-3 flex items-center text-[15px] font-medium text-neutral-500; }
+  .input-suffix { @apply pointer-events-none absolute inset-y-0 right-3 flex items-center text-[15px] font-medium text-neutral-600; }
   /* 동네 3단 선택 (components/region_select.html): 모바일은 세로로, sm 부터 한 줄 */
   .region-select { @apply grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]; }
   .region-select-item { @apply min-w-0; }
   .region-select-control { @apply pr-8; }
   /* 목록 필터: 모바일도 한 줄(3칸)로 — 세로로 쌓이면 첫 화면 절반 이상을 필터가 차지해요 */
   .region-select-filter { @apply w-full grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 sm:w-auto sm:flex-none sm:gap-2 sm:grid-cols-[176px_152px_144px]; }
-  .region-select-filter .region-select-control { @apply h-10 pl-2.5 pr-7 text-[13px] sm:pl-3 sm:pr-8 sm:text-sm; background-position: right 0.375rem center; }
+  .region-select-filter .region-select-control { @apply h-10 pl-2.5 pr-7 text-[13px] coarse:h-11 sm:pl-3 sm:pr-8 sm:text-sm; background-position: right 0.375rem center; }
   @media (min-width: 640px) { .region-select-filter .region-select-control { background-position: right 0.5rem center; } }
-  .choice-list { @apply flex flex-wrap gap-2; }
-  .choice-list label { @apply inline-flex cursor-pointer items-center gap-2 text-[15px] text-neutral-800; }
+  .choice-list { @apply flex flex-wrap gap-x-4 gap-y-1; }
+  .choice-list label { @apply inline-flex min-h-11 cursor-pointer items-center gap-2 text-[15px] text-neutral-800; }
 
-  /* ── 카드 ── */
+  /* ── 카드 (단계 0: 1px 테두리, 그림자 없음 / 단계 1: 클릭 카드 hover) ── */
   .card { @apply rounded-lg border border-neutral-200 bg-white; }
   .card-body { @apply p-4 md:p-5; }
   .card-interactive {
@@ -189,22 +207,25 @@
     transition: border-color 150ms ease-out, box-shadow 200ms ease-out;
   }
 
-  /* ── 칩 (필터/카테고리) ── */
+  /* ── 칩 (필터/카테고리): 40px, 터치 44px ── */
   .chip {
-    @apply inline-flex h-9 shrink-0 cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-full border border-neutral-200 bg-white px-3.5 text-sm font-medium text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900;
+    @apply inline-flex h-10 shrink-0 cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-full border border-neutral-300 bg-white px-3.5 text-sm font-medium text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50 hover:text-neutral-900 coarse:h-11;
     transition: color 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
   }
-  .chip:focus-visible { @apply outline-none ring-2 ring-brand-500 ring-offset-1; }
   .chip > svg { @apply h-4 w-4; }
+  /* 선택 상태: 클래스 · aria-current(현재 필터) · aria-pressed(토글 버튼) 모두 같은 모양 */
   .chip-active,
-  .chip-active:hover { @apply border-brand-600 bg-brand-100 text-brand-800; }
-  /* 가로 스크롤 칩 줄 (보조) */
-  .chip-row { @apply -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0; scrollbar-width: none; }
+  .chip-active:hover,
+  .chip[aria-current]:not([aria-current="false"]),
+  .chip[aria-pressed="true"] { @apply border-brand-700 bg-brand-100 font-semibold text-brand-800; }
+  /* 가로 스크롤 칩 줄 (보조): 위아래 여백으로 포커스 outline 이 잘리지 않게, 안쪽 outline */
+  .chip-row { @apply -mx-4 -my-1.5 flex gap-2 overflow-x-auto px-4 py-1.5 md:mx-0 md:flex-wrap md:overflow-visible md:px-0; scrollbar-width: none; }
   .chip-row::-webkit-scrollbar { display: none; }
+  .chip-row :focus-visible { outline-offset: -2px; }
 
-  /* ── 배지 ── */
+  /* ── 배지 (24px · 6px 모서리, 글자가 상태를 말하고 색은 거들기만) ── */
   .badge {
-    @apply inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-sm px-2 text-xs font-semibold leading-none;
+    @apply inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded-xs px-2 text-xs font-semibold leading-none;
   }
   .badge > svg { @apply h-3.5 w-3.5; }
   .badge-selling { @apply bg-brand-100 text-brand-800; }
@@ -216,7 +237,7 @@
   /* ── 레이아웃/타이포 ── */
   .container-page { @apply mx-auto w-full max-w-6xl px-4 md:px-6; }
   .page-title { @apply text-h1 text-neutral-900 md:text-[28px] md:leading-9; }
-  .section-title { @apply text-h2 text-neutral-900; }
+  .section-title { @apply text-h2 text-neutral-900; text-wrap: balance; }
   .muted { @apply text-neutral-500; }
   .price { @apply text-xl font-bold leading-7 tracking-[-0.01em] text-neutral-900; font-variant-numeric: tabular-nums; }
   .divider { @apply my-6 h-0 w-full border-0 border-t border-neutral-200; }
@@ -235,7 +256,7 @@
   .alert-info { @apply border-blue-200 bg-blue-50 text-blue-800; }
   .alert-success { @apply border-green-200 bg-green-50 text-green-800; }
   /* 좌측 4px 강조 바 (사기 경고 배너 등, 보조) */
-  .alert-accent { @apply rounded-l-sm border-l-4; }
+  .alert-accent { @apply rounded-l-[4px] border-l-4; }
   .alert-danger.alert-accent { @apply border-l-red-600; }
   .alert-warning.alert-accent { @apply border-l-amber-500; }
 
@@ -247,7 +268,7 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s linear infinite;
   }
-  .skeleton-text { @apply h-3.5 rounded-sm; }
+  .skeleton-text { @apply h-3.5 rounded-xs; }
 
   /* ── 아바타 ── */
   .avatar {
@@ -257,51 +278,55 @@
   .avatar-sm { @apply h-8 w-8 text-xs; }
   .avatar-lg { @apply h-16 w-16 text-xl; }
 
-  /* ── 상품 그리드/카드 ── */
+  /* ── 상품 그리드/카드 (1:1 사진 · 제목 · 굵은 가격 · 동네 · 시간) ── */
   .product-grid { @apply grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-8 xl:grid-cols-5; }
 
   .product-card { @apply block min-w-0 rounded-md text-neutral-900; }
-  .product-card:focus-visible { @apply outline-none ring-2 ring-brand-500 ring-offset-4; }
+  .product-card:focus-visible { outline-offset: 4px; }
   .product-card-media { @apply relative aspect-square overflow-hidden rounded-md bg-neutral-100 ring-1 ring-inset ring-black/5; }
   .product-card-img {
     @apply h-full w-full object-cover;
     transition: transform 200ms var(--poly-ease);
   }
   .product-card:hover .product-card-img { transform: scale(1.03); }
-  .product-card-badge { @apply absolute left-2 top-2 shadow-sm; }
-  .product-card-sold { @apply absolute inset-0 bg-white/50; }
+  .product-card-badge { @apply absolute left-2 top-2 shadow-sm ring-1 ring-inset ring-white/60; }
+  .product-card-sold { @apply absolute inset-0 bg-white/[.55]; }
   .product-card-body { @apply pt-2.5; }
   .product-card-title { @apply line-clamp-2 text-[15px] leading-[22px] text-neutral-800; }
-  .product-card:hover .product-card-title { @apply text-neutral-900; }
-  .product-card-price { @apply mt-1 text-base font-bold leading-6 text-neutral-900; font-variant-numeric: tabular-nums; }
+  .product-card-price { @apply mt-1 text-[17px] font-bold leading-6 text-neutral-900; font-variant-numeric: tabular-nums; }
+  /* 거래완료: 흰 베일 + 배지, 가격은 한 단계 낮춰요 */
+  .product-card:has(.product-card-sold) .product-card-price { @apply text-neutral-600; }
   .product-card-meta { @apply mt-1 flex items-center justify-between gap-2 text-[13px] leading-[18px] text-neutral-500; }
   .product-card-stats { @apply flex shrink-0 items-center gap-2; }
   .product-card-stats > span { @apply inline-flex items-center gap-0.5; }
   .product-card-stats svg { @apply h-3.5 w-3.5; }
 
-  /* ── 탭 ── */
+  /* ── 탭 (밑줄만 틸, 개수는 중립색) ── */
   .tab-list { @apply flex gap-5 overflow-x-auto border-b border-neutral-200; scrollbar-width: none; }
   .tab-list::-webkit-scrollbar { display: none; }
   .tab {
     @apply relative -mb-px inline-flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-0.5 text-[15px] font-medium text-neutral-500 hover:text-neutral-800;
     transition: color 150ms ease-out, border-color 150ms ease-out;
   }
-  .tab:focus-visible { @apply rounded-sm outline-none ring-2 ring-brand-500; }
+  /* 스크롤 영역 안이라 안쪽 outline */
+  .tab:focus-visible { @apply rounded-xs; outline-offset: -2px; }
   .tab-active,
   .tab-active:hover { @apply border-brand-700 font-semibold text-neutral-900; }
   .tab-count { @apply text-[13px] font-medium text-neutral-500; }
+  .tab-active .tab-count { @apply text-neutral-900; }
 
-  /* ── 드롭다운 ── */
+  /* ── 드롭다운 (단계 2 그림자) ── */
   .dropdown {
     @apply absolute right-0 top-full z-50 mt-2 min-w-[12rem] origin-top-right overflow-hidden rounded-lg border border-neutral-200 bg-white p-1.5 text-neutral-800 shadow-lg;
     animation: fade-up 160ms var(--poly-ease) both;
   }
   .dropdown-header { @apply px-3 pb-2 pt-1.5; }
   .dropdown-item {
-    @apply flex h-10 w-full items-center gap-2.5 rounded-md px-3 text-left text-sm font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900;
+    @apply flex h-10 w-full items-center gap-2.5 rounded-sm px-3 text-left text-sm font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 coarse:h-11;
     transition: background-color 120ms ease-out;
   }
-  .dropdown-item:focus-visible { @apply bg-neutral-100 outline-none; }
+  /* 패널이 overflow-hidden 이라 안쪽 outline */
+  .dropdown-item:focus-visible { @apply bg-neutral-100; outline-offset: -2px; }
   .dropdown-item > svg { @apply h-[18px] w-[18px] shrink-0 text-neutral-500; }
   .dropdown-item-danger { @apply text-red-700 hover:bg-red-50 hover:text-red-800; }
   .dropdown-item-danger > svg { @apply text-red-600; }
@@ -320,54 +345,64 @@
   .nav {
     @apply sticky top-0 z-40 border-b border-neutral-200 bg-white/90 backdrop-blur-md;
     -webkit-backdrop-filter: saturate(180%) blur(12px);
+    backdrop-filter: saturate(180%) blur(12px);
   }
   .nav-inner { @apply flex h-14 items-center gap-3 md:h-16 md:gap-5; }
   .nav-logo { @apply flex shrink-0 items-center gap-2 rounded-md text-[19px] font-extrabold tracking-[-0.03em] text-neutral-900; }
-  .nav-logo:focus-visible { @apply outline-none ring-2 ring-brand-500 ring-offset-2; }
   .nav-logo > svg { @apply h-7 w-7; }
   .nav-search { @apply relative max-w-md flex-1; }
-  .nav-search > svg { @apply pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-500; }
+  /* 회색 알약 위 아이콘 · 플레이스홀더는 neutral-600 (neutral-500 은 4.40:1 로 부족) */
+  .nav-search > svg { @apply pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-600; }
   .nav-search-input {
-    @apply form-input h-10 w-full rounded-full border-transparent bg-neutral-100 pl-10 pr-4 text-[15px] text-neutral-900 shadow-none placeholder:text-neutral-500 hover:bg-neutral-200/70;
+    @apply form-input h-10 w-full rounded-full border-transparent bg-neutral-100 pl-10 pr-4 text-[15px] text-neutral-900 shadow-none placeholder:text-neutral-600 hover:bg-neutral-200/70;
     transition: background-color 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out;
   }
-  .nav-search-input:focus { @apply border-brand-600 bg-white outline-none ring-[3px] ring-brand-500/20; }
+  .nav-search-input:focus {
+    @apply border-brand-700 bg-white;
+    box-shadow: none;
+    outline: 2px solid theme("colors.brand.700");
+    outline-offset: 0;
+  }
   .nav-actions { @apply ml-auto flex items-center gap-1 md:gap-1.5; }
   .nav-icon-btn {
-    @apply relative inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900;
+    @apply relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900;
     transition: background-color 150ms ease-out, color 150ms ease-out;
   }
-  .nav-icon-btn:focus-visible { @apply outline-none ring-2 ring-brand-500 ring-offset-1; }
+  .nav-icon-btn:focus-visible { outline-offset: 0; }
   .nav-icon-btn[aria-expanded="true"] { @apply bg-neutral-100 text-neutral-900; }
   .nav-icon-btn > svg { @apply h-[22px] w-[22px]; }
-  .nav-link { @apply inline-flex h-10 items-center gap-1 rounded-md px-3 text-[15px] font-semibold text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900; }
+  .nav-link { @apply inline-flex h-10 items-center gap-1 rounded-md px-3 text-[15px] font-semibold text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 coarse:h-11; }
   .nav-link > svg { @apply h-4 w-4; }
-  /* 빨간 숫자 배지 (99+) */
+  /* 빨간 숫자 배지 (99+) — 마크업은 <span class="nav-badge">N</span> 그대로 (테스트 계약) */
   .nav-badge {
-    @apply pointer-events-none absolute -right-0.5 -top-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white;
+    @apply pointer-events-none absolute right-0 top-0 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white;
     font-variant-numeric: tabular-nums;
   }
   .nav-dot { @apply pointer-events-none absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-600 ring-2 ring-white; }
 
   /* ── 모바일 하단 탭바 ── */
   .tabbar {
-    @apply fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-neutral-200 bg-white/95 backdrop-blur-md md:hidden;
+    @apply fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 bg-white/95 backdrop-blur-md md:hidden;
     padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -1px 0 theme("colors.neutral.200"), 0 -6px 16px -8px rgb(28 25 23 / 0.10);
   }
   .tabbar-item {
-    @apply relative flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-neutral-500;
+    @apply relative flex h-14 flex-col items-center justify-center gap-0.5 text-[12px] font-medium leading-4 text-neutral-500;
     transition: color 150ms ease-out;
   }
   .tabbar-item > svg { @apply h-6 w-6; }
-  .tabbar-item[aria-current="page"] { @apply text-neutral-900; }
-  .tabbar-item:focus-visible { @apply outline-none ring-2 ring-inset ring-brand-500; }
+  .tabbar-item[aria-current="page"] { @apply font-semibold text-brand-700; }
+  .tabbar-item[aria-current="page"] > svg { stroke-width: 2.25; }
+  .tabbar-item:focus-visible { outline-offset: -2px; }
   .tabbar-item .nav-dot { @apply right-[calc(50%-16px)] top-2; }
-  .tabbar-write > svg { @apply rounded-md bg-brand-700 p-0.5 text-white; }
+  .tabbar-write { @apply text-neutral-700; }
+  .tabbar-write > svg { @apply h-7 w-7 rounded-sm bg-brand-700 p-1 text-white; }
 
   /* 모바일 하단 고정 CTA (base.html bottom_cta 블록) */
   .bottom-cta {
-    @apply fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white md:hidden;
+    @apply fixed inset-x-0 bottom-0 z-40 bg-white md:hidden;
     padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -1px 0 theme("colors.neutral.200"), 0 -6px 16px -8px rgb(28 25 23 / 0.10);
   }
   .bottom-cta:empty { display: none; }
   .bottom-cta-inner { @apply flex h-16 items-center gap-3 px-4; }
@@ -386,7 +421,10 @@
   }
   .toast > svg, .toast-icon > svg { @apply mt-px h-5 w-5 shrink-0; }
   .toast-message { @apply min-w-0 flex-1 pt-px; }
-  .toast-close { @apply -my-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-white/60 hover:bg-white/10 hover:text-white; }
+  /* 보이는 크기 32px, 누르는 영역 44px */
+  .toast-close { @apply relative -my-1.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm text-white/70 hover:bg-white/10 hover:text-white; }
+  .toast-close::after { content: ""; @apply absolute -inset-1.5; }
+  .toast-close:focus-visible { outline-offset: 0; }
   .toast-close > svg { @apply h-4 w-4; }
   .toast-success svg:first-child { @apply text-brand-300; }
   .toast-info svg:first-child { @apply text-sky-300; }
@@ -403,10 +441,12 @@
     animation: fade-up 200ms var(--poly-ease) both;
   }
   .modal-lg .modal-panel { @apply sm:max-w-2xl; }
-  .modal-header { @apply sticky top-0 z-10 flex items-center justify-between gap-3 bg-white px-5 pb-2 pt-4; }
+  .modal-header { @apply sticky top-0 z-10 flex min-h-14 items-center justify-between gap-3 bg-white py-1.5 pl-5 pr-3; }
   .modal-title { @apply text-h3 text-neutral-900; }
-  .modal-body { @apply px-5 pb-5 pt-2; }
-  .modal-footer { @apply flex gap-2 border-t border-neutral-200 px-5 py-4; }
+  .modal-body { @apply px-5 pb-5 pt-1; }
+  /* 버튼 44px, 주 버튼은 오른쪽 · 모바일은 반반 */
+  .modal-footer { @apply flex gap-2 border-t border-neutral-200 px-5 py-4 sm:justify-end; }
+  .modal-footer > .btn { @apply flex-1 sm:flex-none; }
   /* 바텀시트 손잡이 */
   .modal-panel::before {
     content: "";
@@ -414,10 +454,10 @@
   }
   body.modal-open { overflow: hidden; }
 
-  /* ── 페이지네이션 ── */
+  /* ── 페이지네이션 (44px) ── */
   .pagination { @apply flex items-center justify-center gap-1; }
   .page-link {
-    @apply inline-flex h-10 min-w-[40px] items-center justify-center rounded-md px-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900;
+    @apply inline-flex h-11 min-w-[44px] items-center justify-center rounded-md px-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900;
     font-variant-numeric: tabular-nums;
   }
   .page-link > svg { @apply h-[18px] w-[18px]; }
@@ -430,21 +470,31 @@
   .empty-state-title { @apply text-h3 text-neutral-900; }
   .empty-state-desc { @apply mt-1.5 max-w-xs text-sm leading-[22px] text-neutral-500; }
 
-  /* ── 매너온도 ── */
-  .manner { @apply inline-flex min-w-[96px] shrink-0 flex-col items-end gap-1.5 sm:min-w-[132px]; }
-  .manner-value { @apply inline-flex items-center gap-1 text-base font-bold leading-none; font-variant-numeric: tabular-nums; }
-  .manner-track { @apply h-1.5 w-full overflow-hidden rounded-full bg-neutral-200; }
+  /* ── 매너온도 (기준 36.5° 눈금이 있는 게이지; 색은 틸 하나, 단계는 글자로) ── */
+  .manner { @apply inline-flex w-[120px] shrink-0 flex-col items-end gap-1.5 sm:w-[148px]; }
+  .manner-value { @apply inline-flex items-center gap-1 text-[17px] font-bold leading-5; font-variant-numeric: tabular-nums; }
+  /* 단계 말 (차가워요 · 보통이에요 · 따뜻해요 · 뜨거워요 · 최고예요) */
+  .manner-tier { @apply text-[13px] font-medium leading-[18px] text-neutral-700; }
+  /* 트랙 + 기준 눈금을 감싸는 틀 (눈금이 트랙 위아래로 3px 나와요) */
+  .manner-scale { @apply relative block w-full py-[3px]; }
+  .manner-track { @apply block h-1.5 w-full overflow-hidden rounded-full bg-neutral-200; }
   .manner-bar { @apply block h-full rounded-full; transition: width 400ms var(--poly-ease); }
-  .manner-label { @apply text-xs font-medium leading-none text-neutral-500 underline decoration-neutral-300 decoration-dotted underline-offset-4; }
+  /* 36.5° 기준 눈금: 2×12px 잉크 + 1px 흰 테두리라 어떤 채움 위에서도 보여요 */
+  .manner-baseline {
+    @apply pointer-events-none absolute left-[36.5%] top-0 -ml-px h-3 w-0.5 rounded-[1px] bg-neutral-600;
+    box-shadow: 0 0 0 1px #FFFFFF;
+  }
+  .manner-label { @apply text-xs font-medium leading-4 text-neutral-500; }
 
   /* ── 채팅 말풍선 (chat 앱에서 사용 가능, 보조) ── */
-  .bubble { @apply max-w-[75%] whitespace-pre-line break-words px-3.5 py-2 text-[15px] leading-[22px]; }
-  .bubble-me { @apply rounded-[16px] rounded-br-[4px] bg-brand-700 text-white; }
-  .bubble-other { @apply rounded-[16px] rounded-bl-[4px] bg-neutral-100 text-neutral-900; }
+  .bubble { @apply max-w-[80%] whitespace-pre-line break-words px-3.5 py-2 text-[15px] leading-[22px]; }
+  .bubble-me { @apply rounded-[18px] rounded-br-[4px] bg-brand-700 text-white; }
+  /* 상대 말풍선: #FAFAF9 대화창 위에서 묻히지 않게 흰 바탕 + 1px 테두리 */
+  .bubble-other { @apply rounded-[18px] rounded-bl-[4px] bg-white text-neutral-900 ring-1 ring-inset ring-neutral-200; }
   .bubble-meta { @apply shrink-0 text-[11px] leading-4 text-neutral-500; }
 
   /* 썸네일 (보조) */
-  .thumb { @apply aspect-square shrink-0 rounded-md bg-neutral-100 object-cover ring-1 ring-inset ring-black/5; }
+  .thumb { @apply aspect-square shrink-0 rounded-sm bg-neutral-100 object-cover ring-1 ring-inset ring-black/5; }
 
   /* 본문 바로가기 (접근성) */
   .skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[80] focus:rounded-md focus:bg-neutral-900 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white; }
@@ -459,9 +509,9 @@
 
   /* 이미지 미리보기 (data-preview-target) */
   .preview-grid { @apply grid grid-cols-4 gap-2 sm:grid-cols-5; }
-  .preview-item { @apply relative overflow-hidden rounded-md; }
+  .preview-item { @apply relative overflow-hidden rounded-sm; }
   .preview-item > img { @apply thumb w-full; }
-  .preview-item-badge { @apply absolute bottom-1 left-1 rounded-sm bg-neutral-900/75 px-1.5 py-0.5 text-[11px] font-semibold text-white; }
+  .preview-item-badge { @apply absolute bottom-1 left-1 rounded-xs bg-neutral-900/75 px-1.5 py-0.5 text-[11px] font-semibold text-white; }
 }
 
 /* ───────────────────────── 유틸리티 보강 ───────────────────────── */
@@ -492,6 +542,20 @@
 @media (max-width: 767.98px) {
   body:has(.bottom-cta:not(:empty)) .tabbar { display: none; }
   body:has(.bottom-cta:not(:empty)) { --poly-tabbar-h: 64px; }
+  /* html 의 scroll-padding 도 같은 높이를 쓰도록 (변수는 body 가 아니라 html 에서 읽어요) */
+  html:has(.bottom-cta:not(:empty)) { --poly-tabbar-h: 64px; }
+  html:has(.chat-shell) { --poly-tabbar-h: 0px; }
+
+  /* iOS 확대 방지: 모바일에서는 글자 입력 · 선택 컨트롤 모두 16px */
+  .nav-search-input,
+  .products-filter-select,
+  .region-select-filter .region-select-control { font-size: 16px; }
+}
+
+/* 모션 줄이기: 전역 규칙은 시간만 줄이므로 hover 확대/이동은 명시적으로 끄기 */
+@media (prefers-reduced-motion: reduce) {
+  .product-card:hover .product-card-img,
+  .products-category-item:hover .products-category-icon { transform: none; }
 }
 
 /* Tailwind keyframes는 config에도 있지만 컴포넌트에서 직접 참조하므로 여기서도 정의 */
